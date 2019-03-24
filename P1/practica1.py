@@ -193,13 +193,14 @@ def evaluate(X, Y, w):
     # Para todos los elementos de X, buscar su vecino mas
     # cercano segun el criterio leave-one-out
     # Se vectoriza la operacion para ahorrar tiempo
-    # Se obtienen solo los indices de los vecions segun el criterio
+    # Se obtienen solo los indices de los vecinos segun el criterio
     # leave-one-out
-    neighbors = kdtree.query(weighted_X, k=2)[1][:, -1]
+    neighbors = kdtree.query(weighted_X, k=2)[1][:, 1]
 
     # Predecir las etiquetas
     predicted_Y = Y[neighbors]
 
+    # Calcular las tasas de acierto, reduccion y valor fitness
     accuracy = accuracy_rate(Y, predicted_Y)
     reduction = reduction_rate(w)
     fitness_val = fitness(accuracy, reduction)
@@ -280,7 +281,7 @@ def local_search(X, Y, max_evaluations=15000, max_traits_evaluations=20, mean=0.
     :return Devuelve los w calculados
     """
 
-    np.random.seed(40)
+    np.random.seed(378763)
 
     # Obtener numero de caracteristicas
     N = X.shape[1]
@@ -458,11 +459,15 @@ def local_search_classifier(train_part, test_part):
 
         # Calcular los X de entrenamiento aplicando los pesos y entrenar
         # el modelo con estos valores
-        weighted_X_train = train[0] * w
+        print(w.shape)
+        print(train[0].shape)
+        weighted_X_train = (train[0] * w)[:, w > 0.2]
+        print(weighted_X_train.shape)
         neigh.fit(weighted_X_train, train[1])
 
         # Calcular los X de test aplicando los pesos y obtener las etiquetas
-        weighted_X_test = test[0] * w
+        weighted_X_test = (test[0] * w)[:, w > 0.2]
+        print(weighted_X_test.shape)
         knn_labels = neigh.predict(weighted_X_test)
 
         # Obtener tasa de aciertos, reduccion y agrupacion de ambos
