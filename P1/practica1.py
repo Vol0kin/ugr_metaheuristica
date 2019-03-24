@@ -115,6 +115,25 @@ def reduction_rate(w, threshold=0.2):
 
     return reduction
 
+def accuracy_rate(true_Y, predicted_Y):
+    """
+    Funcion que calcula la tasa de aciertos.
+    Estima cuantas etiquetas se han predicho de forma correcta.
+
+    :param true_Y: Etiquetas reales
+    :param predicted_y: Etiquetas predichas
+
+    :return Devuelve el ratio de etiquetas predichas correctamente
+    """
+    
+    # Obtener numero de etiquetas y correctamente predichas
+    N = true_Y.shape[0]
+    correct_pred = true_Y[true_Y == predicted_Y].shape[0]
+
+    # Calcular tasa de aciertos
+    accuracy = correct_pred / N 
+
+    return accuracy
 
 def fitness(accuracy, reduction, alpha=0.5):
     """
@@ -134,11 +153,11 @@ def fitness(accuracy, reduction, alpha=0.5):
 def normalize_w(w):
     """
     Funcion para normalizar los pesos w en el rango [0, 1].
-    Si algun wi no esta en ese rango, se le asigna el valor mas cercano 
-    dependiendo de por que extremo se pase (si es menor que 0 se le asigna 
+    Si algun wi no esta en ese rango, se le asigna el valor mas cercano
+    dependiendo de por que extremo se pase (si es menor que 0 se le asigna
     el 0, si es mayor que 1 se le asigna 1).
 
-    :param w: Vector de pesos a normalizar 
+    :param w: Vector de pesos a normalizar
 
     :return Devuelve normal_w, donde se han normalizado los pesos.
     """
@@ -150,6 +169,42 @@ def normalize_w(w):
     normal_w[normal_w > 1.0] = 1.0
 
     return normal_w
+
+def evaluate(X, Y, w):
+    """
+    Funcion para evaluar los pesos con la funcion fitness para determinar
+    como de buenos son estos en la busqueda local.
+
+    :param X: Conjunto de vectores de caracteristicas
+    :param Y: Conjunto de etiquetas
+    :param w: Pesos
+
+    :return Devuelve una evaluacion de como de buenos son los nuevos pesos
+            segun la funcion fitness para la tasa de aciertos y la tasa de
+            reduccion
+    """
+
+    # Aplicar los pesos sobre X
+    weighted_X = X * w
+
+    # Crear un KDTree con todos los X
+    kdtree = KDTree(weighted_X)
+
+    # Para todos los elementos de X, buscar su vecino mas
+    # cercano segun el criterio leave-one-out
+    # Se vectoriza la operacion para ahorrar tiempo
+    # Se obtienen solo los indices de los vecions segun el criterio
+    # leave-one-out
+    neighbors = kdtree.query(weighted_X, k=2)[1][:, -1]
+
+    # Predecir las etiquetas
+    predicted_Y = Y[neighbors]
+
+    accuracy = accuracy_rate(Y, predicted_Y)
+    reduction = reduction_rate(w)
+    fitness_val = fitness(accuracy, reduction)
+
+    return fitness_val
 
 def relief(X, Y):
     """
@@ -209,6 +264,71 @@ def relief(X, Y):
 
     return w
 
+def local_search(X, Y, max_evaluations=15000, max_traits_evaluations=20, mean=0.0, sigma=0.3):
+    """
+    Funcion para el calculo de w mediante la búsqueda local.
+
+    :param X: Conjunto de vectores de caracteristicas 
+    :param Y: Conjunto de etiquetas 
+    :param max_evaluations: Maximo numero de evaluaciones de la funcion fitness 
+                            que puede hacer la busqueda 
+    :param max_traits_evaluations: Numero maximo de veces que se pueden evaluar 
+                                   las caracteristicas sin exito
+    :param mean: Media del operador de mutacion 
+    :param sigma: Desviacion tipica del operador de mutacion 
+
+    :return Devuelve los w calculados
+    """
+
+    np.random.seed(40)
+
+    # Obtener numero de caracteristicas
+    N = X.shape[1]
+
+    # Generar un w inicial y establecer las evaluaciones, las 
+    # evaluaciones fallidas y el valor fitness iniciales
+    w = np.random.uniform(0.0, 1.0, N)
+    evaluations = 0
+    unsuccessful_evaluations = 0
+    fitness_val = evaluate(X, Y, w)
+
+    # Mientras no se hayan superado el numero maximo de evaluaciones
+    # intentar ajustar w
+    while evaluations < max_evaluations:
+        # Copiar w
+        current_w = np.copy(w)
+
+        # Intentar mutar cada caracteristica en el orden dado por la permutacion 
+        # hasta encontrar la primera mutacion que obtiene un mejor valor de fitness
+        for trait in np.random.permutation(N):
+            # Mutar el w_i con un valor de la normal con media mean y d.t. sigma
+            current_w[trait] += np.random.normal(mean, sigma)
+
+            # Normalizar los w en el rango [0, 1]
+            current_w = normalize_w(current_w)
+            
+            # Evaluar el nuevo w con los datos
+            evaluations += 1
+            new_fitness = evaluate(X, Y, current_w)
+
+            # Si el nuevo fitness es mejor, actualizar w y hacer que el numero de 
+            # evaluacions sin exito sea 0
+            if new_fitness > fitness_val:
+                fitness_val = new_fitness
+                unsuccessful_evaluations = 0
+                w = np.copy(current_w)
+                break
+            # En caso contrario, contabilizar un error mas y restaurar los w
+            else:
+                unsuccessful_evaluations += 1
+                current_w = np.copy(w)
+
+            # Si se sobrepasa el numero max de evaluaciones o se obtienen demasiados 
+            # errores, se termina la busqueda
+            if evaluations > max_evaluations or unsuccessful_evaluations > max_traits_evaluations * N:
+                return w
+
+    return w
 
 def knn_classifier(train_part, test_part):
     """
@@ -303,8 +423,56 @@ def relief_classifier(train_part, test_part):
         print("Accuracy: {}\tReduction: {}\tAgrupacion: {}\tTiempo: {}".format(accuracy, reduction, fit_val, total_time))
 
 
+def local_search_classifier(train_part, test_part):
+    """
+    Implementacion de un clasificador 1-NN con la tecnica de la Busqueda Local
+    para el calculo de los pesos.
+    Ajusta un clasificador 1-NN con pesos, los cuales se obtienen mediante
+    una Busqueda Local para un conjunto de entrenamiento. Despues entrena un 
+    clasificador 1-NN de sklearn con los valores de entrenamiento ponderados.
 
-df = pd.read_csv('data/colposcopy.csv')
+    :param train_part: Particiones de entrenamiento con las que se va
+                       a entrenar el clasificador 1-NN.
+    :param test_part: Particiones de prueba con las que se va a comprobar
+                      el ajuste del clasificador.
+    """
+
+    # Crear un nuevo clasificador 1-NN de sklearn
+    neigh = KNeighborsClassifier(n_neighbors=1)
+
+    # Para cada elemento de las listas de particiones de entrenamiento
+    # y prueba, obtener los w, entrenar el modelo y predecir las etiquetas
+    # Comprobar luego la precision del ajuste
+    for train, test in zip(train_part, test_part):
+        # Tiempo antes de lanzar la Busqueda Local
+        t1 = time.time()
+
+        # Calculo de los pesos mediante la Busqueda Local
+        w = local_search(train[0], train[1])
+
+        # Tiempo despues de terminar la Busqueda Local
+        t2 = time.time()
+        total_time = t2 - t1
+
+        print(w)
+
+        # Calcular los X de entrenamiento aplicando los pesos y entrenar
+        # el modelo con estos valores
+        weighted_X_train = train[0] * w
+        neigh.fit(weighted_X_train, train[1])
+
+        # Calcular los X de test aplicando los pesos y obtener las etiquetas
+        weighted_X_test = test[0] * w
+        knn_labels = neigh.predict(weighted_X_test)
+
+        # Obtener tasa de aciertos, reduccion y agrupacion de ambos
+        accuracy = accuracy_score(test[1], knn_labels)
+        reduction = reduction_rate(w)
+        fit_val = fitness(accuracy, reduction)
+        
+        print("Accuracy: {}\tReduction: {}\tAgrupacion: {}\tTiempo: {}".format(accuracy, reduction, fit_val, total_time))
+
+df = pd.read_csv('data/texture.csv')
 sample = df.values[:, 1:]
 
 # Obtener los valores x, y de la muestra (normalizar x)
@@ -317,4 +485,4 @@ sample_y = sample[:, -1].reshape(-1,)
 # La segunda contiene 5 particiones de test con sus (x, y)
 train_part, test_part = stratify_sample(sample_x, sample_y)
 
-relief_classifier(train_part, test_part)
+local_search_classifier(train_part, test_part)
