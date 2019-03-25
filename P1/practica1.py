@@ -5,6 +5,7 @@ from sklearn.metrics import accuracy_score                  # Medir la precision
 from sklearn.neighbors import KNeighborsClassifier          # Clasificador KNN
 from pykdtree.kdtree import KDTree                          # Implementacion paralela de KDTree 
 import time                                                 # Medir el tiempo
+import sys                                                  # Argumentos de la linea de comandos
 
 def normalize_data(sample):
     """
@@ -184,8 +185,8 @@ def evaluate(X, Y, w):
             reduccion
     """
 
-    # Aplicar los pesos sobre X
-    weighted_X = X * w
+    # Aplicar los pesos sobre X (aquellos con valor >= 0.2)
+    weighted_X = (X * w)[:, w >= 0.2]
 
     # Crear un KDTree con todos los X
     kdtree = KDTree(weighted_X)
@@ -281,7 +282,7 @@ def local_search(X, Y, max_evaluations=15000, max_traits_evaluations=20, mean=0.
     :return Devuelve los w calculados
     """
 
-    np.random.seed(378763)
+    np.random.seed(8912374)
 
     # Obtener numero de caracteristicas
     N = X.shape[1]
@@ -455,19 +456,17 @@ def local_search_classifier(train_part, test_part):
         t2 = time.time()
         total_time = t2 - t1
 
-        print(w)
-
         # Calcular los X de entrenamiento aplicando los pesos y entrenar
         # el modelo con estos valores
-        print(w.shape)
-        print(train[0].shape)
-        weighted_X_train = (train[0] * w)[:, w > 0.2]
-        print(weighted_X_train.shape)
+        # Se seleccionan solo aquellas caracteristicas cuyo w_i sea superior
+        # o igual a 0.2
+        weighted_X_train = (train[0] * w)[:, w >= 0.2]
         neigh.fit(weighted_X_train, train[1])
 
         # Calcular los X de test aplicando los pesos y obtener las etiquetas
-        weighted_X_test = (test[0] * w)[:, w > 0.2]
-        print(weighted_X_test.shape)
+        # Se seleccionan solo aquellas caracteristicas cuyo w_i sea superior
+        # o igual a 0.2
+        weighted_X_test = (test[0] * w)[:, w >= 0.2]
         knn_labels = neigh.predict(weighted_X_test)
 
         # Obtener tasa de aciertos, reduccion y agrupacion de ambos
@@ -477,7 +476,27 @@ def local_search_classifier(train_part, test_part):
         
         print("Accuracy: {}\tReduction: {}\tAgrupacion: {}\tTiempo: {}".format(accuracy, reduction, fit_val, total_time))
 
-df = pd.read_csv('data/texture.csv')
+# Posibles archivos y funciones
+files = ('colposcopy', 'ionosphere', 'texture')
+functions = ('knn', 'relief', 'local')
+
+# Leer archivo y funcion de entrada
+in_file = sys.argv[1]
+in_func = sys.argv[2]
+
+# Comprobar si el archivo no es correcto, en cuyo caso se lanza una excepcion
+if not in_file in files:
+    raise ValueError('Error: el archivo tiene que ser uno de los siguitenes: {}'.format(files))
+
+# Comprobar si la funcion no es correcta, en cuyo caso se lanza una excepcion
+if not in_func in functions:
+    raise ValueError('Error: la funcion tiene que ser una de las siguientes: {}'.format(functions))
+
+# Crear el archivo csv
+csv_file = 'data/' + in_file + '.csv'
+
+# Cargar el archivo csv que contiene los datos y obtener la muestra
+df = pd.read_csv(csv_file)
 sample = df.values[:, 1:]
 
 # Obtener los valores x, y de la muestra (normalizar x)
@@ -490,4 +509,12 @@ sample_y = sample[:, -1].reshape(-1,)
 # La segunda contiene 5 particiones de test con sus (x, y)
 train_part, test_part = stratify_sample(sample_x, sample_y)
 
-local_search_classifier(train_part, test_part)
+if in_func == 'knn':
+    print('Clasificador KNN')
+    knn_classifier(train_part, test_part)
+elif in_func == 'relief':
+    print('Clasificador RELIEF')
+    relief_classifier(train_part, test_part) 
+else:
+    print('Clasificador Busqueda Local')
+    local_search_classifier(train_part, test_part)
