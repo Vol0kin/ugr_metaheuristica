@@ -1,0 +1,88 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[spanish]{babel}					% Utilizar español
+\usepackage[utf8]{inputenc}					% Caracteres UTF-8
+\usepackage{graphicx}						% Imagenes
+\usepackage[hidelinks]{hyperref}			% Poner enlaces sin marcarlos en rojo
+\usepackage{fancyhdr}						% Modificar encabezados y pies de pagina
+\usepackage{float}							% Insertar figuras
+\usepackage[textwidth=390pt]{geometry}		% Anchura de la pagina
+\usepackage[nottoc]{tocbibind}				% Referencias (no incluir num pagina indice en Indice)
+
+% Configuracion de encabezados y pies de pagina
+\pagestyle{fancy}
+\lhead{Vladislav Nikolov Vasilev}
+\rhead{Metaheurísticas}
+\lfoot{Grado en Ingeniería Informática}
+\cfoot{}
+\rfoot{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}		% Linea cabeza de pagina
+\renewcommand{\footrulewidth}{0.4pt}		% Linea pie de pagina
+
+\begin{document}
+\pagenumbering{gobble}
+
+% Pagina de titulo
+\begin{titlepage}
+
+\begin{minipage}{\textwidth}
+
+\centering
+
+\includegraphics[scale=0.3]{img/ugr.png}\\
+
+\textsc{\Large Metaheurísticas\\[0.2cm]}
+\textsc{GRADO EN INGENIERÍA INFORMÁTICA}\\[0.3cm]
+
+\noindent\rule[-1ex]{\textwidth}{1pt}\\[1.5ex]
+\textsc{{\Huge PRÁCTICA 1\\[0.1cm]}}
+\textsc{{\Large \\Problema del Aprendizaje de Pesos en Características (APC)}}
+\noindent\rule[-1ex]{\textwidth}{2pt}\\[3.5ex]
+
+\end{minipage}
+
+\vspace{0.5cm}
+
+\begin{minipage}{\textwidth}
+
+\centering
+
+\textbf{Autor}\\ {Vladislav Nikolov Vasilev}\\[1ex]
+\textbf{NIE}\\ {X8743846M}\\[1ex]
+\textbf{E-Mail}\\ {vladis890@gmail.com}\\[1ex]
+\textbf{Grupo de prácticas}\\ {MH3 Jueves 17:30-19:30}\\[1ex]
+\textbf{Rama}\\ {Computación y Sistemas Inteligentes}\\[1ex]
+\vspace{0.2cm}
+
+\includegraphics[scale=0.3]{img/etsiit.jpeg}
+
+\vspace{0.3cm}
+\textsc{Escuela Técnica Superior de Ingenierías Informática y de Telecomunicación}\\
+\vspace{1cm}
+\textsc{Curso 2018-2019}
+\end{minipage}
+\end{titlepage}
+
+\pagenumbering{arabic}
+\tableofcontents
+\thispagestyle{empty}				% No usar estilo en la pagina de indice
+
+\newpage
+
+\section{Descripción del problema}
+
+\section{Descripción de los algoritmos}
+
+\section{Descripción del método de búsqueda}
+
+\newpage
+
+\begin{thebibliography}{5}
+
+\bibitem{nombre-referencia}
+Texto referencia
+\\\url{https://url.referencia.com}
+
+\end{thebibliography}
+
+\end{document}
+
