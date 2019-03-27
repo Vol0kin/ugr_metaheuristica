@@ -353,6 +353,12 @@ def knn_classifier(train_part, test_part):
     # ninguna caracteristica)
     reduction = 0.0
 
+    # Listas para guardar los datos (reduccion, tasa de clas. y tiempo)
+    reduction_list = []
+    accuracy_list = []
+    aggregation_list = []
+    time_list = []
+
     # Para cada elemento de las listas de particiones de entrenamiento
     # y prueba, entrenar el modelo y predecir las etiquetas
     # Comprobar luego la precision del ajuste
@@ -374,6 +380,12 @@ def knn_classifier(train_part, test_part):
         accuracy = accuracy_score(test[1], knn_labels)
         fit_val = fitness(accuracy, reduction)
 
+
+        # Insertar los datos en las listas
+        reduction_list.append(reduction)
+        accuracy_list.append(accuracy)
+        aggregation_list.append(fit_val)
+        time_list.append(total_time)
         print("Accuracy: {}\tReduction: {}\tAgrupacion: {}\tTiempo: {}".format(accuracy, reduction, fit_val, total_time))
 
 
@@ -393,6 +405,12 @@ def relief_classifier(train_part, test_part):
 
     # Crear un nuevo clasificador 1-NN de sklearn
     neigh = KNeighborsClassifier(n_neighbors=1)
+
+    # Listas para guardar los datos (reduccion, tasa de clas. y tiempo)
+    reduction_list = []
+    accuracy_list = []
+    aggregation_list = []
+    time_list = []
 
     # Para cada elemento de las listas de particiones de entrenamiento
     # y prueba, obtener los w, entrenar el modelo y predecir las etiquetas
@@ -422,6 +440,12 @@ def relief_classifier(train_part, test_part):
         reduction = reduction_rate(w)
         fit_val = fitness(accuracy, reduction)
         
+        # Insertar los datos en las listas
+        reduction_list.append(reduction)
+        accuracy_list.append(accuracy)
+        aggregation_list.append(fit_val)
+        time_list.append(total_time)
+
         print("Accuracy: {}\tReduction: {}\tAgrupacion: {}\tTiempo: {}".format(accuracy, reduction, fit_val, total_time))
 
 
@@ -441,6 +465,12 @@ def local_search_classifier(train_part, test_part):
 
     # Crear un nuevo clasificador 1-NN de sklearn
     neigh = KNeighborsClassifier(n_neighbors=1)
+
+    # Listas para guardar los datos (reduccion, tasa de clas. y tiempo)
+    reduction_list = []
+    accuracy_list = []
+    aggregation_list = []
+    time_list = []
 
     # Para cada elemento de las listas de particiones de entrenamiento
     # y prueba, obtener los w, entrenar el modelo y predecir las etiquetas
@@ -474,6 +504,12 @@ def local_search_classifier(train_part, test_part):
         reduction = reduction_rate(w)
         fit_val = fitness(accuracy, reduction)
         
+        # Insertar los datos en las listas
+        reduction_list.append(reduction)
+        accuracy_list.append(accuracy)
+        aggregation_list.append(fit_val)
+        time_list.append(total_time)
+
         print("Accuracy: {}\tReduction: {}\tAgrupacion: {}\tTiempo: {}".format(accuracy, reduction, fit_val, total_time))
 
 # Posibles archivos y funciones
