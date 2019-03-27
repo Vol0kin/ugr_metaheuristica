@@ -344,6 +344,8 @@ def knn_classifier(train_part, test_part):
                        a entrenar el clasificador 1-NN.
     :param test_part: Particiones de prueba con las que se va a comprobar
                       el ajuste del clasificador.
+    :return Devuelve arrays creados a apartir de las listas de tasas de 
+            clasificacion, tasas de reduccion, agrupaciones y tiempos.
     """
 
     # Crear un nuevo clasificador de sklearn del tipo 1-NN
@@ -380,13 +382,13 @@ def knn_classifier(train_part, test_part):
         accuracy = accuracy_score(test[1], knn_labels)
         fit_val = fitness(accuracy, reduction)
 
-
         # Insertar los datos en las listas
         reduction_list.append(reduction)
         accuracy_list.append(accuracy)
         aggregation_list.append(fit_val)
         time_list.append(total_time)
-        print("Accuracy: {}\tReduction: {}\tAgrupacion: {}\tTiempo: {}".format(accuracy, reduction, fit_val, total_time))
+
+    return np.array(accuracy_list), np.array(reduction_list), np.array(aggregation_list), np.array(time_list)
 
 
 def relief_classifier(train_part, test_part):
@@ -401,6 +403,8 @@ def relief_classifier(train_part, test_part):
                        a entrenar el clasificador 1-NN.
     :param test_part: Particiones de prueba con las que se va a comprobar
                       el ajuste del clasificador.
+    :return Devuelve arrays creados a apartir de las listas de tasas de 
+            clasificacion, tasas de reduccion, agrupaciones y tiempos.
     """
 
     # Crear un nuevo clasificador 1-NN de sklearn
@@ -446,7 +450,7 @@ def relief_classifier(train_part, test_part):
         aggregation_list.append(fit_val)
         time_list.append(total_time)
 
-        print("Accuracy: {}\tReduction: {}\tAgrupacion: {}\tTiempo: {}".format(accuracy, reduction, fit_val, total_time))
+    return np.array(accuracy_list), np.array(reduction_list), np.array(aggregation_list), np.array(time_list)
 
 
 def local_search_classifier(train_part, test_part):
@@ -461,6 +465,8 @@ def local_search_classifier(train_part, test_part):
                        a entrenar el clasificador 1-NN.
     :param test_part: Particiones de prueba con las que se va a comprobar
                       el ajuste del clasificador.
+    :return Devuelve arrays creados a apartir de las listas de tasas de 
+            clasificacion, tasas de reduccion, agrupaciones y tiempos.
     """
 
     # Crear un nuevo clasificador 1-NN de sklearn
@@ -510,7 +516,7 @@ def local_search_classifier(train_part, test_part):
         aggregation_list.append(fit_val)
         time_list.append(total_time)
 
-        print("Accuracy: {}\tReduction: {}\tAgrupacion: {}\tTiempo: {}".format(accuracy, reduction, fit_val, total_time))
+    return np.array(accuracy_list), np.array(reduction_list), np.array(aggregation_list), np.array(time_list)
 
 # Posibles archivos y funciones
 files = ('colposcopy', 'ionosphere', 'texture')
@@ -528,7 +534,7 @@ if not in_file in files:
 if not in_func in functions:
     raise ValueError('Error: la funcion tiene que ser una de las siguientes: {}'.format(functions))
 
-# Crear el archivo csv
+# Determinar archivo CSV de entrada
 csv_file = 'data/' + in_file + '.csv'
 
 # Cargar el archivo csv que contiene los datos y obtener la muestra
@@ -545,12 +551,23 @@ sample_y = sample[:, -1].reshape(-1,)
 # La segunda contiene 5 particiones de test con sus (x, y)
 train_part, test_part = stratify_sample(sample_x, sample_y)
 
+# Decidir que funcion se llama
 if in_func == 'knn':
-    print('Clasificador KNN')
-    knn_classifier(train_part, test_part)
+    print('Clasificador: KNN')
+    classifier = knn_classifier
 elif in_func == 'relief':
-    print('Clasificador RELIEF')
-    relief_classifier(train_part, test_part) 
+    print('Clasificador: RELIEF')
+    classifier = relief_classifier
 else:
-    print('Clasificador Busqueda Local')
-    local_search_classifier(train_part, test_part)
+    print('Clasificador: Busqueda Local')
+    classifier = local_search_classifier
+
+# Llamar a la funcion de clasificacion y combinar los datos
+class_rate, red_rate, aggrupation, times = classifier(train_part, test_part)
+data = np.array([[clas, rate, agr, time] for clas, rate, agr, time in zip(class_rate, red_rate, aggrupation, times)])
+
+# Crear un DataFrame con los datos de salida (particiones)
+out_df = pd.DataFrame(data, columns=['%_clas', '%_red', 'Agr.', 'T'], index=['Particion {}'.format(i) for i in range(1, 6)])
+
+# Mostrar datos de las particiones
+print(out_df)
