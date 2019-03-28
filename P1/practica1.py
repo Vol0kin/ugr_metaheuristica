@@ -282,6 +282,7 @@ def local_search(X, Y, max_evaluations=15000, max_traits_evaluations=20, mean=0.
     :return Devuelve los w calculados
     """
 
+    # Establecer la semilla aleatoria
     np.random.seed(8912374)
 
     # Obtener numero de caracteristicas
@@ -300,30 +301,30 @@ def local_search(X, Y, max_evaluations=15000, max_traits_evaluations=20, mean=0.
         # Copiar w
         current_w = np.copy(w)
 
-        # Intentar mutar cada caracteristica en el orden dado por la permutacion 
+        # Intentar mutar cada caracteristica en el orden dado por la permutacion
         # hasta encontrar la primera mutacion que obtiene un mejor valor de fitness
         for trait in np.random.permutation(N):
             # Mutar el w_i con un valor de la normal con media mean y d.t. sigma
-            current_w[trait] += np.random.normal(mean, sigma)
+            w[trait] += np.random.normal(mean, sigma)
 
             # Normalizar los w en el rango [0, 1]
-            current_w = normalize_w(current_w)
+            w = normalize_w(w)
             
             # Evaluar el nuevo w con los datos
             evaluations += 1
-            new_fitness = evaluate(X, Y, current_w)
+            new_fitness = evaluate(X, Y, w)
 
-            # Si el nuevo fitness es mejor, actualizar w y hacer que el numero de 
-            # evaluacions sin exito sea 0
+            # Si el nuevo valor de fitness es mejor, conservar w, guardar el mejor
+            # valor de fitness e indicar que se ha realizado una evaluacion con 
+            # exito
             if new_fitness > fitness_val:
                 fitness_val = new_fitness
                 unsuccessful_evaluations = 0
-                w = np.copy(current_w)
                 break
             # En caso contrario, contabilizar un error mas y restaurar los w
             else:
                 unsuccessful_evaluations += 1
-                current_w = np.copy(w)
+                w[trait] = current_w[trait]
 
             # Si se sobrepasa el numero max de evaluaciones o se obtienen demasiados 
             # errores, se termina la busqueda
