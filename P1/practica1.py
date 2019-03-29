@@ -68,31 +68,6 @@ def stratify_sample(X, y):
 
     return train_part, test_part
 
-def KNN(X, Y, x, neighbors=1):
-    """
-    Implementacion del KNN vectorizada.
-
-    Recibe una muestra X y sus etiquetas, y un array
-    x del que buscar sus vecinos mas cercanos. Construye
-    un kdtree con X y busca los k vecinos mas cercanos de
-    x.
-
-    :param X: Vectores de caracteristicas de una muestra de N elementos
-    :param Y: Etiquetas que se corresponden a cada uno de los N elementos de X
-    :param x: Elemento o array de elementos de los que buscar sus k-vecinos mas cercanos
-    :param neighbors: Numero de vecinos que buscar (por defecto 1)
-
-    :return: K vecions mas cercanos de x
-    """
-
-    # Construir el arbol
-    kd_tree = KDTree(X)
-
-    # Obtener las distancias y los indices de los k vecions mas cercanos
-    dist, index = kd_tree.query(x, k=neighbors)
-
-    return Y[index]
-
 def reduction_rate(w, threshold=0.2):
     """
     Funcion que calcula la tasa de reduccion de un vector w.
@@ -519,56 +494,91 @@ def local_search_classifier(train_part, test_part):
 
     return np.array(accuracy_list), np.array(reduction_list), np.array(aggregation_list), np.array(time_list)
 
-# Posibles archivos y funciones
-files = ('colposcopy', 'ionosphere', 'texture')
-functions = ('knn', 'relief', 'local')
+if __name__ == '__main__':
+    # Posibles archivos y funciones
+    files = ('colposcopy', 'ionosphere', 'texture')
+    functions = ('knn', 'relief', 'local')
 
-# Leer archivo y funcion de entrada
-in_file = sys.argv[1]
-in_func = sys.argv[2]
+    # Leer archivo y funcion de entrada
+    in_file = sys.argv[1]
+    in_func = sys.argv[2]
 
-# Comprobar si el archivo no es correcto, en cuyo caso se lanza una excepcion
-if not in_file in files:
-    raise ValueError('Error: el archivo tiene que ser uno de los siguitenes: {}'.format(files))
+    # Comprobar si el archivo no es correcto, en cuyo caso se lanza una excepcion
+    if not in_file in files:
+        raise ValueError('Error: el archivo tiene que ser uno de los siguitenes: {}'.format(files))
 
-# Comprobar si la funcion no es correcta, en cuyo caso se lanza una excepcion
-if not in_func in functions:
-    raise ValueError('Error: la funcion tiene que ser una de las siguientes: {}'.format(functions))
+    # Comprobar si la funcion no es correcta, en cuyo caso se lanza una excepcion
+    if not in_func in functions:
+        raise ValueError('Error: la funcion tiene que ser una de las siguientes: {}'.format(functions))
 
-# Determinar archivo CSV de entrada
-csv_file = 'data/' + in_file + '.csv'
+    # Determinar archivo CSV de entrada
+    csv_file = 'data/' + in_file + '.csv'
 
-# Cargar el archivo csv que contiene los datos y obtener la muestra
-df = pd.read_csv(csv_file)
-sample = df.values[:, 1:]
+    # Cargar el archivo csv que contiene los datos y obtener la muestra
+    df = pd.read_csv(csv_file)
+    sample = df.values[:, 1:]
 
-# Obtener los valores x, y de la muestra (normalizar x)
-sample_x = normalize_data(sample[:, :-1])
-sample_y = sample[:, -1].reshape(-1,)
+    # Obtener los valores x, y de la muestra (normalizar x)
+    sample_x = normalize_data(sample[:, :-1])
+    sample_y = sample[:, -1].reshape(-1,)
 
-# Dividir la muestra en particiones disjuntas 
-# Se obtienen 5 particiones, organizadas en 2 listas 
-# La primera contiene 5 particiones de entrenamiento con sus (x, y)
-# La segunda contiene 5 particiones de test con sus (x, y)
-train_part, test_part = stratify_sample(sample_x, sample_y)
+    # Dividir la muestra en particiones disjuntas 
+    # Se obtienen 5 particiones, organizadas en 2 listas 
+    # La primera contiene 5 particiones de entrenamiento con sus (x, y)
+    # La segunda contiene 5 particiones de test con sus (x, y)
+    train_part, test_part = stratify_sample(sample_x, sample_y)
 
-# Decidir que funcion se llama
-if in_func == 'knn':
-    print('Clasificador: KNN')
-    classifier = knn_classifier
-elif in_func == 'relief':
-    print('Clasificador: RELIEF')
-    classifier = relief_classifier
-else:
-    print('Clasificador: Busqueda Local')
-    classifier = local_search_classifier
+    # Decidir que funcion se llama
+    if in_func == 'knn':
+        print('Clasificador: KNN')
+        classifier = knn_classifier
+    elif in_func == 'relief':
+        print('Clasificador: RELIEF')
+        classifier = relief_classifier
+    else:
+        print('Clasificador: Busqueda Local')
+        classifier = local_search_classifier
 
-# Llamar a la funcion de clasificacion y combinar los datos
-class_rate, red_rate, aggrupation, times = classifier(train_part, test_part)
-data = np.array([[clas, rate, agr, time] for clas, rate, agr, time in zip(class_rate, red_rate, aggrupation, times)])
+    print('Conjunto de datos: {}'.format(in_file))
+    # Llamar a la funcion de clasificacion y combinar los datos
+    class_rate, red_rate, aggrupation, times = classifier(train_part, test_part)
 
-# Crear un DataFrame con los datos de salida (particiones)
-out_df = pd.DataFrame(data, columns=['%_clas', '%_red', 'Agr.', 'T'], index=['Particion {}'.format(i) for i in range(1, 6)])
+    class_rate *= 100
+    red_rate *= 100 
+    aggrupation *= 100
 
-# Mostrar datos de las particiones
-print(out_df)
+    data = np.array([[clas, rate, agr, time] for clas, rate, agr, time in zip(class_rate, red_rate, aggrupation, times)])
+
+    # Crear un DataFrame con los datos de salida (particiones)
+    out_df = pd.DataFrame(data, columns=['%_clas', '%_red', 'Agr.', 'T'], index=['Particion {}'.format(i) for i in range(1, 6)])
+
+    # Mostrar datos de las particiones
+    print('\nResultados de las ejecuciones\n')
+    print(out_df)
+
+    # Mostrar valores estadisticos por pantalla
+    print('\nValores estadisticos\n')
+
+    print('%_clas maxima: {}'.format(class_rate.max()))
+    print('%_clas minima: {}'.format(class_rate.min()))
+    print('%_clas media: {}'.format(class_rate.mean()))
+    print('%_clas mediana: {}'.format(np.median(class_rate)))
+    print('%_clas desviacion tipica: {}'.format(np.std(class_rate)))
+
+    print('\n%_red maxima: {}'.format(red_rate.max()))
+    print('%_red minima: {}'.format(red_rate.min()))
+    print('%_red media: {}'.format(red_rate.mean()))
+    print('%_red mediana: {}'.format(np.median(red_rate)))
+    print('%_red desviacion tipica: {}'.format(np.std(red_rate)))
+
+    print('\nAgr. maxima: {}'.format(aggrupation.max()))
+    print('Agr. minima: {}'.format(aggrupation.min()))
+    print('Agr. media: {}'.format(aggrupation.mean()))
+    print('Agr. mediana: {}'.format(np.median(aggrupation)))
+    print('Agr. desviacion tipica: {}'.format(np.std(aggrupation)))
+
+    print('\nTiempo maximo: {} seg.'.format(times.max()))
+    print('Tiempo minimo: {} seg.'.format(times.min()))
+    print('Tiempo medio: {} seg.'.format(times.mean()))
+    print('Tiempo mediano: {} seg.'.format(np.median(times)))
+    print('Tiempo desviacion tipica: {} seg.'.format(np.std(times)))
