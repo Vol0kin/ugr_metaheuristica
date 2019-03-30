@@ -558,27 +558,14 @@ if __name__ == '__main__':
 
     # Mostrar valores estadisticos por pantalla
     print('\nValores estadisticos\n')
+    stat_data = np.array([[class_rate.max(), red_rate.max(), aggrupation.max(), times.max()],
+                          [class_rate.min(), red_rate.min(), aggrupation.min(), times.min()],
+                          [class_rate.mean(), red_rate.mean(), aggrupation.mean(), times.mean()],
+                          [np.median(class_rate), np.median(red_rate), np.median(aggrupation), np.median(times)],
+                          [np.std(class_rate), np.std(red_rate), np.std(aggrupation), np.std(times)]])
 
-    print('%_clas maxima: {}'.format(class_rate.max()))
-    print('%_clas minima: {}'.format(class_rate.min()))
-    print('%_clas media: {}'.format(class_rate.mean()))
-    print('%_clas mediana: {}'.format(np.median(class_rate)))
-    print('%_clas desviacion tipica: {}'.format(np.std(class_rate)))
+    stat_df = pd.DataFrame(stat_data, index=['Maximo', 'Minimo', 'Media', 'Mediana', 'Desv. tipica'],
+                           columns=['%_clas', '%_red', 'Agr.', 'T'])
 
-    print('\n%_red maxima: {}'.format(red_rate.max()))
-    print('%_red minima: {}'.format(red_rate.min()))
-    print('%_red media: {}'.format(red_rate.mean()))
-    print('%_red mediana: {}'.format(np.median(red_rate)))
-    print('%_red desviacion tipica: {}'.format(np.std(red_rate)))
-
-    print('\nAgr. maxima: {}'.format(aggrupation.max()))
-    print('Agr. minima: {}'.format(aggrupation.min()))
-    print('Agr. media: {}'.format(aggrupation.mean()))
-    print('Agr. mediana: {}'.format(np.median(aggrupation)))
-    print('Agr. desviacion tipica: {}'.format(np.std(aggrupation)))
-
-    print('\nTiempo maximo: {} seg.'.format(times.max()))
-    print('Tiempo minimo: {} seg.'.format(times.min()))
-    print('Tiempo medio: {} seg.'.format(times.mean()))
-    print('Tiempo mediano: {} seg.'.format(np.median(times)))
-    print('Tiempo desviacion tipica: {} seg.'.format(np.std(times)))
+    print(stat_df)
+    print('\nTiempo total: {}'.format(times.sum()))
