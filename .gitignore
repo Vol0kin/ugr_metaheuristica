@@ -384,3 +384,5 @@ TSWLatexianTemp*
 
 # standalone packages
 *.sta
+
+P1/out/*

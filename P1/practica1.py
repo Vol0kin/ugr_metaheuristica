@@ -3,7 +3,12 @@ import pandas as pd
 from sklearn.model_selection import StratifiedKFold         # Particionar muestra
 from sklearn.metrics import accuracy_score                  # Medir la precision de los resultados de test
 from sklearn.neighbors import KNeighborsClassifier          # Clasificador KNN
-from pykdtree.kdtree import KDTree                          # Implementacion paralela de KDTree 
+
+try:
+    from pykdtree.kdtree import KDTree                      # Implementacion paralela de KDTree
+except ImportError:
+    from scipy.spatial import cKDTree as KDTree             # En caso de fallar, importar cKDTree como KDTree
+
 import time                                                 # Medir el tiempo
 import sys                                                  # Argumentos de la linea de comandos
 

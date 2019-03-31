@@ -117,6 +117,8 @@ que se reduzcan al máximo el número de características conservando una $tasa\
 
 \section{Descripción de los algoritmos}
 
+\subsection{Consideraciones previas}
+
 Primeramente, antes de empezar con la descripción formal de los algoritmos implementados, vamos a describir algunos aspectos
 comunes, como por ejemplo cómo se representan las soluciones, como se inicializan en algunos de los casos y algunas funciones
 utilizadas en muchas partes del código, como por ejemplo la función objetivo. Cabe destacar que muchos de los pseudocódigos
@@ -572,8 +574,11 @@ para poder satisfacer las dependencias se necesita el gestor de paquetes \textbf
 Se recomienda instalar las dependencias, las cuáles vienen en el archivo \textbf{requirements.txt}, ya que sin ellas, el
 programa no podrá funcionar. Se recomienda utilizar el script de bash incluido para realizar la instalación, ya que se
 encarga de instalarlo en un entorno virtual para no causar problemas de versiones con paquetes que ya se tengan instaladas en
-el equipo o para no instalar paquetes no deseados. Una vez instalados, para poder utilizar el entorno creado se debe ejecutar
-el siguiente comando:
+el equipo o para no instalar paquetes no deseados. Una vez instalados\footnote{Si se produce algún error durante la
+instalación de los paquetes, puede ser debido a pykdtree, ya que al necesitar un compilador que soporte OMP puede fallar en
+los sistemas OSX. Para evitar estos problemas, el programa puede utilizar un cKDTree de scipy en caso de que a la hora de
+importar pykdtree se produzca un error, suponiendo a cambio una penalización en el tiempo de ejecución.}, para poder utilizar
+el entorno creado se debe ejecutar el siguiente comando:
 
 \begin{lstlisting}
 	$ source ./env/bin/activate
@@ -599,6 +604,18 @@ cuanto a sus posibles valores:
 	\item \textbf{algoritmo} puede ser \textbf{knn}, \textbf{relief} o \textbf{local}.
 \end{itemize}
 
+A continuación, para ilustrar mejor lo explicado hasta el momento, se ofrece una captura de un ejemplo de ejecución del
+programa. En la imagen se puede ver la siguiente información:
+
+\begin{itemize}[label=\textbullet]
+	\item Se muestra primero el algoritmo que se va a ejecutar, el conjunto de datos sobre el que se ejecuta y el tiempo
+	total.
+	\item Se puede ver una tabla en la que aparecen los datos referentes a cada partición (tasa de clasificación, tasa de
+	reducción, agrupación y tiempo).
+	\item Se muestran valores estadísticos para cada variable (valores máximo, mínimo, medio, mediana y desviación típica).
+\end{itemize}
+
+
 \begin{figure}[H]
 \centering
 \includegraphics[scale=0.35]{img/out_example.png}
@@ -607,9 +624,159 @@ cuanto a sus posibles valores:
 
 \newpage
 
-\section{Análisis}
+\section{Análisis de resultados y experimentación}
+
+\subsection{Descripción de los casos del problema}
+
+Para analizar el rendimiento de los algoritmos, se han realizado pruebas sobre 3 conjuntos de datos:
+
+\begin{itemize}[label=\textbullet]
+	\item \textbf{Colposcopy}: Conjunto de datos de colposcopias adquirido y anotado por médicos profesionales del Hospital
+	Universitario de Caracas. Las imágenes fueron tomadas al azar de las secuencias colposcópicas. 287 ejemplos con 62
+	características que deben ser clasificados en 2 clases.
+	\item \textbf{Ionosphere}: Conjunto de datos de radar que fueron recogidos por un sistema en \textit{Goose Bay},
+	Labrador. 352 ejemplos con 34 características que deben ser clasificados en 2 clases.
+	\item \textbf{Texture}: Conjunto de datos de extracciones de imágenes para distinguir entre 11 texturas diferentes
+	(césped, piel de becerro prensada, papel hecho a mano, rafia en bucle a una pila alta, lienzo de algodón,...). 550
+	ejemplos con 40 características que deben ser clasificados en 11 clases.
+\end{itemize}
+
+\subsection{Análisis de los resultados}
+
+Se han realizado distintas ejecuciones con los datos para cada uno de los algoritmos. Cada conjunto de datos se ha dividido
+con una función de \textbf{sklearn}, y se han mezclado con la \textbf{semialla aleatoria} 40. Para el caso de la búsqueda
+local, tanto para generar el $W$ inicial como para generar las posteriores mutaciones se ha utlizado la \textbf{semilla}
+8912374. Ambas están fijadas en el código y se pueden comprobar en sus respectivas funciones.
+
+A continuación se muestran los resultados obtenidos para cada algoritmo y para cada uno de los conjuntos de datos, midiendo
+sus valores de tasa de clasificación, tasa de reducción, agrupación (función objetivo) y tiempo que ha tardado (en segundos).
+Además se ofrece información extra sobre los valores máximo, mínimo, medio, mediana y desviación típica de cada uno de los
+datos, para poder comparar los datos más fácilmente. Y, como extra, se ha añadido una tabla en la que aparecen los valores
+medios de cada algoritmo, para facilitar la comparación:
+
+\begin{table}[H]
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\cline{2-13}
+\multicolumn{1}{l|}{}                       & \multicolumn{4}{c|}{\textbf{Colposcopy}}                                                   & \multicolumn{4}{c|}{\textbf{Ionosphere}}                                                   & \multicolumn{4}{c|}{\textbf{Texture}}                                                      \\ \cline{2-13} 
+\multicolumn{1}{l|}{}                       & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 1}}  & 79,66                      & 0                       & 39,83                  & 0,00049    & 85,92                      & 0                       & 42,96                  & 0,00045    & 91,82                      & 0                       & 45,91                  & 0,00056    \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 2}}  & 66,67                      & 0                       & 33,33                  & 0,00037    & 85,71                      & 0                       & 42,86                  & 0,00037    & 91,82                      & 0                       & 45,91                  & 0,00048    \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 3}}  & 71,93                      & 0                       & 35,96                  & 0,00035    & 88,57                      & 0                       & 44,29                  & 0,00036    & 93,64                      & 0                       & 46,82                  & 0,00044    \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 4}}  & 82,46                      & 0                       & 41,23                  & 0,00035    & 87,14                      & 0                       & 43,57                  & 0,00039    & 93,64                      & 0                       & 46,82                  & 0,00046    \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 5}}  & 73,68                      & 0                       & 36,84                  & 0,00035    & 84,29                      & 0                       & 42,14                  & 0,00039    & 90,91                      & 0                       & 45,45                  & 0,00049    \\ \hline
+\multicolumn{1}{|c|}{\textbf{Media}}        & 74,88                      & 0                       & 37,44                  & 0,00038    & 86,33                      & 0                       & 43,16                  & 0,00039    & 92,36                      & 0                       & 46,18                  & 0,00049    \\ \hline
+\multicolumn{1}{|c|}{\textbf{Máximo}}       & 82,46                      & 0                       & 41,23                  & 0,00049    & 88,57                      & 0                       & 44,29                  & 0,00048    & 93,64                      & 0                       & 46,82                  & 0,00056    \\ \hline
+\multicolumn{1}{|c|}{\textbf{Mínimo}}       & 66,67                      & 0                       & 33,33                  & 0,00035    & 84,29                      & 0                       & 42,14                  & 0,00036    & 90,91                      & 0                       & 45,45                  & 0,00044    \\ \hline
+\multicolumn{1}{|c|}{\textbf{Mediana}}      & 73,68                      & 0                       & 36,84                  & 0,00035    & 85,92                      & 0                       & 42,96                  & 0,00039    & 91,82                      & 0                       & 45,91                  & 0,00048    \\ \hline
+\multicolumn{1}{|c|}{\textbf{Desv. Típica}} & 5,62                       & 0                       & 2,81                   & 0,000056   & 1,44                       & 0                       & 0,72                   & 0,000033   & 1,09                       & 0                       & 0,55                   & 0,00004    \\ \hline
+\end{tabular}
+}%
+\caption{Resultados obtenidos por el algoritmo 1-NN en el problema del APC.}
+\end{table}
+
+\begin{table}[H]
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\cline{2-13}
+\multicolumn{1}{l|}{}                       & \multicolumn{4}{c|}{\textbf{Colposcopy}}                                                   & \multicolumn{4}{c|}{\textbf{Ionosphere}}                                                   & \multicolumn{4}{c|}{\textbf{Texture}}                                                      \\ \cline{2-13} 
+\multicolumn{1}{l|}{}                       & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 1}}  & 72,88                      & 29,03                   & 50,96                  & 0,04223180 & 87,32                      & 2,94                    & 45,13                  & 0,04617286 & 93,64                      & 7,50                    & 50,57                  & 0,09011912 \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 2}}  & 70,18                      & 25,81                   & 47,99                  & 0,03592849 & 91,43                      & 2,94                    & 47,18                  & 0,04701781 & 94,55                      & 15,00                   & 54,77                  & 0,08130646 \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 3}}  & 68,42                      & 48,39                   & 58,40                  & 0,03983450 & 91,43                      & 2,94                    & 47,18                  & 0,03659153 & 95,45                      & 7,50                    & 51,48                  & 0,08078218 \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 4}}  & 77,19                      & 64,52                   & 70,85                  & 0,03201556 & 90,00                      & 2,94                    & 46,47                  & 0,03484225 & 97,27                      & 5,00                    & 51,14                  & 0,08749294 \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 5}}  & 82,46                      & 29,03                   & 55,74                  & 0,03293490 & 84,29                      & 2,94                    & 43,61                  & 0,03472829 & 93,64                      & 2,50                    & 48,07                  & 0,09723902 \\ \hline
+\multicolumn{1}{|c|}{\textbf{Media}}        & 74,23                      & 39,35                   & 56,79                  & 0,03658905 & 88,89                      & 2,94                    & 45,92                  & 0,03987055 & 94,91                      & 7,50                    & 51,20                  & 0,08738794 \\ \hline
+\multicolumn{1}{|c|}{\textbf{Máximo}}       & 82,46                      & 64,52                   & 70,85                  & 0,04223180 & 91,43                      & 2,94                    & 47,18                  & 0,04701781 & 97,27                      & 15,00                   & 54,77                  & 0,09723902 \\ \hline
+\multicolumn{1}{|c|}{\textbf{Mínimo}}       & 68,42                      & 25,81                   & 47,99                  & 0,03201556 & 84,29                      & 2,94                    & 43,61                  & 0,03472829 & 93,64                      & 2,50                    & 48,07                  & 0,08078218 \\ \hline
+\multicolumn{1}{|c|}{\textbf{Mediana}}      & 72,88                      & 29,03                   & 55,74                  & 0,03592849 & 90,00                      & 2,94                    & 46,47                  & 0,03659153 & 94,55                      & 7,50                    & 51,14                  & 0,08749294 \\ \hline
+\multicolumn{1}{|c|}{\textbf{Desv. Típica}} & 5,07                       & 14,91                   & 7,91                   & 0,00392631 & 2,75                       & 0,00                    & 1,37                   & 0,00553680 & 1,36                       & 4,18                    & 2,15                   & 0,00608498 \\ \hline
+\end{tabular}
+}%
+\caption{Resultados obtenidos por el algoritmo \textit{RELIEF} en el problema del APC.}
+\end{table}
+
+\begin{table}[H]
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\cline{2-13}
+                                            & \multicolumn{4}{c|}{\textbf{Colposcopy}}                                                   & \multicolumn{4}{c|}{\textbf{Ionosphere}}                                                   & \multicolumn{4}{c|}{\textbf{Texture}}                                                      \\ \cline{2-13} 
+                                            & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 1}}  & 81,36                      & 83,87                   & 82,61                  & 2,47677159 & 88,73                      & 85,29                   & 87,01                  & 0,74606109 & 92,73                      & 77,50                   & 85,11                  & 0,81571221 \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 2}}  & 71,93                      & 82,26                   & 77,09                  & 2,88534594 & 88,57                      & 79,41                   & 83,99                  & 0,83731246 & 89,09                      & 85,00                   & 87,05                  & 0,86508775 \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 3}}  & 70,18                      & 82,26                   & 76,22                  & 2,59485793 & 80,00                      & 94,12                   & 87,06                  & 0,42965746 & 95,45                      & 82,50                   & 88,98                  & 1,02096820 \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 4}}  & 71,93                      & 82,26                   & 77,09                  & 2,90626860 & 88,57                      & 91,18                   & 89,87                  & 0,75856829 & 90,91                      & 85,00                   & 87,95                  & 1,56289935 \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 5}}  & 64,91                      & 75,81                   & 70,36                  & 2,81053543 & 85,71                      & 91,18                   & 88,45                  & 0,62555575 & 87,27                      & 82,50                   & 84,89                  & 1,22837043 \\ \hline
+\multicolumn{1}{|c|}{\textbf{Media}}        & 72,06                      & 81,29                   & 76,68                  & 2,73475590 & 86,32                      & 88,24                   & 87,28                  & 0,67943101 & 91,09                      & 82,50                   & 86,80                  & 1,09860759 \\ \hline
+\multicolumn{1}{|c|}{\textbf{Máximo}}       & 81,36                      & 83,87                   & 82,61                  & 2,90626860 & 88,73                      & 94,12                   & 89,87                  & 0,83731246 & 95,45                      & 85,00                   & 88,98                  & 1,56289935 \\ \hline
+\multicolumn{1}{|c|}{\textbf{Mínimo}}       & 64,91                      & 75,81                   & 70,36                  & 2,47677159 & 80,00                      & 79,41                   & 83,99                  & 0,42965746 & 87,27                      & 77,50                   & 84,89                  & 0,81571221 \\ \hline
+\multicolumn{1}{|c|}{\textbf{Mediana}}      & 71,93                      & 82,26                   & 77,09                  & 2,81053543 & 88,57                      & 91,18                   & 87,06                  & 0,74606109 & 90,91                      & 82,50                   & 87,05                  & 1,02096820 \\ \hline
+\multicolumn{1}{|c|}{\textbf{Desv. Típica}} & 5,31                       & 2,81                    & 3,89                   & 0,16968432 & 3,35                       & 5,26                    & 1,95                   & 0,14206914 & 2,84                       & 2,74                    & 1,59                   & 0,27312796 \\ \hline
+\end{tabular}
+}%
+\caption{Resultados obtenidos por el algoritmo BL en el problema del APC.}
+\end{table}
+
+\begin{table}[H]
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\cline{2-13}
+\multicolumn{1}{l|}{}                 & \multicolumn{4}{c|}{\textbf{Colposcopy}}                                                   & \multicolumn{4}{c|}{\textbf{Ionosphere}}                                                   & \multicolumn{4}{c|}{\textbf{Texture}}                                                      \\ \cline{2-13} 
+\multicolumn{1}{l|}{}                 & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} \\ \hline
+\multicolumn{1}{|c|}{\textbf{1-NN}}   & 74,88                      & 0                       & 37,44                  & 0,00039    & 86,33                      & 0                       & 43,16                  & 0,00039    & 92,36                      & 0                       & 46,18                  & 0,00049    \\ \hline
+\multicolumn{1}{|c|}{\textbf{RELIEF}} & 74,23                      & 39,35                   & 56,79                  & 0,03659    & 88,89                      & 2,94                    & 45,92                  & 0,03987    & 94,91                      & 7,50                    & 51,20                  & 0,08739    \\ \hline
+\multicolumn{1}{|c|}{\textbf{BL}}     & 72,06                      & 81,29                   & 76,68                  & 2,73476    & 86,32                      & 88,24                   & 87,28                  & 0,67943    & 91,09                      & 82,50                   & 86,80                  & 1,09861    \\ \hline
+\end{tabular}
+}%
+\caption{Valores medios de los tres algoritmos en el problema del APC.}
+\end{table}
+
+Para comparar los resultados podemos tomar como referente la tasa de clasificación, ya que comparar por tiempo 
+(el 1-NN y el algoritmo \textit{RELIEF} son infinitamente más rápidos que la búsqueda local, pero eso no significa que los
+resultados obtenidos sean mejores) o por tasa se reducción (1-NN no reduce, ya que es simplemente el clasificador normal) o
+por agrupación (una agrupación alta no significa que se clasifiquen mejor los elementos; puede que se hayan reducido mucho
+el número de características) no sería justo.
+
+Hace falta recalcar que, a pesar de haber usado ciertas semillas para intentar hacer que todo el proceso fuese más
+determinista, los elementos que se encuentran en los conjuntos de entrenamiento y test, así como la forma de generar una
+solución inicial y de obtener vecinos en la búsqueda local hacen que todo este proceso sea influido por el azar, ya que a lo
+mejor con una distribución diferente de los datos se hubiesen conseguido resultados distintos, más favorables para un
+método o para otro. Por tanto, estos resultados obtenidos no pueden ser considerados concluyentes al 100\% a la hora de
+decidir qué técnica es mejor, ya que hay un factor no determinista por debajo que influirá de una u otra forma en el
+desarrollo de las operaciones. Una vez habiendo matizado esto, comencemos con el análisis.
+
+Siguiendo los valores medios obtenidos, podemos ver que para el conjunto de datos \textbf{Colposcopy} el algoritmo 1-NN es
+el que mejores resultados ofrece, seguido por muy cerca de \textit{RELIEF}, y un poco más lejos, la búsqueda local. Sin
+embargo, aunque dijésemos que solo se consideraría la tasa de clasificación, si nos fijamos en la tasa de reducción, podemos
+ver que la búsqueda local tiene una tasa media de reducción muy superior a los otros dos (hay que considerar que, en los
+datos de \textit{RELIEF}, aunque aparezca una tasa de reducción, no se aplica sobre los datos; solo se ha dejado para que
+se vea qué porcentaje de los $w_i \in W$ eran menores a 0.2), y por tanto, si se dispusieran de más datos, a lo mejor la 
+búsqueda local generalizaría mejor. Es importante destacar, además, que \textit{RELIEF} tiene una desviación típica menor,
+con lo cuál la tasa de variabilidad de los resultados es menor que la de los otros algoritmos.
+
+Pasando a analizar los datos de \textbf{Ionosphere}, podemos ver que \textit{RELIEF} es el que obtiene la tasa media de
+clasificación más alta, dejando casi igualados al 1-NN y a la búsqueda local. Además, es el que ofrece un valor de tasa
+de clasificación máximo más elevado con un 91.43\%. Sin embargo, el que obtiene una menor desviación típica es el 1-NN, con
+lo cuál, en ese caso, los datos no estarán tan dispersos. La búsqueda local se queda muy atrás en cuanto a desviación típica,
+siendo la que tiene un valor más alto, significando esto que hay una mayor variabilidad de resultados dentro del conjunto.
+Sin embargo, siguiendo de nuevo el mismo esquema, por la tasa de reducción obtenida en la búsqueda local, puede que para
+más datos sea la que mejor generalice, pero como el conjunto es finito y no se disponen de más, no se puede llegar a
+determinar con ciencia cierta cuál sería su comportamiento.
+
+Esto se puede ver en el siguiente gráfico, donde se puede ver que hay un valor en la búsqueda local se queda fuera del
+rango de los ``bigotes'', haciendo que la desviación típica tenga un valor más elevado:
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.8]{img/boxplot.png}
+\caption{\textit{Boxplot} que compara los tres algoritmos.}
+\end{figure}
+
+\subsection{Experimentación}
 
 \newpage
+
+
 
 \begin{thebibliography}{5}
 
