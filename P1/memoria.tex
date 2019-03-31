@@ -10,6 +10,11 @@
 \usepackage{amsmath}						% Simbolos matematicos
 \usepackage{enumitem}						% Enumeraciones
 \usepackage[linesnumbered,ruled,vlined]{algorithm2e}	% Pseudocodigo
+\usepackage{listings}
+
+\lstset{
+	language=bash
+}
 
 
 % Configuracion de encabezados y pies de pagina
@@ -525,6 +530,84 @@ $orden\_caracteristicas \gets $ Permutacion(1 \KwTo $N$)
 \newpage
 
 \section{Desarrollo de la práctica}
+
+La práctica se ha implementado en \textbf{Python3} y ha sido probada en la versión 3.7.1. Por tanto, se recomienda
+encarecidamente utilizar un intérprete de Python3 al ejecutar el código y no uno de la versión 2.X, debio a problemas
+de compatibilidad con ciertas funciones del lenguaje. Se ha probado el código sobre Linux Mint 19 y al estar basado en
+Ubuntu 18 no debería haber problemas de compatibilidad con otros sistemas, además de que Python es un lenguaje muy portable.
+No se ha probado en el entorno \textbf{conda}, pero si se consiguen instalar los módulos necesarios, no debería haber
+problemas.
+
+A la hora de implementar el software, se han utilizado tanto módulos ya incluidos en Python, como el módulo \textbf{time}
+para la medición de tiempos, como módulos científicos y para \textit{machine learning}, como por ejemplo \textbf{numpy} y
+\textbf{sklearn}. Este último se ha utlizado para poder dividir los datos para el \textbf{5 Fold Cross Validation}
+y para obtener un clasificador KNN que poder utilizar para poder probar los resultados obtenidos por cada uno de los
+algoritmos. Para la visualización de datos se ha utilizado \textbf{pandas}, ya que permite conseguir una visualización rápida
+de estos gracias a los DataFrames.
+
+Adicionalmente, la estructura de \textbf{KDTree} utilizada ha sido sacada de un módulo externo llamado
+\textbf{pykdtree}, cuyo enlace puede ser encontrado en las referencias. Este módulo está implementado en \textbf{Cython} y
+\textbf{C} y también utiliza \textbf{OMP}, con lo cuál su rendimiento va a ser muy superior a otras implementaciones como
+por ejemplo el \textbf{cKDTree} de \textbf{scipy}\footnote{De hecho, pykdtree está basado en cKDTree y libANN, cogiendo lo
+mejor de cada implementación y paralelizando el código con OMP para conseguir unos rendimientos muy superiores a ambos,
+tanto a la hora de crear el árbol como para hacer consultas.}. En cuanto a su uso, las funciones y la forma de construirlo
+son las mismas que las de cKDTree, con lo cuál se puede consultar su documentación para obtener más información sobre
+su uso.
+
+Siendo ahora más concretos en cuanto a la implementación, se ha creado una función para cada uno de los algoritmos que se
+han implementado. Estas funciones se encargan de recorrer las particiones creadas y de ejecutar los respectivos
+algoritmos pasándoles los datos, además de encargarse de recopilar información estadística para mostrarla luego por
+pantalla. Se han utilizado dos semillas aleatorias las cuáles están fijas en el código: una para dividir los datos, y otra en
+la búsqueda local, que se fija al principio, justo antes de inicializar los $W$, como se puede ver en el pseudocódigo. Los
+ficheros ARFF proporcionados se han convertido al formato CSV con un script propio, con el objetivo de facilitar la lectura
+de los datos. Estos archivos también se proporcionan junto con el código fuente implementado.
+
+\newpage
+
+\section{Manual de usuario}
+
+Para poder ejecutar el programa, se necesita un intérprete de \textbf{Python3}, como se ha mencionado anteriormente. Además,
+para poder satisfacer las dependencias se necesita el gestor de paquetes \textbf{pip} (preferiblemente \textbf{pip3}).
+
+Se recomienda instalar las dependencias, las cuáles vienen en el archivo \textbf{requirements.txt}, ya que sin ellas, el
+programa no podrá funcionar. Se recomienda utilizar el script de bash incluido para realizar la instalación, ya que se
+encarga de instalarlo en un entorno virtual para no causar problemas de versiones con paquetes que ya se tengan instaladas en
+el equipo o para no instalar paquetes no deseados. Una vez instalados, para poder utilizar el entorno creado se debe ejecutar
+el siguiente comando:
+
+\begin{lstlisting}
+	$ source ./env/bin/activate
+\end{lstlisting}
+
+Para desactivar el entorno virtual, simplemente basta con ejecutar:
+
+\begin{lstlisting}
+	(env) $ deactivate
+\end{lstlisting}
+
+Para ejecutar el programa basta con ejecutar el siguiente comando:
+
+\begin{lstlisting}
+	$ python3 practica1.py [archivo] [algoritmo]
+\end{lstlisting}
+
+Los argumentos \textbf{archivo} y \textbf{algoritmo} son obligatorios, y sin ellos el programa lanzará una excepción. En
+cuanto a sus posibles valores:
+
+\begin{itemize}[label=\textbullet]
+	\item \textbf{archivo} puede ser \textbf{colposcopy}, \textbf{ionosphere} o \textbf{texture}.
+	\item \textbf{algoritmo} puede ser \textbf{knn}, \textbf{relief} o \textbf{local}.
+\end{itemize}
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.35]{img/out_example.png}
+\caption{Ejemplo de salida de la ejecución con los datos \textbf{texture} y el algoritmo \textbf{local}.}
+\end{figure}
+
+\newpage
+
+\section{Análisis}
 
 \newpage
 

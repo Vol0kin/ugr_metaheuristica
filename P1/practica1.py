@@ -540,8 +540,10 @@ if __name__ == '__main__':
         classifier = local_search_classifier
 
     print('Conjunto de datos: {}'.format(in_file))
+
     # Llamar a la funcion de clasificacion y combinar los datos
     class_rate, red_rate, aggrupation, times = classifier(train_part, test_part)
+    print('Tiempo total: {}'.format(times.sum()))
 
     class_rate *= 100
     red_rate *= 100 
@@ -568,4 +570,3 @@ if __name__ == '__main__':
                            columns=['%_clas', '%_red', 'Agr.', 'T'])
 
     print(stat_df)
-    print('\nTiempo total: {}'.format(times.sum()))
