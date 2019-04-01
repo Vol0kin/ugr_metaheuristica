@@ -517,7 +517,7 @@ if __name__ == '__main__':
         raise ValueError('Error: la funcion tiene que ser una de las siguientes: {}'.format(functions))
 
     # Determinar archivo CSV de entrada
-    csv_file = 'data/' + in_file + '.csv'
+    csv_file = '../BIN/' + in_file + '.csv'
 
     # Cargar el archivo csv que contiene los datos y obtener la muestra
     df = pd.read_csv(csv_file)
