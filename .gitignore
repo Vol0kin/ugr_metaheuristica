@@ -386,3 +386,5 @@ TSWLatexianTemp*
 *.sta
 
 P1/out/*
+P1/run.sh
+P1/boxplots.py

@@ -1,14 +1,14 @@
 \documentclass[11pt,a4paper]{article}
-\usepackage[spanish]{babel}					% Utilizar español
-\usepackage[utf8]{inputenc}					% Caracteres UTF-8
-\usepackage{graphicx}						% Imagenes
-\usepackage[hidelinks]{hyperref}			% Poner enlaces sin marcarlos en rojo
-\usepackage{fancyhdr}						% Modificar encabezados y pies de pagina
-\usepackage{float}							% Insertar figuras
-\usepackage[textwidth=390pt]{geometry}		% Anchura de la pagina
-\usepackage[nottoc]{tocbibind}				% Referencias (no incluir num pagina indice en Indice)
-\usepackage{amsmath}						% Simbolos matematicos
-\usepackage{enumitem}						% Enumeraciones
+\usepackage[spanish,es-nodecimaldot]{babel}	% Utilizar español
+\usepackage[utf8]{inputenc}						% Caracteres UTF-8
+\usepackage{graphicx}							% Imagenes
+\usepackage[hidelinks]{hyperref}				% Poner enlaces sin marcarlos en rojo
+\usepackage{fancyhdr}							% Modificar encabezados y pies de pagina
+\usepackage{float}								% Insertar figuras
+\usepackage[textwidth=390pt]{geometry}			% Anchura de la pagina
+\usepackage[nottoc]{tocbibind}					% Referencias (no incluir num pagina indice en Indice)
+\usepackage{amsmath}							% Simbolos matematicos
+\usepackage{enumitem}							% Enumeraciones
 \usepackage[linesnumbered,ruled,vlined]{algorithm2e}	% Pseudocodigo
 \usepackage{listings}
 
@@ -26,7 +26,6 @@
 \rfoot{\thepage}
 \renewcommand{\headrulewidth}{0.4pt}		% Linea cabeza de pagina
 \renewcommand{\footrulewidth}{0.4pt}		% Linea pie de pagina
-\decimalpoint								% Hacer que los números decimales usen . en vez de ,
 
 \begin{document}
 \pagenumbering{gobble}
@@ -548,13 +547,13 @@ algoritmos. Para la visualización de datos se ha utilizado \textbf{pandas}, ya 
 de estos gracias a los DataFrames.
 
 Adicionalmente, la estructura de \textbf{KDTree} utilizada ha sido sacada de un módulo externo llamado
-\textbf{pykdtree}, cuyo enlace puede ser encontrado en las referencias. Este módulo está implementado en \textbf{Cython} y
-\textbf{C} y también utiliza \textbf{OMP}, con lo cuál su rendimiento va a ser muy superior a otras implementaciones como
-por ejemplo el \textbf{cKDTree} de \textbf{scipy}\footnote{De hecho, pykdtree está basado en cKDTree y libANN, cogiendo lo
+\textbf{pykdtree}\cite{pykdtree}. Este módulo está implementado en \textbf{Cython} y \textbf{C} y también utiliza
+\textbf{OMP}, con lo cuál su rendimiento va a ser muy superior a otras implementaciones como por ejemplo el \textbf{cKDTree}
+de \textbf{scipy}\footnote{De hecho, pykdtree está basado en cKDTree y libANN, cogiendo lo
 mejor de cada implementación y paralelizando el código con OMP para conseguir unos rendimientos muy superiores a ambos,
 tanto a la hora de crear el árbol como para hacer consultas.}. En cuanto a su uso, las funciones y la forma de construirlo
-son las mismas que las de cKDTree, con lo cuál se puede consultar su documentación para obtener más información sobre
-su uso.
+son las mismas que las de cKDTree, con lo cuál se puede consultar su documentación\cite{ckdtree} para obtener más información
+sobre su uso.
 
 Siendo ahora más concretos en cuanto a la implementación, se ha creado una función para cada uno de los algoritmos que se
 han implementado. Estas funciones se encargan de recorrer las particiones creadas y de ejecutar los respectivos
@@ -754,6 +753,16 @@ se vea qué porcentaje de los $w_i \in W$ eran menores a 0.2), y por tanto, si s
 búsqueda local generalizaría mejor. Es importante destacar, además, que \textit{RELIEF} tiene una desviación típica menor,
 con lo cuál la tasa de variabilidad de los resultados es menor que la de los otros algoritmos.
 
+Lo descrito anteriormente se puede ver en el siguiente \textit{boxplot}, donde se puede ver que uno de los resultados
+obtenidos por la búsqueda local se salen de los ``bigotes'', lo cuál hace que el valor de la desviación típica sea mucho
+más grande:
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.8]{img/box_colposcopy.png}
+\caption{\textit{Boxplot} que compara los algoritmos en Colposcopy.}
+\end{figure}
+
 Pasando a analizar los datos de \textbf{Ionosphere}, podemos ver que \textit{RELIEF} es el que obtiene la tasa media de
 clasificación más alta, dejando casi igualados al 1-NN y a la búsqueda local. Además, es el que ofrece un valor de tasa
 de clasificación máximo más elevado con un 91.43\%. Sin embargo, el que obtiene una menor desviación típica es el 1-NN, con
@@ -769,20 +778,189 @@ rango de los ``bigotes'', haciendo que la desviación típica tenga un valor má
 \begin{figure}[H]
 \centering
 \includegraphics[scale=0.8]{img/boxplot.png}
-\caption{\textit{Boxplot} que compara los tres algoritmos.}
+\caption{\textit{Boxplot} que compara los algoritmos en Ionosphere.}
 \end{figure}
+
+Para finalizar el análisis, observermos que sucede con el conjunto de datos \textbf{Texture}. En este caso, de nuevo, nos
+encontramos que \textit{RELIEF} ofrece la mayor tasa de clasificación, seguido del 1-NN, y en último lugar la búsqueda local.
+A pesar de estar en último lugar, los resultados de la búsqueda local no dejan de ser bastante buenos, ya que están por
+encima del 90\% de tasa de clasificación. Y, como sucedió en el caso anterior, las desviaciones típicas sitúan al 1-NN
+en mejor posición, seguido de \textit{RELIEF}, y teniendo la búsqueda local en último lugar. Por tanto, la búsqueda local
+tendrá una variabilidad de los resultados muy alta, mientras que en el caso del 1-NN casi no habrá, y en el \textit{RELIEF}
+habrá cierta variabilidad, pero de forma muy moderada. De nuevo, insistiendo en lo que ya se ha dicho hasta ahora : la
+búsqueda local reduce mucho la cantidad de características utilizadas, y por tanto, si llegan a haber más datos, podría darse
+el caso de que generalizase mejor.
+
+En el siguiente \textit{boxplot} se puede ver lo descrito anteriormente de forma gráfica:
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.8]{img/box_texture.png}
+\caption{\textit{Boxplot} que compara los algoritmos en Texture.}
+\end{figure}
+
+Para ver el comportamiento de la búsqueda local, vamos a observar los siguientes gráficos, que describen la evolución de
+las tasas de crecimiento y reducción, y del valor \textit{fitness} en la Partición 3 del conjunto de datos \textbf{Texture}:
+
+\begin{figure}[H]
+\centering
+\begin{minipage}{.5\textwidth}
+	\centering
+	\includegraphics[scale=0.43]{img/acc_texture.png}
+\end{minipage}%
+\begin{minipage}{.5\textwidth}
+	\centering
+	\includegraphics[scale=0.43]{img/red_texture.png}
+\end{minipage}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.6]{img/fit_texture.png}
+\end{figure}
+
+Se puede observar que la tasa de clasificación evoluciona de manera muy abrupta, ya que a medida que van pasando las
+evaluaciones su valor se ve, o bien incrementado, o bien decrementado, pero sin seguir ninguna tendencia fija, influenciado
+posiblemente por la tasa de reducción, la cuál sí que crece de una forma más suavizada. Como el objetivo es maximizar la
+función objetivo, es posible que sea mucho más fácil ir mejorándola a medida que se eliminan características que intentado
+como tal mejorar la tasa de clasificación. Por eso se puede ver su evolución tan poco natural al compararla por ejemplo con
+la tasa de reducción, la cuál si que crece de manera maś suave. La agrupación de ambos elementos se puede ver claramente que
+siempre va evolucionando, hasta que llega un momento en el cuál no se puede mejorar más. Hay que prestar atención en que la
+búsqueda local no llega a completar 15000 iteraciones si no que para mucho antes, dándose la condición de que se han
+explorado $20 \cdot N$ vecinos sin éxito.
 
 \subsection{Experimentación}
 
+En esta sección queremos presentar una moficación realizada para ver si se consiguen mejores resultados.
+
+Esta modificación consiste en mezclar el algoritmo \textit{RELIEF} y la búsqueda local. Es decir, se pretende que los valores
+iniciales de $W$ no sean valores aleatorios, si no más bien que reciba los valors del algoritmo greedy, y que a partir de ahí,
+intente mejorarlos. Por tanto, queremos combinar los buenos resultados del algoritmo greedy con la capacidad de explorar
+que ofrece la búsqueda local.
+
+Los resultados se pueden ver en las tablas de a continuación:
+
+\begin{table}[H]
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\cline{2-13}
+                                            & \multicolumn{4}{c|}{\textbf{Colposcopy}}                                                   & \multicolumn{4}{c|}{\textbf{Ionosphere}}                                                   & \multicolumn{4}{c|}{\textbf{Texture}}                                                      \\ \cline{2-13} 
+                                            & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 1}}  & 64,41                      & 80,65                   & 72,53                  & 1,16521    & 85,92                      & 88,24                   & 87,08                  & 0,74191    & 87,27                      & 85,00                   & 86,14                  & 0,98343    \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 2}}  & 78,95                      & 82,26                   & 80,60                  & 1,73750    & 92,86                      & 85,29                   & 89,08                  & 0,92928    & 90,00                      & 85,00                   & 87,50                  & 0,96770    \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 3}}  & 73,68                      & 88,71                   & 81,20                  & 0,53926    & 87,14                      & 85,29                   & 86,22                  & 1,22533    & 92,73                      & 85,00                   & 88,86                  & 0,87373    \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 4}}  & 73,68                      & 87,10                   & 80,39                  & 0,66275    & 95,71                      & 85,29                   & 90,50                  & 1,10265    & 92,73                      & 82,50                   & 87,61                  & 0,72119    \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 5}}  & 80,70                      & 91,94                   & 86,32                  & 0,93132    & 80,00                      & 85,29                   & 82,65                  & 0,74525    & 86,36                      & 82,50                   & 84,43                  & 0,84195    \\ \hline
+\multicolumn{1}{|c|}{\textbf{Media}}        & 74,28                      & 86,13                   & 80,21                  & 1,00721    & 88,33                      & 85,88                   & 87,10                  & 0,94888    & 89,82                      & 84,00                   & 86,91                  & 0,87760    \\ \hline
+\multicolumn{1}{|c|}{\textbf{Máximo}}       & 80,70                      & 91,94                   & 86,32                  & 1,73750    & 95,71                      & 88,24                   & 90,50                  & 1,22533    & 92,73                      & 85,00                   & 88,86                  & 0,98343    \\ \hline
+\multicolumn{1}{|c|}{\textbf{Mínimo}}       & 64,41                      & 80,65                   & 72,53                  & 0,53926    & 80,00                      & 85,29                   & 82,65                  & 0,74191    & 86,36                      & 82,50                   & 84,43                  & 0,72119    \\ \hline
+\multicolumn{1}{|c|}{\textbf{Mediana}}      & 73,68                      & 87,10                   & 80,60                  & 0,93132    & 87,14                      & 85,29                   & 87,08                  & 0,92928    & 90,00                      & 85,00                   & 87,50                  & 0,87373    \\ \hline
+\multicolumn{1}{|c|}{\textbf{Desv. Típica}} & 5,68                       & 4,16                    & 4,42                   & 0,42466    & 5,51                       & 1,18                    & 2,69                   & 0,19223    & 2,66                       & 1,22                    & 1,51                   & 0,09494    \\ \hline
+\end{tabular}
+}%
+\caption{Resultados obtenidos por el algoritmo BL+\textit{RELIEF} en el problema del APC.}
+\end{table}
+
+\begin{table}[H]
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\cline{2-13}
+                                         & \multicolumn{4}{c|}{\textbf{Colposcopy}}                                                   & \multicolumn{4}{c|}{\textbf{Ionosphere}}                                                   & \multicolumn{4}{c|}{\textbf{Texture}}                                                      \\ \cline{2-13} 
+                                         & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} \\ \hline
+\multicolumn{1}{|c|}{\textbf{1-NN}}      & 74,88                      & 0                       & 37,44                  & 0,00039    & 86,33                      & 0                       & 43,16                  & 0,00039    & 92,36                      & 0                       & 46,18                  & 0,00049    \\ \hline
+\multicolumn{1}{|c|}{\textbf{RELIEF}}    & 74,23                      & 39,35                   & 56,79                  & 0,03659    & 88,89                      & 2,94                    & 45,92                  & 0,03987    & 94,91                      & 7,50                    & 51,20                  & 0,08739    \\ \hline
+\multicolumn{1}{|c|}{\textbf{BL}}        & 72,06                      & 81,29                   & 76,68                  & 2,73476    & 86,32                      & 88,24                   & 87,28                  & 0,67943    & 91,09                      & 82,50                   & 86,80                  & 1,09861    \\ \hline
+\multicolumn{1}{|c|}{\textbf{BL+RELIEF}} & 74,28                      & 86,13                   & 80,21                  & 1,00721    & 88,33                      & 85,88                   & 87,10                  & 0,94888    & 89,82                      & 84,00                   & 86,91                  & 0,87760    \\ \hline
+\end{tabular}
+}%
+\caption{Valores medios de los cuatro algoritmos en el problema del APC.}
+\end{table}
+
+Como se puede ver a simple vista, partiendo de la búsqueda local como base, inicializar el vector $W$ con los valores
+obtenidos por el algoritmo \textit{RELIEF} presenta ciertas mejoras en algunos datos, como por ejemplo en \textbf{Colposcopy}
+y en \textbf{Ionosphere}, llegando a superar en el primer caso a \textit{RELIEF} y quedándose muy cerca de hacerlo en el
+segundo. Sin embargo, a estas mejoras también le deben seguir algunos empeoramientos. Por ejemplo, en el conjunto de datos
+\textbf{Texture} se queda muy lejos de los tres algoritmos, siendo el peor detodos. Además, en todos los casos la desviación
+típica obtenida es mayor que la del resto de algoritmos, con lo cuál la variabilidad de los resultados será mucho mayor que
+en los otros casos.
+
+En el siguiente \textit{boxplot} se puede ver como son los resultados para cada conjunto de datos:
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.6]{img/box_local_r.png}
+\caption{\textit{Boxplot} de los distintos datos con BL+\textit{RELIEF}.}
+\end{figure}
+
+Y en cuanto al proceso de búsqueda local, cogiendo de nuevo la Partición 3 del conjunto \textbf{Texture}, obtenemos las
+siguientes gráficas de la evolución de las tasas de clasificación y reducción y del valor de la función \textit{fitness} a
+medida que se van realizando evaluaciones de la función objetivo:
+
+\begin{figure}[H]
+\centering
+\begin{minipage}{.5\textwidth}
+	\centering
+	\includegraphics[scale=0.43]{img/acc_localr.png}
+\end{minipage}%
+\begin{minipage}{.5\textwidth}
+	\centering
+	\includegraphics[scale=0.43]{img/red_localr.png}
+\end{minipage}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.6]{img/fit_localr.png}
+\end{figure}
+
+Como se puede ver, esta vez la tasa de clasificación comienza en un valor muy elevado, pero a medida que van pasando
+evaluaciones de la función objetivo, se puede ver que su valor va bajando, siendo el motivo seguramente que muchas
+características se veían reducidas. Esto se debe, de nuevo, a que es más fácil mejorar la función objetivo reduciendo el
+número de características que mejorando la tasa de clasificación como tal. Comparando la tasa de clasificación con la tasa
+de reducción y la agrupación, se puede ver muy claramente como estas dos crecen de una forma mucho más natural, por el motivo
+comentado anteriormente.
+
+De este pequeño estudio podemos concluir que combinar las dos técnicas nos ha permitido mejorar las tasas de clasificación
+en algunos conjuntos de datos, con el precio de empeorar mucho en otros y de aumentar la variabilidad de los resultados
+que se obtienen, ya que las desviaciones típicas eran muy elevadas. Por tanto, aunque a corto plazo parece que se haya
+mejorado, mirando los resultados obtenidos con una perspectiva más amplia podemos concluir que no merece la pena combinar
+estas dos técnicas esperando conseguir algún tipo de resultado milagroso que resuelva todos los casos con resultados casi
+perfectos. Además, nada garantiza que el $W$ obtenido por el algoritmo \textit{RELIEF} no sea un óptimo local, y que
+intentar mejorar a partir de este sea imposible, cosa que no pasaría si se iniciase desde un punto aleatorio. Por tanto, es
+mejor decantarse por alguna de las técnicas estudiadas anteriormente.
+
+\subsection{Conclusión}
+
+Como conlcusión de este análisis, podemos decir que en los casos estudiados, y de momento, el mejor algoritmo es
+\textit{RELIEF}, ya que es el que ofrece mejores tasas de clasificación con unas desviaciones típicas bastante aceptables
+(no son tan buenas como las del 1-NN, pero son mucho mejores que las de la búsqueda local). La búsqueda local ha demostrado
+que no es la mejor solución en este caso, pero como se ha dicho anteriormente, a lo mejor disponiendo de más datos ésta
+hubiese mostrado otra tendencia. Asi que por el momento, nos quedamos con \textit{RELIEF} hasta que encontremos una técnica
+mejor.
+
 \newpage
-
-
 
 \begin{thebibliography}{5}
 
-\bibitem{nombre-referencia}
-Texto referencia
-\\\url{https://url.referencia.com}
+\bibitem{pykdtree}
+Repositroio de GitHub de pykdtree.
+\\\url{https://github.com/storpipfugl/pykdtree}
+
+\bibitem{ckdtree}
+Documentación de cKDTree.
+\\\url{https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.cKDTree.html}
+
+\bibitem{kdtree}
+Información sobre la estructura de datos KDTree.
+\\\url{https://en.wikipedia.org/wiki/K-d_tree}
+
+\bibitem{stratifiedkfold}
+Documentación del StratifiedKFold para dividir las muestras.
+\\\url{https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.StratifiedKFold.html}
+
+\bibitem{kneighbors}
+Documentación del clasificador KNeighborsClassifier.
+\\\url{https://scikit-learn.org/stable/modules/generated/sklearn.neighbors.KNeighborsClassifier.html}
 
 \end{thebibliography}
 
