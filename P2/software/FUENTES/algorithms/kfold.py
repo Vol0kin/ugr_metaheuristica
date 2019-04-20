@@ -1,6 +1,8 @@
 import numpy as np
 from sklearn.model_selection import StratifiedKFold         # Particionar muestra
 
+# Modulo para la normalizacion y creacion de las muestras
+
 def normalize_data(sample):
     """
     Funcion para normalizar los datos de una muestra. Convierte

@@ -1,5 +1,7 @@
 import numpy as np
 
+# Modulo para medir valores de reduccion, precision y fitness
+
 def reduction_rate(w, threshold=0.2):
     """
     Funcion que calcula la tasa de reduccion de un vector w.
