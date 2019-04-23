@@ -84,6 +84,26 @@ def arithmetic_crossover(parents, chromosomes):
 
 
 ###############################################################################
+#                        Operador de mutacion                                 #
+###############################################################################
+
+def mutation_operator(chromosome, gen):
+    """
+    Funcion para generar una mutacion en el gen de un cromosoma
+
+    :param chromosome: Cromosoma a mutar
+    :param gen: Gen del cromosoma a mutar
+    """
+
+    # Aplicar mutacion (sumarle valor generado por una normal de media 0 
+    # y desviacion tipica 0.3)
+    chromosome[gen] += np.random.normal(0.0, 0.3)
+
+    # Normalizar el cromosoma
+    np.clip(chromosome, 0.0, 1.0)
+
+
+###############################################################################
 #                   Torneo binario de seleccion                               #
 ###############################################################################
 
@@ -114,6 +134,27 @@ def binary_tournament(data, labels, parents, chromosomes):
         best_parent = parents[1]
 
     return best_parent
+
+
+###############################################################################
+#                           Ordenar la poblacion                              #
+###############################################################################
+
+def sort_population(fitness_values, population):
+    """
+    Funcion para ordenar la poblacion segun su valor de la funcion fitness
+
+    :param fitness_values: Lista de valores fitness
+    :param population: Conjunto de cromosomas que ordenar
+    """
+
+    # Obtener los indices ordenados de los valores fitness
+    # en orden descendente (de mayor a menor)
+    index = np.argsort(fitness_values)[::-1]
+
+    # Ordenar valores fitness y poblacion
+    fitness_values = fitness_values[index]
+    population = population[index]
 
 
 ###############################################################################
