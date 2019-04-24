@@ -107,30 +107,25 @@ def mutation_operator(chromosome, gen):
 #                   Torneo binario de seleccion                               #
 ###############################################################################
 
-def binary_tournament(data, labels, parents, chromosomes):
+def binary_tournament(pop_fitness, parents):
     """
     Funcion que simula un torneo binario entre dos padres para determinar el
     mejor de ellos
 
-    :param data: Conjunto de vectores de caracteristicas
-    :param labels: Conjunto de etiquetas, una por cada fila de datos
+    :param pop_fitness: Valors fitness de la poblacion
     :param parents: Indices de los padres que comparar
-    :param chromosomes: Conjunto de cromosomas
 
     :return Devuelve el mejor padre segun la funcion fitness
     """
-    # Obtener los cromosomas de los padres
-    parents_chromosomes = chromosomes[parents, :]
 
-    # Calcular valors fitness de los padres
-    fit_value_parent1 = metrics.evaluate(data, labels, parents_chromosomes[0])
-    fit_value_parent2 = metrics.evaluate(data, labels, parents_chromosomes[1])
+    # Obtener los valores fitness de los padres
+    parents_fitness = pop_fitness[parents]
 
     # Elegir como mejor padre el primero
     best_parent = parents[0]
 
     # Comprobar si el segundo padre es mejor que el primero
-    if fit_value_parent1 < fit_value_parent2:
+    if parents_fitness[0] < parents_fitness[1]:
         best_parent = parents[1]
 
     return best_parent
@@ -165,14 +160,50 @@ def genetic_algorithm(data, labels, cross_rate, mutation_rate, cross_func,
                       chromosomes=30, max_evals=15000):
     
     
-    n_gens = data.shape[1]
+    genes = data.shape[1]
+    
+    if cross_func == blx_alpha_crossover:
+        expected_crosses = int(chromosomes / 2 * cross_rate)
+    else:
+        expected_crosses = int(chromosomes * cross_rate)
 
-    expected_crosses = chromosomes / 2 * cross_rate
-    expected_mutations = chromosomes * n_gens * mutation_rate
+    expected_mutations = chromosomes * genes * mutation_rate
 
     n_evaluations = 0
 
-    while n_evaluations < max_evals:
-        None
+    # Generar poblacion inicial y evaluarla
+    population = generate_initial_population(chromosomes, genes)
+    pop_fitness = metrics.evaluate_population(data, labels, population)
 
-    return None
+    n_evaluations += chromosomes
+
+    # Ordenar poblacion por valor fitness
+    sort_population(pop_fitness, population)
+
+    while n_evaluations < max_evals:
+
+        # Crear una lista de padres
+        parents_list = []
+
+        # Realizar numero de cromosomas torneos binarios para determinar
+        # quienes seran los padres
+        for _ in range(chromosomes):
+
+            # Elegir dos cromosomas aleatorios
+            parents = np.random.choice(chromosomes, 2)
+
+            # Realizar el torneo binario
+            parents_list.append(binary_tournament(pop_fitness, parents))
+
+        # Convertir padres obtenidos a array
+        parents = np.array(parents_list)
+
+        # Obtener los padres que participaran en el cruce
+        cross_parents = parents.reshape(-1, 2)[:expected_crosses, :]
+
+        # Aplicar operador de cruce para obtener los descendientes
+        offspring = cross_func(parents, population)
+
+
+
+    return population[0]
