@@ -56,7 +56,11 @@ def blx_alpha_crossover(parents, chromosomes, alpha=0.3):
 
     # Generar hijos y normalizarlos al rango [0, 1]
     children = np.random.uniform(c_min - i * alpha, c_max + i * alpha)
-    np.clip(children, 0.0, 1.0)
+
+    children[children < 0.0] = 0.0
+    children[children > 1.0] = 1.0
+
+#    np.clip(children, 0.0, 1.0)
 
     return children
 
@@ -87,20 +91,24 @@ def arithmetic_crossover(parents, chromosomes):
 #                        Operador de mutacion                                 #
 ###############################################################################
 
-def mutation_operator(chromosome, gen):
+def mutation_operator(population, chromosomes, genes):
     """
     Funcion para generar una mutacion en el gen de un cromosoma
 
-    :param chromosome: Cromosoma a mutar
-    :param gen: Gen del cromosoma a mutar
+    :parm population: Poblacion que mutar
+    :param chromosomes: Cromosomas a mutar
+    :param genes: Genes de los cromosomas a mutar
     """
 
-    # Aplicar mutacion (sumarle valor generado por una normal de media 0 
+    # Aplicar mutacion (sumarle valor generado por una normal de media 0
     # y desviacion tipica 0.3)
-    chromosome[gen] += np.random.normal(0.0, 0.3)
+
+    population[chromosomes, genes] += np.random.normal(0.0, 0.3, chromosomes.shape[0])
 
     # Normalizar el cromosoma
-    np.clip(chromosome, 0.0, 1.0)
+    population[population < 0.0] = 0.0
+    population[population > 1.0] = 1.0
+    #np.clip(population, 0.0, 1.0)
 
 
 ###############################################################################
@@ -148,8 +156,10 @@ def sort_population(fitness_values, population):
     index = np.argsort(fitness_values)[::-1]
 
     # Ordenar valores fitness y poblacion
-    fitness_values = fitness_values[index]
-    population = population[index]
+    sorted_fitness = fitness_values[index]
+    sorted_population = population[index]
+
+    return sorted_fitness, sorted_population
 
 
 ###############################################################################
@@ -161,6 +171,7 @@ def genetic_algorithm(data, labels, cross_rate, mutation_rate, cross_func,
     
     
     genes = data.shape[1]
+    print("numero de genes ", genes)
     
     if cross_func == blx_alpha_crossover:
         expected_crosses = int(chromosomes / 2 * cross_rate)
@@ -168,6 +179,11 @@ def genetic_algorithm(data, labels, cross_rate, mutation_rate, cross_func,
         expected_crosses = int(chromosomes * cross_rate)
 
     expected_mutations = chromosomes * genes * mutation_rate
+
+    mutate_generation = expected_mutations
+
+    print("numero esperado de cruces: ", expected_crosses)
+    print("numero esperado de mutaciones: ", expected_mutations)
 
     n_evaluations = 0
 
@@ -178,10 +194,10 @@ def genetic_algorithm(data, labels, cross_rate, mutation_rate, cross_func,
     n_evaluations += chromosomes
 
     # Ordenar poblacion por valor fitness
-    sort_population(pop_fitness, population)
+    pop_fitness, population = sort_population(pop_fitness, population)
 
     while n_evaluations < max_evals:
-
+        print("evaluaciones al comienzo del bucle ", n_evaluations)
         # Crear una lista de padres
         parents_list = []
 
@@ -191,6 +207,8 @@ def genetic_algorithm(data, labels, cross_rate, mutation_rate, cross_func,
 
             # Elegir dos cromosomas aleatorios
             parents = np.random.choice(chromosomes, 2)
+
+            #print("padres: ", parents)
 
             # Realizar el torneo binario
             parents_list.append(binary_tournament(pop_fitness, parents))
@@ -202,8 +220,47 @@ def genetic_algorithm(data, labels, cross_rate, mutation_rate, cross_func,
         cross_parents = parents.reshape(-1, 2)[:expected_crosses, :]
 
         # Aplicar operador de cruce para obtener los descendientes
-        offspring = cross_func(parents, population)
+        offspring = cross_func(cross_parents, population)
+        print("numero de descendientes: ", offspring.shape)
 
+        # Obtener los descendientes sin cruzar
+        offspring_no_cross = population[parents[expected_crosses * 2:], :]
+        print("numero de descendientes sin cruce: ", offspring_no_cross.shape)
 
+        # Combinar los dos en la nueva poblacion 
+        new_population = np.r_[offspring, offspring_no_cross]
+
+        # Proceso de mutacion
+        if mutate_generation >= 1.0:
+            n_mutations = int(mutate_generation)
+            mutate_generation = expected_mutations
+
+            mut_chromosome = np.random.choice(chromosomes, n_mutations, replace=True)
+            mut_gene = np.random.choice(genes, n_mutations)
+
+            print(mut_chromosome)
+            print(mut_gene)
+
+            mutation_operator(new_population, mut_chromosome, mut_gene)
+        else:
+            mutate_generation += expected_mutations
+
+        new_pop_fitness = metrics.evaluate_population(data, labels, new_population)
+
+        n_evaluations += chromosomes
+
+        new_pop_fitness, new_population = sort_population(new_pop_fitness, new_population)
+
+        if pop_fitness[0] > new_pop_fitness[-1]:
+            print("elitismo")
+            new_pop_fitness[-1] = pop_fitness[0]
+            new_population[-1] = population[0]
+            new_pop_fitness, new_population = sort_population(new_pop_fitness, new_population)
+
+        population = new_population
+        pop_fitness = new_pop_fitness
+
+        print(population)
+        print(pop_fitness)
 
     return population[0]
