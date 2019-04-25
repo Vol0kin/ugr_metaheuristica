@@ -168,11 +168,12 @@ def sort_population(fitness_values, population):
 
 def genetic_algorithm(data, labels, cross_rate, mutation_rate, cross_func,
                       chromosomes=30, max_evals=15000):
-    
-    
+
+    # Obtener numero de genes
     genes = data.shape[1]
     print("numero de genes ", genes)
     
+    # Obtener numero esperado de cruces y mutaciones
     if cross_func == blx_alpha_crossover:
         expected_crosses = int(chromosomes / 2 * cross_rate)
     else:
@@ -180,11 +181,16 @@ def genetic_algorithm(data, labels, cross_rate, mutation_rate, cross_func,
 
     expected_mutations = chromosomes * genes * mutation_rate
 
+    # Establecer cuando mutar una generacion
     mutate_generation = expected_mutations
+
+    # Establecer indice de los padres que no cruzan
+    index_no_cross = expected_crosses * 2
 
     print("numero esperado de cruces: ", expected_crosses)
     print("numero esperado de mutaciones: ", expected_mutations)
 
+    # Inicializar las evaluaciones
     n_evaluations = 0
 
     # Generar poblacion inicial y evaluarla
@@ -201,8 +207,8 @@ def genetic_algorithm(data, labels, cross_rate, mutation_rate, cross_func,
         # Crear una lista de padres
         parents_list = []
 
-        # Realizar numero de cromosomas torneos binarios para determinar
-        # quienes seran los padres
+        # Realizar tantos torneos binarios como cromosomas haya para
+        # decidir quienes seran los padres
         for _ in range(chromosomes):
 
             # Elegir dos cromosomas aleatorios
@@ -224,7 +230,7 @@ def genetic_algorithm(data, labels, cross_rate, mutation_rate, cross_func,
         print("numero de descendientes: ", offspring.shape)
 
         # Obtener los descendientes sin cruzar
-        offspring_no_cross = population[parents[expected_crosses * 2:], :]
+        offspring_no_cross = population[parents[index_no_cross:], :]
         print("numero de descendientes sin cruce: ", offspring_no_cross.shape)
 
         # Combinar los dos en la nueva poblacion 
@@ -245,18 +251,21 @@ def genetic_algorithm(data, labels, cross_rate, mutation_rate, cross_func,
         else:
             mutate_generation += expected_mutations
 
+        # Evaluar la nueva poblacion
         new_pop_fitness = metrics.evaluate_population(data, labels, new_population)
-
         n_evaluations += chromosomes
 
+        # Ordenar la nueva poblacion por fitness
         new_pop_fitness, new_population = sort_population(new_pop_fitness, new_population)
 
+        # Proceso de elitismo
         if pop_fitness[0] > new_pop_fitness[-1]:
             print("elitismo")
             new_pop_fitness[-1] = pop_fitness[0]
             new_population[-1] = population[0]
             new_pop_fitness, new_population = sort_population(new_pop_fitness, new_population)
 
+        # Aplicar criterio generacional
         population = new_population
         pop_fitness = new_pop_fitness
 
