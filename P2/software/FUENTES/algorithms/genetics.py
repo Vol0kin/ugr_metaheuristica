@@ -171,24 +171,33 @@ def genetic_algorithm(data, labels, cross_rate, mutation_rate, cross_func,
 
     # Obtener numero de genes
     genes = data.shape[1]
-    print("numero de genes ", genes)
-    
-    # Obtener numero esperado de cruces y mutaciones
+    print("Numero de genes ", genes)
+
+    # Obtener numero esperado de cruces, mutaciones y numero de nuevos
+    # cromosomas por generacion
+    # Los valores cambiaran segun la funcion de cruce utilizada
     if cross_func == blx_alpha_crossover:
         expected_crosses = int(chromosomes / 2 * cross_rate)
+        n_new_chromosomes = chromosomes
     else:
+        # Se deben realizar mas cruces debido a que el operador solo produce
+        # un descendiente (el doble que con BLX-alpha)
         expected_crosses = int(chromosomes * cross_rate)
+        n_new_chromosomes = expected_crosses + chromosomes
 
     expected_mutations = chromosomes * genes * mutation_rate
 
-    # Establecer cuando mutar una generacion
+    # Establecer cuando mutar una generacion (se ira acumulando hasta que
+    # tenga un valor mayor o igual a uno, y eso indicara que se debe
+    # mutar en esa generacion)
     mutate_generation = expected_mutations
 
-    # Establecer indice de los padres que no cruzan
+    # Establecer frontera entre padres que se cruzan y padres que no
+    # La frontera viene dada por el doble del numero de parejas
     index_no_cross = expected_crosses * 2
 
-    print("numero esperado de cruces: ", expected_crosses)
-    print("numero esperado de mutaciones: ", expected_mutations)
+    print("Numero esperado de cruces: ", expected_crosses)
+    print("Numero esperado de mutaciones: ", expected_mutations)
 
     # Inicializar las evaluaciones
     n_evaluations = 0
@@ -203,64 +212,107 @@ def genetic_algorithm(data, labels, cross_rate, mutation_rate, cross_func,
     pop_fitness, population = sort_population(pop_fitness, population)
 
     while n_evaluations < max_evals:
-        print("evaluaciones al comienzo del bucle ", n_evaluations)
+        # Crear array de modificados
+        # 0 -> el cromosoma no se ha obtenido por cruce, es igual al de la
+        # poblacion anterior
+        # 1 -> el cromosoma se ha obtenido por cruce o por mutacion
+        modified = np.zeros((chromosomes,), dtype=np.int)
+
+        print("Evaluaciones al comienzo del bucle ", n_evaluations)
         # Crear una lista de padres
         parents_list = []
 
-        # Realizar tantos torneos binarios como cromosomas haya para
-        # decidir quienes seran los padres
-        for _ in range(chromosomes):
+        # Realizar tantos torneos binarios como cromosomas se tengan
+        # que generar 
+        for _ in range(n_new_chromosomes):
 
             # Elegir dos cromosomas aleatorios
             parents = np.random.choice(chromosomes, 2)
 
-            #print("padres: ", parents)
-
             # Realizar el torneo binario
             parents_list.append(binary_tournament(pop_fitness, parents))
 
-        # Convertir padres obtenidos a array
         parents = np.array(parents_list)
 
-        # Obtener los padres que participaran en el cruce
-        cross_parents = parents.reshape(-1, 2)[:expected_crosses, :]
+        # Formar las parejas de padres que se van a cruzar
+        cross_parents = parents[:index_no_cross].reshape(-1, 2)
 
         # Aplicar operador de cruce para obtener los descendientes
         offspring = cross_func(cross_parents, population)
-        print("numero de descendientes: ", offspring.shape)
+
+        # Marcar los cromosomas que se han obtenido por cruce
+        if cross_func == blx_alpha_crossover:
+            modified[: index_no_cross] = 1
+        else:
+            modified[: expected_crosses] = 1
+        print("Numero de descendientes: ", offspring.shape)
 
         # Obtener los descendientes sin cruzar
         offspring_no_cross = population[parents[index_no_cross:], :]
-        print("numero de descendientes sin cruce: ", offspring_no_cross.shape)
+        print("Numero de descendientes sin cruce: ", offspring_no_cross.shape)
 
-        # Combinar los dos en la nueva poblacion 
+        # Generar nueva poblacion
         new_population = np.r_[offspring, offspring_no_cross]
 
         # Proceso de mutacion
         if mutate_generation >= 1.0:
+            # Obtener numero de mutaciones (truncando)
             n_mutations = int(mutate_generation)
+
+            # Reiniciar contador de mutaciones
             mutate_generation = expected_mutations
 
+            # Generar cromosmas y genes a mutar
             mut_chromosome = np.random.choice(chromosomes, n_mutations, replace=True)
             mut_gene = np.random.choice(genes, n_mutations)
 
             print(mut_chromosome)
             print(mut_gene)
 
+            # Aplicar mutacion
             mutation_operator(new_population, mut_chromosome, mut_gene)
+
+            # Indicar que se han modificado los cromosomas correspondientes
+            modified[mut_chromosome] = 1
         else:
+            # Incrementar contador de mutaciones
             mutate_generation += expected_mutations
 
-        # Evaluar la nueva poblacion
-        new_pop_fitness = metrics.evaluate_population(data, labels, new_population)
-        n_evaluations += chromosomes
+        # Evaluar la poblacion
+        new_pop_fitness = []
+
+        for i in range(chromosomes):
+            if modified[i] == 1:
+                # Evaluar nuevo cromosoma
+                new_pop_fitness.append(metrics.evaluate(data, labels, new_population[i]))
+            else:
+                # Como no se ha modificado el cromosoma, se obtiene su valor
+                # fitness de la poblacion anterior
+                fitness_index = i
+
+                # Si se utiliza cruce aritmetico, se debe aplicar un desplazamiento
+                # para poder obetener el indice (debido a que hay mas padres, se tiene
+                # que aplicar un desplazamiento equivalente al numero esperado de cruces)
+                if cross_func == arithmetic_crossover:
+                    fitness_index += expected_crosses
+
+                # Obetener valor fitness de la poblacion anterior
+                new_pop_fitness.append(pop_fitness[parents[fitness_index]])
+
+        new_pop_fitness = np.array(new_pop_fitness)
+
+        # Actualizar el numero de evaluaciones realizadas
+        n_evaluations += modified.sum()
+        print("Evaluaciones realizadas: ", modified.sum())
+        print("Vector de modificados: ", modified)
 
         # Ordenar la nueva poblacion por fitness
         new_pop_fitness, new_population = sort_population(new_pop_fitness, new_population)
 
         # Proceso de elitismo
-        if pop_fitness[0] > new_pop_fitness[-1]:
-            print("elitismo")
+        # Se compara el mejor cromosoma de la poblacion anterior con el mejor de la nueva
+        # Si el de la poblacion anterior es mejor, se conserva
+        if pop_fitness[0] > new_pop_fitness[0]:
             new_pop_fitness[-1] = pop_fitness[0]
             new_population[-1] = population[0]
             new_pop_fitness, new_population = sort_population(new_pop_fitness, new_population)
