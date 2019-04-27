@@ -166,8 +166,9 @@ def sort_population(fitness_values, population):
 #               Implementacion de los algoritmos geneticos                    #
 ###############################################################################
 
-def genetic_algorithm(data, labels, cross_rate, mutation_rate, cross_func,
-                      chromosomes=30, max_evals=15000):
+def generational_genetic_algorithm(data, labels, cross_func, cross_rate=0.7,
+                                   mutation_rate=0.001, chromosomes=30,
+                                   max_evals=15000):
 
     # Obtener numero de genes
     genes = data.shape[1]
@@ -325,3 +326,129 @@ def genetic_algorithm(data, labels, cross_rate, mutation_rate, cross_func,
         print(pop_fitness)
 
     return population[0]
+
+
+def stationary_genetic_algorithm(data, labels, cross_func, cross_rate=1.0,
+                                 mutation_rate=0.001, chromosomes=30,
+                                 max_evals=15000):
+
+    # Obtener numero de genes
+    genes = data.shape[1]
+    n_children = 2
+    print("Numero de genes ", genes)
+    print("Numero de hijos: ", n_children)
+
+    # Obtener numero esperado de cruces, mutaciones y numero de nuevos
+    # cromosomas por generacion
+    # Los valores cambiaran segun la funcion de cruce utilizada
+    if cross_func == blx_alpha_crossover:
+        n_parents = 2
+    else:
+        # Se deben realizar mas cruces debido a que el operador solo produce
+        # un descendiente (el doble que con BLX-alpha)
+        n_parents = 4
+
+    expected_mutations = n_children * genes * mutation_rate
+
+    # Establecer cuando mutar una generacion (se ira acumulando hasta que
+    # tenga un valor mayor o igual a uno, y eso indicara que se debe
+    # mutar en esa generacion)
+    mutate_generation = expected_mutations
+
+
+    print("Numero esperado de mutaciones: ", expected_mutations)
+
+    # Inicializar las evaluaciones
+    n_evaluations = 0
+
+    # Generar poblacion inicial y evaluarla
+    population = generate_initial_population(chromosomes, genes)
+    pop_fitness = metrics.evaluate_population(data, labels, population)
+
+    n_evaluations += chromosomes
+
+    # Ordenar poblacion por valor fitness
+    pop_fitness, population = sort_population(pop_fitness, population)
+
+    while n_evaluations < max_evals:
+
+        print("Evaluaciones al comienzo del bucle ", n_evaluations)
+        # Crear una lista de padres
+        parents_list = []
+
+        # Realizar tantos torneos binarios como cromosomas se tengan
+        # que generar 
+        for _ in range(n_parents):
+
+            # Elegir dos cromosomas aleatorios
+            parents = np.random.choice(chromosomes, 2)
+
+            # Realizar el torneo binario
+            parents_list.append(binary_tournament(pop_fitness, parents))
+
+        parents = np.array(parents_list)
+
+        # Formar las parejas de padres que se van a cruzar
+        cross_parents = parents.reshape(-1, 2)
+        print("Padres: ", cross_parents)
+
+        # Aplicar operador de cruce para obtener los descendientes
+        offspring = cross_func(cross_parents, population)
+
+        print("Numero de descendientes: ", offspring.shape)
+        print(offspring)
+
+
+        # Proceso de mutacion
+        if mutate_generation >= 1.0:
+            # Obtener numero de mutaciones (truncando)
+            n_mutations = int(mutate_generation)
+
+            # Reiniciar contador de mutaciones
+            mutate_generation = expected_mutations
+
+            # Generar cromosmas y genes a mutar
+            mut_chromosome = np.random.choice(n_children, n_mutations, replace=True)
+            mut_gene = np.random.choice(genes, n_mutations)
+
+            print(mut_chromosome)
+            print(mut_gene)
+
+            # Aplicar mutacion
+            mutation_operator(offspring, mut_chromosome, mut_gene)
+        else:
+            # Incrementar contador de mutaciones
+            print("Incrementar contador mutacion")
+            mutate_generation += expected_mutations
+
+        # Evaluar la poblacion
+        offspring_fitness = metrics.evaluate_population(data, labels, offspring)
+
+        offspring_fitness, offspring = sort_population(offspring_fitness, offspring)
+
+        print("Fitness de los hijos: ", offspring_fitness)
+        print("Fitness de los padres a comparar: ", pop_fitness[-2:])
+
+        n_evaluations += n_children
+
+        child_index = 0
+
+        for i in range(-2, 0):
+            if pop_fitness[i] < offspring_fitness[child_index]:
+                print("El hijo es mejor")
+                pop_fitness[i] = offspring_fitness[child_index]
+                population[i] = offspring[i]
+                child_index += 1
+
+        pop_fitness, population = sort_population(pop_fitness, population)
+
+        print(population)
+        print(pop_fitness)
+
+    return population[0]
+
+def genetic_algorithm(data, labels, cross_func, generational=True):
+    if generational == True:
+        return generational_genetic_algorithm(data, labels, cross_func)
+    else:
+        return stationary_genetic_algorithm(data, labels, cross_func)
