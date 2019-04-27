@@ -431,14 +431,13 @@ def stationary_genetic_algorithm(data, labels, cross_func, cross_rate=1.0,
 
         n_evaluations += n_children
 
-        child_index = 0
+        pop_tournament = np.r_[population[-2:, :], offspring]
+        tournament_fitness = np.r_[pop_fitness[-2:], offspring_fitness]
 
-        for i in range(-2, 0):
-            if pop_fitness[i] < offspring_fitness[child_index]:
-                print("El hijo es mejor")
-                pop_fitness[i] = offspring_fitness[child_index]
-                population[i] = offspring[i]
-                child_index += 1
+        tournament_fitness, pop_tournament = sort_population(tournament_fitness, pop_tournament)
+
+        population[-2:] = pop_tournament[:2]
+        pop_fitness[-2:] = tournament_fitness[:2]
 
         pop_fitness, population = sort_population(pop_fitness, population)
 

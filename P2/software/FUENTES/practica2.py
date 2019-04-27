@@ -49,7 +49,7 @@ def genetic_classifier(train_part, test_part):
         t1 = time.time()
 
         # Calculo de los pesos mediante la Busqueda Local
-        w = algorithms.genetics.genetic_algorithm(train[0], train[1], cross_func, generational=True)
+        w = algorithms.genetics.genetic_algorithm(train[0], train[1], cross_func, generational=False)
 
         # Tiempo despues de terminar la Busqueda Local
         t2 = time.time()
