@@ -99,14 +99,18 @@ def mutation_operator(population, chromosomes, genes, mean=0.0, sigma=0.3):
     :param genes: Genes de los cromosomas a mutar
     :param mean: Media de la mutacion (por defecto 0.0)
     :param sigma: Desviacion tipica de la mutacion (por defecto 0.3)
+    
+    :return Devuelve la poblacion mutada
     """
-
+    
     # Aplicar mutacion (sumarle valor generado por una normal de media 0
     # y desviacion tipica 0.3)
     population[chromosomes, genes] += np.random.normal(mean, sigma, chromosomes.shape[0])
 
     # Normalizar el/los cromosoma/s mutados
     population = utils.normalize_w(population)
+    
+    return population
 
 
 ###############################################################################
@@ -147,6 +151,8 @@ def sort_population(fitness_values, population):
 
     :param fitness_values: Lista de valores fitness
     :param population: Conjunto de cromosomas que ordenar
+    
+    :return Devuelve los valores fitnes y la poblacion ordenados por fitness
     """
 
     # Obtener los indices ordenados de los valores fitness
@@ -320,7 +326,7 @@ def generational_genetic_algorithm(data, labels, cross_func, cross_rate=0.7,
             print(mut_gene)
 
             # Aplicar mutacion
-            mutation_operator(new_population, mut_chromosome, mut_gene)
+            new_population = mutation_operator(new_population, mut_chromosome, mut_gene)
 
             # Indicar que se han modificado los cromosomas correspondientes
             modified[mut_chromosome] = 1
@@ -475,7 +481,7 @@ def stationary_genetic_algorithm(data, labels, cross_func, cross_rate=1.0,
             print(mut_gene)
 
             # Aplicar mutacion
-            mutation_operator(offspring, mut_chromosome, mut_gene)
+            new_population = mutation_operator(offspring, mut_chromosome, mut_gene)
         else:
             # Incrementar contador de mutaciones
             mutate_generation += expected_mutations
