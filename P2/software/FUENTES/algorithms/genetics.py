@@ -1,5 +1,6 @@
 import numpy as np
 from . import metrics
+from . import utils
 
 ###############################################################################
 #                     Generacion de poblacion inicial                         #
@@ -57,10 +58,8 @@ def blx_alpha_crossover(parents, chromosomes, alpha=0.3):
     # Generar hijos y normalizarlos al rango [0, 1]
     children = np.random.uniform(c_min - i * alpha, c_max + i * alpha)
 
-    children[children < 0.0] = 0.0
-    children[children > 1.0] = 1.0
-
-#    np.clip(children, 0.0, 1.0)
+    # Normalizar valores
+    children = utils.normalize_w(children)
 
     return children
 
@@ -91,24 +90,23 @@ def arithmetic_crossover(parents, chromosomes):
 #                        Operador de mutacion                                 #
 ###############################################################################
 
-def mutation_operator(population, chromosomes, genes):
+def mutation_operator(population, chromosomes, genes, mean=0.0, sigma=0.3):
     """
     Funcion para generar una mutacion en el gen de un cromosoma
 
-    :parm population: Poblacion que mutar
+    :param population: Poblacion que mutar
     :param chromosomes: Cromosomas a mutar
     :param genes: Genes de los cromosomas a mutar
+    :param mean: Media de la mutacion (por defecto 0.0)
+    :param sigma: Desviacion tipica de la mutacion (por defecto 0.3)
     """
 
     # Aplicar mutacion (sumarle valor generado por una normal de media 0
     # y desviacion tipica 0.3)
+    population[chromosomes, genes] += np.random.normal(mean, sigma, chromosomes.shape[0])
 
-    population[chromosomes, genes] += np.random.normal(0.0, 0.3, chromosomes.shape[0])
-
-    # Normalizar el cromosoma
-    population[population < 0.0] = 0.0
-    population[population > 1.0] = 1.0
-    #np.clip(population, 0.0, 1.0)
+    # Normalizar el/los cromosoma/s mutados
+    population = utils.normalize_w(population)
 
 
 ###############################################################################
@@ -163,28 +161,82 @@ def sort_population(fitness_values, population):
 
 
 ###############################################################################
+#                               Elitismo                                      #
+###############################################################################
+
+def elitism(old_fitness, old_population, new_fitness, new_population):
+    """
+    Funcion para aplicar el criterio de elitismo en un algoritmo genetico
+    generacional. El elitismo solo se aplica si el mejor cromosoma de la
+    poblacion anterior es mejor que el mejor cromosoma de la nueva poblacion,
+    con el objetivo de no perderlo
+
+    :param old_fitness: Antiguos valores fitness
+    :param old_population: Antigua poblacion
+    :param new_fitness: Nuevos valores fitness
+    :param new_population: Nueva poblacion
+
+    :return Devuleve los nuevos valores fitness y poblacion al aplicar el
+            criterio de elitismo
+    """
+
+    # Obtener mejores valores fitness de las dos poblaciones
+    old_best_fit = old_fitness[0]
+    new_best_fit = new_fitness[0]
+
+    # Si se va a perder el mejor cromosoma, se le reintroduce en la nueva
+    # poblacion eliminando el ultimo de la nueva
+    if old_best_fit > new_best_fit:
+        # Insertar en la poblacion y eliminar el ultimo
+        new_population = np.r_[old_population[0].reshape(1, -1), new_population]
+        new_population = np.delete(new_population, -1, axis=0)
+
+        # Insertar valor fitness y eliminar el ultimo
+        new_fitness = np.r_[old_best_fit, new_fitness]
+        new_fitness = np.delete(new_fitness, -1)
+
+    return new_fitness, new_population
+
+
+###############################################################################
 #               Implementacion de los algoritmos geneticos                    #
 ###############################################################################
 
 def generational_genetic_algorithm(data, labels, cross_func, cross_rate=0.7,
                                    mutation_rate=0.001, chromosomes=30,
                                    max_evals=15000):
+    """
+    Implementacion del algoritmo genetico generacional con los operadores de
+    cruce BLX-alpha y cruce aritmetico. Se parte de una poblacion inicial
+    generada aleatoriamente y se va refinando hasta obtener unos buenos pesos
+    para el problema de clasificacion.
+
+    :param data: Conjunto de datos
+    :param labels: Conjunto de etiquetas
+    :param cross_func: Funcion de cruce. Puede ser BLX-alpha o cruce aritmetico
+    :param cross_rate: Probabilidad de cruce (por defecto 0.7)
+    :param mutation_rate: Probabilidad de mutar (por defecto 0.001)
+    :param chromosomes: Numero de cromosomas iniciales (por defecto 30)
+    :param max_evals: Numero maximo de evaluaciones de la funcion objetivo
+                      (por defecto 15000)
+
+    :return Devuelve el mejor w de la poblacion despues de 15000 evaluaciones
+            de la funcion objetivo
+    """
 
     # Obtener numero de genes
     genes = data.shape[1]
-    print("Numero de genes ", genes)
 
-    # Obtener numero esperado de cruces, mutaciones y numero de nuevos
-    # cromosomas por generacion
+    # Obtener numero esperado de cruces, mutaciones y numero de padres
     # Los valores cambiaran segun la funcion de cruce utilizada
     if cross_func == blx_alpha_crossover:
         expected_crosses = int(chromosomes / 2 * cross_rate)
-        n_new_chromosomes = chromosomes
+        n_parents = chromosomes
     else:
         # Se deben realizar mas cruces debido a que el operador solo produce
         # un descendiente (el doble que con BLX-alpha)
         expected_crosses = int(chromosomes * cross_rate)
-        n_new_chromosomes = expected_crosses + chromosomes
+        n_parents = expected_crosses + chromosomes
 
     expected_mutations = chromosomes * genes * mutation_rate
 
@@ -195,10 +247,7 @@ def generational_genetic_algorithm(data, labels, cross_func, cross_rate=0.7,
 
     # Establecer frontera entre padres que se cruzan y padres que no
     # La frontera viene dada por el doble del numero de parejas
-    index_no_cross = expected_crosses * 2
-
-    print("Numero esperado de cruces: ", expected_crosses)
-    print("Numero esperado de mutaciones: ", expected_mutations)
+    index_limit_cross_copy = expected_crosses * 2
 
     # Inicializar las evaluaciones
     n_evaluations = 0
@@ -225,7 +274,7 @@ def generational_genetic_algorithm(data, labels, cross_func, cross_rate=0.7,
 
         # Realizar tantos torneos binarios como cromosomas se tengan
         # que generar 
-        for _ in range(n_new_chromosomes):
+        for _ in range(n_parents):
 
             # Elegir dos cromosomas aleatorios
             parents = np.random.choice(chromosomes, 2)
@@ -236,20 +285,20 @@ def generational_genetic_algorithm(data, labels, cross_func, cross_rate=0.7,
         parents = np.array(parents_list)
 
         # Formar las parejas de padres que se van a cruzar
-        cross_parents = parents[:index_no_cross].reshape(-1, 2)
+        cross_parents = parents[:index_limit_cross_copy].reshape(-1, 2)
 
         # Aplicar operador de cruce para obtener los descendientes
         offspring = cross_func(cross_parents, population)
 
         # Marcar los cromosomas que se han obtenido por cruce
         if cross_func == blx_alpha_crossover:
-            modified[: index_no_cross] = 1
+            modified[: index_limit_cross_copy] = 1
         else:
             modified[: expected_crosses] = 1
         print("Numero de descendientes: ", offspring.shape)
 
         # Obtener los descendientes sin cruzar
-        offspring_no_cross = population[parents[index_no_cross:], :]
+        offspring_no_cross = population[parents[index_limit_cross_copy:], :]
         print("Numero de descendientes sin cruce: ", offspring_no_cross.shape)
 
         # Generar nueva poblacion
@@ -282,6 +331,8 @@ def generational_genetic_algorithm(data, labels, cross_func, cross_rate=0.7,
         # Evaluar la poblacion
         new_pop_fitness = []
 
+        # Recorrer la lista de modificados y ver si se tiene que evaluar de
+        # nuevo el cromosoma o no
         for i in range(chromosomes):
             if modified[i] == 1:
                 # Evaluar nuevo cromosoma
@@ -309,18 +360,9 @@ def generational_genetic_algorithm(data, labels, cross_func, cross_rate=0.7,
 
         # Ordenar la nueva poblacion por fitness
         new_pop_fitness, new_population = sort_population(new_pop_fitness, new_population)
-
-        # Proceso de elitismo
-        # Se compara el mejor cromosoma de la poblacion anterior con el mejor de la nueva
-        # Si el de la poblacion anterior es mejor, se conserva
-        if pop_fitness[0] > new_pop_fitness[0]:
-            new_pop_fitness[-1] = pop_fitness[0]
-            new_population[-1] = population[0]
-            new_pop_fitness, new_population = sort_population(new_pop_fitness, new_population)
-
-        # Aplicar criterio generacional
-        population = new_population
-        pop_fitness = new_pop_fitness
+        
+        # Elitismo y sustitucion generacional de la poblacion
+        pop_fitness, population = elitism(pop_fitness, population, new_pop_fitness, new_population)
 
         print(population)
         print(pop_fitness)
@@ -331,22 +373,41 @@ def generational_genetic_algorithm(data, labels, cross_func, cross_rate=0.7,
 def stationary_genetic_algorithm(data, labels, cross_func, cross_rate=1.0,
                                  mutation_rate=0.001, chromosomes=30,
                                  max_evals=15000):
+    """
+    Implementacion del algoritmo genetico estacionario con los operadores de
+    cruce BLX-alpha y cruce aritmetico. Se parte de una poblacion inicial
+    generada aleatoriamente y se va refinando hasta obtener unos buenos pesos
+    para el problema de clasificacion.
+
+    :param data: Conjunto de datos
+    :param labels: Conjunto de etiquetas
+    :param cross_func: Funcion de cruce. Puede ser BLX-alpha o cruce aritmetico
+    :param cross_rate: Probabilidad de cruce (por defecto 0.7)
+    :param mutation_rate: Probabilidad de mutar (por defecto 0.001)
+    :param chromosomes: Numero de cromosomas iniciales (por defecto 30)
+    :param max_evals: Numero maximo de evaluaciones de la funcion objetivo
+                      (por defecto 15000)
+
+    :return Devuelve el mejor w de la poblacion despues de 15000 evaluaciones
+            de la funcion objetivo
+    """
 
     # Obtener numero de genes
     genes = data.shape[1]
+
+    # Establecer numero de hijos (cromosomas)
     n_children = 2
     print("Numero de genes ", genes)
     print("Numero de hijos: ", n_children)
 
-    # Obtener numero esperado de cruces, mutaciones y numero de nuevos
-    # cromosomas por generacion
+    # Establecer numero de padres y de mutaciones esperadas por generacion
     # Los valores cambiaran segun la funcion de cruce utilizada
     if cross_func == blx_alpha_crossover:
-        n_parents = 2
+        n_parents = n_children
     else:
         # Se deben realizar mas cruces debido a que el operador solo produce
         # un descendiente (el doble que con BLX-alpha)
-        n_parents = 4
+        n_parents = n_children * 2
 
     expected_mutations = n_children * genes * mutation_rate
 
@@ -354,7 +415,6 @@ def stationary_genetic_algorithm(data, labels, cross_func, cross_rate=1.0,
     # tenga un valor mayor o igual a uno, y eso indicara que se debe
     # mutar en esa generacion)
     mutate_generation = expected_mutations
-
 
     print("Numero esperado de mutaciones: ", expected_mutations)
 
@@ -418,27 +478,33 @@ def stationary_genetic_algorithm(data, labels, cross_func, cross_rate=1.0,
             mutation_operator(offspring, mut_chromosome, mut_gene)
         else:
             # Incrementar contador de mutaciones
-            print("Incrementar contador mutacion")
             mutate_generation += expected_mutations
 
-        # Evaluar la poblacion
+        # Evaluar los descendientes y ordenarlos por fitness
         offspring_fitness = metrics.evaluate_population(data, labels, offspring)
-
         offspring_fitness, offspring = sort_population(offspring_fitness, offspring)
 
         print("Fitness de los hijos: ", offspring_fitness)
         print("Fitness de los padres a comparar: ", pop_fitness[-2:])
 
+        # Incrementar el numero de evaluaciones
         n_evaluations += n_children
 
+        # Crear poblacion y fitness de torneo, compuesto por los dos ultimos
+        # elementos de la poblacion y por los dos descendientes, en este orden
         pop_tournament = np.r_[population[-2:, :], offspring]
         tournament_fitness = np.r_[pop_fitness[-2:], offspring_fitness]
 
+        # Ordenar ultimos dos elementos de la poblacion y descendientes por
+        # el valor de fitness obtenido para estos
         tournament_fitness, pop_tournament = sort_population(tournament_fitness, pop_tournament)
 
+        # Insertar en los dos ultimos lugares aquellos que tienen mejor fitness
         population[-2:] = pop_tournament[:2]
         pop_fitness[-2:] = tournament_fitness[:2]
 
+        # Ordenar de nuevo la poblacion, en caso de que hayan habido cambios
+        # significativos
         pop_fitness, population = sort_population(pop_fitness, population)
 
         print(population)
@@ -446,7 +512,18 @@ def stationary_genetic_algorithm(data, labels, cross_func, cross_rate=1.0,
 
     return population[0]
 
+
 def genetic_algorithm(data, labels, cross_func, generational=True):
+    """
+    Funcion que sirve como interfaz para llamar a los dos algoritmos geneticos
+
+    :param data: Conjunto de datos
+    :param labels: Conjunto de etiquetas
+    :param cross_func: Funcion de cruce a utilizar
+    :param generational: Utilizar o no un enfoque generacional (por defecto True)
+
+    :return Devuelve el mejor w de la poblacion segun alguno de los dos criterios
+    """
     if generational == True:
         return generational_genetic_algorithm(data, labels, cross_func)
     else:
