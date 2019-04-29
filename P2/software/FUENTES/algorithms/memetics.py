@@ -156,8 +156,7 @@ def memetic_algorithm(data, labels, ls_rate, cross_rate=0.7, mutation_rate=0.001
         # poblacion anterior
         # 1 -> el cromosoma se ha obtenido por cruce o por mutacion
         modified = np.zeros((chromosomes,), dtype=np.int)
-
-        print("Evaluaciones al comienzo del bucle ", n_evaluations)
+        
         # Crear una lista de padres
         parents_list = []
 
@@ -181,11 +180,9 @@ def memetic_algorithm(data, labels, ls_rate, cross_rate=0.7, mutation_rate=0.001
 
         # Marcar los cromosomas que se han obtenido por cruce
         modified[: index_limit_cross_copy] = 1
-        print("Numero de descendientes: ", offspring.shape)
 
         # Obtener los descendientes sin cruzar
         offspring_no_cross = population[parents[index_limit_cross_copy:], :]
-        print("Numero de descendientes sin cruce: ", offspring_no_cross.shape)
 
         # Generar nueva poblacion
         new_population = np.r_[offspring, offspring_no_cross]
@@ -201,9 +198,6 @@ def memetic_algorithm(data, labels, ls_rate, cross_rate=0.7, mutation_rate=0.001
             # Generar cromosmas y genes a mutar
             mut_chromosome = np.random.choice(chromosomes, n_mutations, replace=True)
             mut_gene = np.random.choice(genes, n_mutations)
-
-            print(mut_chromosome)
-            print(mut_gene)
 
             # Aplicar mutacion
             new_population = genetics.mutation_operator(new_population, mut_chromosome, mut_gene)
@@ -233,8 +227,6 @@ def memetic_algorithm(data, labels, ls_rate, cross_rate=0.7, mutation_rate=0.001
         # Actualizar el numero de evaluaciones realizadas
         n_evaluations += modified.sum()
         n_generations += 1
-        print("Evaluaciones realizadas: ", modified.sum())
-        print("Vector de modificados: ", modified)
 
         # Ordenar la nueva poblacion por fitness
         new_pop_fitness, new_population = genetics.sort_population(new_pop_fitness, new_population)
@@ -248,7 +240,6 @@ def memetic_algorithm(data, labels, ls_rate, cross_rate=0.7, mutation_rate=0.001
         if n_generations % 10 == 0:
             if ls_rate == 1.0:
             		# Busqueda local sobre toda la poblacion
-                print("Aplicando LS sobre toda la poblacion")
                 for i in range(chromosomes):
                     # Ir modificando cada elemento de la poblacion con su fitness
                     population[i], pop_fitness[i] = local_search(data, labels, population[i], pop_fitness[i], ls_evals)
@@ -259,7 +250,6 @@ def memetic_algorithm(data, labels, ls_rate, cross_rate=0.7, mutation_rate=0.001
 
                 if ls_best:
                     # Aplicar la busqueda local sobre los ls_elements mejores cromosomas
-                    print("Aplicando LS sobre los mejores ", ls_elements)
                     for i in range(ls_elements):
                         # Ir modificando el cromosoma y el fitness de los mejores de la poblacion
                         population[i], pop_fitness[i] = local_search(data, labels, population[i], pop_fitness[i], ls_evals)
@@ -267,8 +257,7 @@ def memetic_algorithm(data, labels, ls_rate, cross_rate=0.7, mutation_rate=0.001
                 else:
                     # Generar ls_elements indices aleatorios sobre los que aplicar la busqueda local
                     ls_index = np.random.choice(chromosomes, ls_elements, replace=True)
-
-                    print("Aplicando LS sobre aleatorios ", ls_index)
+                    
                     for index in ls_index:
                         # Ir modificando los valores del cromosoma y del fitness  de los elementos aleatorios
                         population[index], pop_fitness[index] = local_search(data, labels, population[index], pop_fitness[index], ls_evals)
@@ -277,8 +266,5 @@ def memetic_algorithm(data, labels, ls_rate, cross_rate=0.7, mutation_rate=0.001
             # Ordenar de nuevo la poblacion en caso de que se haya visto desordenada
             pop_fitness, population = genetics.sort_population(pop_fitness, population)
 
-
-        print(population)
-        print(pop_fitness)
 
     return population[0]

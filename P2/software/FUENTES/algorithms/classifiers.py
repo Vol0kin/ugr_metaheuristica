@@ -3,9 +3,10 @@ import time																									# Medir tiempos
 from enum import Enum																				# Enumerados
 from sklearn.metrics import accuracy_score                  # Medir la precision de los resultados de test
 from sklearn.neighbors import KNeighborsClassifier          # Clasificador KNN
-import algorithms.genetics
-import algorithms.metrics
-import algorithms.memetics
+from . import genetics
+from . import metrics
+from . import memetics
+from . import kfold
 
 class GeneticCross(Enum):
 		BLX = 1
@@ -53,9 +54,9 @@ def genetic_classifier(train_part, test_part, cross, replacement):
     
     # Determinar el operador de cruce a utilizar
     if cross == GeneticCross.BLX:
-    		cross_func = algorithms.genetics.blx_alpha_crossover
+    		cross_func = genetics.blx_alpha_crossover
     else:
-    		cross_func = algorithms.genetics.arithmetic_crossover
+    		cross_func = genetics.arithmetic_crossover
     
     # Determinar la estrategia de reemplazo a utilizar
     if replacement == GeneticReplacement.GENERATIONAL:
@@ -71,7 +72,7 @@ def genetic_classifier(train_part, test_part, cross, replacement):
         t1 = time.time()
 
         # Calculo de los pesos mediante el Algoritmo Genetico
-        w = algorithms.genetics.genetic_algorithm(train[0], train[1], cross_func, generational)
+        w = genetics.genetic_algorithm(train[0], train[1], cross_func, generational)
 
         # Tiempo despues de terminar la Busqueda Local
         t2 = time.time()
@@ -92,8 +93,8 @@ def genetic_classifier(train_part, test_part, cross, replacement):
 
         # Obtener tasa de aciertos, reduccion y agrupacion de ambos
         accuracy = accuracy_score(test[1], knn_labels)
-        reduction = algorithms.metrics.reduction_rate(w)
-        fit_val = algorithms.metrics.fitness(accuracy, reduction)
+        reduction = metrics.reduction_rate(w)
+        fit_val = metrics.fitness(accuracy, reduction)
         
         # Insertar los datos en las listas
         reduction_list.append(reduction)
@@ -138,7 +139,7 @@ def memetic_classifier(train_part, test_part, ls_evaluations):
     if ls_evaluations == MemeticsLocalSearch.ALL_POPULATION:
     		ls_rate = 1.0
     		ls_best = False
-    elif ls_evaluations == MemeticsLocalSearch.BEST_CHROMOSMES:
+    elif ls_evaluations == MemeticsLocalSearch.BEST_CHROMOSOMES:
     		ls_rate = 0.1
     		ls_best = True
     else:
@@ -153,7 +154,7 @@ def memetic_classifier(train_part, test_part, ls_evaluations):
         t1 = time.time()
 
         # Calculo de los pesos mediante la Busqueda Local
-        w = algorithms.memetics.memetic_algorithm(train[0], train[1], ls_rate, ls_best=ls_best)
+        w = memetics.memetic_algorithm(train[0], train[1], ls_rate, ls_best=ls_best)
 
         # Tiempo despues de terminar la Busqueda Local
         t2 = time.time()
@@ -174,8 +175,8 @@ def memetic_classifier(train_part, test_part, ls_evaluations):
 
         # Obtener tasa de aciertos, reduccion y agrupacion de ambos
         accuracy = accuracy_score(test[1], knn_labels)
-        reduction = algorithms.metrics.reduction_rate(w)
-        fit_val = algorithms.metrics.fitness(accuracy, reduction)
+        reduction = metrics.reduction_rate(w)
+        fit_val = metrics.fitness(accuracy, reduction)
         
         # Insertar los datos en las listas
         reduction_list.append(reduction)

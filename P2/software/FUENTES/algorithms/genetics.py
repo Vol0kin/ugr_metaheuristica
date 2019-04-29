@@ -273,15 +273,13 @@ def generational_genetic_algorithm(data, labels, cross_func, cross_rate=0.7,
         # poblacion anterior
         # 1 -> el cromosoma se ha obtenido por cruce o por mutacion
         modified = np.zeros((chromosomes,), dtype=np.int)
-
-        print("Evaluaciones al comienzo del bucle ", n_evaluations)
+        
         # Crear una lista de padres
         parents_list = []
 
         # Realizar tantos torneos binarios como cromosomas se tengan
         # que generar 
         for _ in range(n_parents):
-
             # Elegir dos cromosomas aleatorios
             parents = np.random.choice(chromosomes, 2)
 
@@ -301,11 +299,9 @@ def generational_genetic_algorithm(data, labels, cross_func, cross_rate=0.7,
             modified[: index_limit_cross_copy] = 1
         else:
             modified[: expected_crosses] = 1
-        print("Numero de descendientes: ", offspring.shape)
 
         # Obtener los descendientes sin cruzar
         offspring_no_cross = population[parents[index_limit_cross_copy:], :]
-        print("Numero de descendientes sin cruce: ", offspring_no_cross.shape)
 
         # Generar nueva poblacion
         new_population = np.r_[offspring, offspring_no_cross]
@@ -321,9 +317,6 @@ def generational_genetic_algorithm(data, labels, cross_func, cross_rate=0.7,
             # Generar cromosmas y genes a mutar
             mut_chromosome = np.random.choice(chromosomes, n_mutations, replace=True)
             mut_gene = np.random.choice(genes, n_mutations)
-
-            print(mut_chromosome)
-            print(mut_gene)
 
             # Aplicar mutacion
             new_population = mutation_operator(new_population, mut_chromosome, mut_gene)
@@ -361,17 +354,12 @@ def generational_genetic_algorithm(data, labels, cross_func, cross_rate=0.7,
 
         # Actualizar el numero de evaluaciones realizadas
         n_evaluations += modified.sum()
-        print("Evaluaciones realizadas: ", modified.sum())
-        print("Vector de modificados: ", modified)
 
         # Ordenar la nueva poblacion por fitness
         new_pop_fitness, new_population = sort_population(new_pop_fitness, new_population)
         
         # Elitismo y sustitucion generacional de la poblacion
         pop_fitness, population = elitism(pop_fitness, population, new_pop_fitness, new_population)
-
-        print(population)
-        print(pop_fitness)
 
     return population[0]
 
@@ -403,8 +391,6 @@ def stationary_genetic_algorithm(data, labels, cross_func, cross_rate=1.0,
 
     # Establecer numero de hijos (cromosomas)
     n_children = 2
-    print("Numero de genes ", genes)
-    print("Numero de hijos: ", n_children)
 
     # Establecer numero de padres y de mutaciones esperadas por generacion
     # Los valores cambiaran segun la funcion de cruce utilizada
@@ -422,8 +408,6 @@ def stationary_genetic_algorithm(data, labels, cross_func, cross_rate=1.0,
     # mutar en esa generacion)
     mutate_generation = expected_mutations
 
-    print("Numero esperado de mutaciones: ", expected_mutations)
-
     # Inicializar las evaluaciones
     n_evaluations = 0
 
@@ -437,8 +421,6 @@ def stationary_genetic_algorithm(data, labels, cross_func, cross_rate=1.0,
     pop_fitness, population = sort_population(pop_fitness, population)
 
     while n_evaluations < max_evals:
-
-        print("Evaluaciones al comienzo del bucle ", n_evaluations)
         # Crear una lista de padres
         parents_list = []
 
@@ -456,14 +438,9 @@ def stationary_genetic_algorithm(data, labels, cross_func, cross_rate=1.0,
 
         # Formar las parejas de padres que se van a cruzar
         cross_parents = parents.reshape(-1, 2)
-        print("Padres: ", cross_parents)
 
         # Aplicar operador de cruce para obtener los descendientes
         offspring = cross_func(cross_parents, population)
-
-        print("Numero de descendientes: ", offspring.shape)
-        print(offspring)
-
 
         # Proceso de mutacion
         if mutate_generation >= 1.0:
@@ -477,9 +454,6 @@ def stationary_genetic_algorithm(data, labels, cross_func, cross_rate=1.0,
             mut_chromosome = np.random.choice(n_children, n_mutations, replace=True)
             mut_gene = np.random.choice(genes, n_mutations)
 
-            print(mut_chromosome)
-            print(mut_gene)
-
             # Aplicar mutacion
             new_population = mutation_operator(offspring, mut_chromosome, mut_gene)
         else:
@@ -489,9 +463,6 @@ def stationary_genetic_algorithm(data, labels, cross_func, cross_rate=1.0,
         # Evaluar los descendientes y ordenarlos por fitness
         offspring_fitness = metrics.evaluate_population(data, labels, offspring)
         offspring_fitness, offspring = sort_population(offspring_fitness, offspring)
-
-        print("Fitness de los hijos: ", offspring_fitness)
-        print("Fitness de los padres a comparar: ", pop_fitness[-2:])
 
         # Incrementar el numero de evaluaciones
         n_evaluations += n_children
@@ -512,9 +483,6 @@ def stationary_genetic_algorithm(data, labels, cross_func, cross_rate=1.0,
         # Ordenar de nuevo la poblacion, en caso de que hayan habido cambios
         # significativos
         pop_fitness, population = sort_population(pop_fitness, population)
-
-        print(population)
-        print(pop_fitness)
 
     return population[0]
 
