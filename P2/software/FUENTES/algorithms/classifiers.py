@@ -8,18 +8,20 @@ from . import metrics
 from . import memetics
 from . import kfold
 
+# Modulo para los distintos clasificadores implementados
+
 class GeneticCross(Enum):
-		BLX = 1
-		AC = 2
+    BLX = 1
+    AC = 2
 
 class GeneticReplacement(Enum):
-		GENERATIONAL = 1
-		STATIONARY = 2
+    GENERATIONAL = 1
+    STATIONARY = 2
 
 class MemeticsLocalSearch(Enum):
-		ALL_POPULATION = 1
-		BEST_CHROMOSOMES = 2
-		RANDOM_CHROMOSOMES = 3
+    ALL_POPULATION = 1
+    BEST_CHROMOSOMES = 2
+    RANDOM_CHROMOSOMES = 3
 
 def genetic_classifier(train_part, test_part, cross, replacement):
     """
@@ -54,15 +56,15 @@ def genetic_classifier(train_part, test_part, cross, replacement):
     
     # Determinar el operador de cruce a utilizar
     if cross == GeneticCross.BLX:
-    		cross_func = genetics.blx_alpha_crossover
+        cross_func = genetics.blx_alpha_crossover
     else:
-    		cross_func = genetics.arithmetic_crossover
+        cross_func = genetics.arithmetic_crossover
     
     # Determinar la estrategia de reemplazo a utilizar
     if replacement == GeneticReplacement.GENERATIONAL:
-    		generational = True
+        generational = True
     else:
-    		generational = False
+        generational = False
 
     # Para cada elemento de las listas de particiones de entrenamiento
     # y prueba, obtener los w, entrenar el modelo y predecir las etiquetas
@@ -137,14 +139,14 @@ def memetic_classifier(train_part, test_part, ls_evaluations):
     
     # Decidir los ratios del algoritmo memetico y si se hace con los mejores
     if ls_evaluations == MemeticsLocalSearch.ALL_POPULATION:
-    		ls_rate = 1.0
-    		ls_best = False
+        ls_rate = 1.0
+        ls_best = False
     elif ls_evaluations == MemeticsLocalSearch.BEST_CHROMOSOMES:
-    		ls_rate = 0.1
-    		ls_best = True
+        ls_rate = 0.1
+        ls_best = True
     else:
-    		ls_rate = 0.1
-    		ls_best = False
+        ls_rate = 0.1
+        ls_best = False
 
     # Para cada elemento de las listas de particiones de entrenamiento
     # y prueba, obtener los w, entrenar el modelo y predecir las etiquetas
