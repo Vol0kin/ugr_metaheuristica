@@ -1,0 +1,125 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[spanish,es-nodecimaldot]{babel}	% Utilizar español
+\usepackage[utf8]{inputenc}					% Caracteres UTF-8
+\usepackage{graphicx}						% Imagenes
+\usepackage[hidelinks]{hyperref}			% Poner enlaces sin marcarlos en rojo
+\usepackage{fancyhdr}						% Modificar encabezados y pies de pagina
+\usepackage{float}							% Insertar figuras
+\usepackage[textwidth=390pt]{geometry}		% Anchura de la pagina
+\usepackage[nottoc]{tocbibind}				% Referencias (no incluir num pagina indice en Indice)
+\usepackage{enumitem}						% Permitir enumerate con distintos simbolos
+\usepackage[T1]{fontenc}					% Usar textsc en sections
+\usepackage{amsmath}						% Símbolos matemáticos
+
+% Comando para poner el nombre de la asignatura
+\newcommand{\asignatura}{Metaheurísticas}
+
+% Configuracion de encabezados y pies de pagina
+\pagestyle{fancy}
+\lhead{Vladislav Nikolov Vasilev}
+\rhead{\asignatura{}}
+\lfoot{Grado en Ingeniería Informática}
+\cfoot{}
+\rfoot{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}		% Linea cabeza de pagina
+\renewcommand{\footrulewidth}{0.4pt}		% Linea pie de pagina
+
+\begin{document}
+\pagenumbering{gobble}
+
+% Pagina de titulo
+\begin{titlepage}
+
+\begin{minipage}{\textwidth}
+
+\centering
+
+\includegraphics[scale=0.3]{img/ugr.png}\\
+
+\textsc{\Large \asignatura{}\\[0.2cm]}
+\textsc{GRADO EN INGENIERÍA INFORMÁTICA}\\[0.3cm]
+
+\noindent\rule[-1ex]{\textwidth}{1pt}\\[1.5ex]
+\textsc{{\Huge PRÁCTICA 2\\[1pt]}}
+\textsc{{\Large \\Técnicas de Búsqueda basadas en Poblaciones para el Problema del Aprendizaje de Pesos en Características}}
+\noindent\rule[-1ex]{\textwidth}{2pt}\\[1ex]
+
+\end{minipage}
+
+\vspace{0.18cm}
+
+\begin{minipage}{\textwidth}
+
+\centering
+
+\textbf{Autor}\\ {Vladislav Nikolov Vasilev}\\[1ex]
+\textbf{NIE}\\ {X8743846M}\\[1ex]
+\textbf{E-Mail}\\ {vladis890@gmail.com}\\[1ex]
+\textbf{Grupo de prácticas}\\ {MH3 Jueves 17:30-19:30}\\[1ex]
+\textbf{Rama}\\ {Computación y Sistemas Inteligentes}\\[1ex]
+\vspace{0.2cm}
+
+\includegraphics[scale=0.3]{img/etsiit.jpeg}
+
+\vspace{0.3cm}
+\textsc{Escuela Técnica Superior de Ingenierías Informática y de Telecomunicación}\\
+\vspace{1cm}
+\textsc{Curso 2018-2019}
+\end{minipage}
+\end{titlepage}
+
+\pagenumbering{arabic}
+\tableofcontents
+\thispagestyle{empty}				% No usar estilo en la pagina de indice
+
+\newpage
+
+\setlength{\parskip}{1em}
+
+\section{Descripción del problema}
+
+El problema que se aborda en esta práctica es el Aprendizaje de Pesos en Características (APC). Es un problema típico de
+\textit{machine learning} en el cuál se pretende optimizar el rendimiento de un clasificador basado en vecinos más cercanos.
+Esto se consigue mediante la ponderación de las características de entrada con un vector de pesos $W$, el cuál utiliza
+codificación real (cada $w_i \in W$ es un número real), con el objetivo de modificar sus valores a la hora de calcular la
+distancia. Cada vector $W$ se expresa como $W = \lbrace w_1, w_2, \dots , w_n \rbrace$, siendo $n$ el número de dimensiones
+del vector de características, y cumpliéndose además que $\forall w_i \in W, \; w_i \in [0, 1]$.\par
+
+El clasificador considerado para este problema es el 1-NN (genéricamente, un clasificador $k$-NN, con $k$ vecinos, siendo
+en este caso $k = 1$), es decir, aquél que clasifica un elemento según su primer vecino más cercano utilizando alguna medida
+de distancia (en este caso, utilizando la distancia Euclídea). Cabe destacar que no en todos los casos se usará el clasificador
+1-NN ya que se pueden dar casos en los que el vecino más cercano de un elemento sea él mismo. Por ese motivo, en algunas
+técnicas/algoritmos se usará un 1-NN con el criterio de \textit{leave-one-out}, es decir, que se busca el vecino más cercano
+pero excluyéndose a él mismo.\par
+
+El objetivo propuesto es aprender el vector de pesos $W$
+mediante una serie de algoritmos, de tal forma que al optimizar el clasificador se mejore tanto la precisión de éste como su
+complejidad, es decir, que se considere un menor número de características. Estos dos parámetros, a los que llamaremos $tasa\_
+clas$ y $tasa\_red$, respectivamente, se pueden expresar de la siguiente forma:
+
+\[tasa\_clas = 100 \cdot \frac{nº \; instancias \; bien \; clasificadas \; en \; T}{nº \; instancias \; en \; T}\]
+\[tasa\_red = 100 \cdot \frac{nº \; valores \; w_i < 0.2}{nº \; caracteristicas}\]
+
+\noindent siendo $T$ el tamaño del conjunto de datos sobre que el que se evalúa el clasificador.\par
+
+Por tanto, al combinarlos en una única función a la que llamaremos $F(W)$, la cuál será nuestra función objetivo a optimizar
+(maximizar), tenemos que:
+
+\[F(W) = \alpha \cdot tasa\_clas(W) + (1 - \alpha) \cdot tasa\_red(W)\] 
+
+\noindent siendo $\alpha$ la importancia que se le asigna a la tasa de clasificación y a la de reducción, cumpliendo que
+$\alpha \in [0, 1]$. En este caso, se utiliza un $\alpha = 0.5$ para dar la misma importancia a ambos, con lo cuál se pretende
+que se reduzcan al máximo el número de características conservando una $tasa\_clas$ alta.
+
+\newpage
+
+\begin{thebibliography}{5}
+
+\bibitem{nombre-referencia}
+Texto referencia
+\\\url{https://url.referencia.com}
+
+\end{thebibliography}
+
+\end{document}
+

@@ -96,7 +96,7 @@ def local_search(data, labels, initial_w, initial_fit, max_evaluations):
 ###############################################################################
 
 def memetic_algorithm(data, labels, ls_rate, cross_rate=0.7, mutation_rate=0.001,
-                      chromosomes=30, max_evals=15000, ls_best=False):
+                      chromosomes=10, max_evals=15000, ls_best=False):
     """
     Implementacion del algoritmo memetico basandose en el algoritmo genetico
     generacional con el operador de cruce BLX-alpha. Se parte de una poblacion
@@ -106,14 +106,14 @@ def memetic_algorithm(data, labels, ls_rate, cross_rate=0.7, mutation_rate=0.001
     :param data: Conjunto de datos
     :param labels: Conjunto de etiquetas
     :param ls_rate: Tasa de elementos de la poblacion sobre los que aplicar la
-    								busqueda local
+                    busqueda local
     :param cross_rate: Probabilidad de cruce (por defecto 0.7)
     :param mutation_rate: Probabilidad de mutar (por defecto 0.001)
-    :param chromosomes: Numero de cromosomas iniciales (por defecto 30)
+    :param chromosomes: Numero de cromosomas iniciales (por defecto 10)
     :param max_evals: Numero maximo de evaluaciones de la funcion objetivo
                       (por defecto 15000)
     :param ls_best: Indica si aplicar la busqueda local sobre los ls_rate mejores
-    								cromosomas de la poblacion (por defecto False)
+                    cromosomas de la poblacion (por defecto False)
 
     :return Devuelve el mejor w de la poblacion despues de 15000 evaluaciones
             de la funcion objetivo
@@ -239,7 +239,7 @@ def memetic_algorithm(data, labels, ls_rate, cross_rate=0.7, mutation_rate=0.001
         # el numero de evaluaciones totales realizadas
         if n_generations % 10 == 0:
             if ls_rate == 1.0:
-            		# Busqueda local sobre toda la poblacion
+            	# Busqueda local sobre toda la poblacion
                 for i in range(chromosomes):
                     # Ir modificando cada elemento de la poblacion con su fitness
                     population[i], pop_fitness[i] = local_search(data, labels, population[i], pop_fitness[i], ls_evals)
