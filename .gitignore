@@ -392,8 +392,8 @@ TSWLatexianTemp*
 Tablas_APC_2018-19.xls
 
 # Practica 1
-P1/out/*
-P1/run.sh
-P1/boxplots.py
+**/out/*
+**/run.sh
+**/boxplots.py
 
 

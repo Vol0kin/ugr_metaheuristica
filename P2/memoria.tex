@@ -292,7 +292,7 @@ y con estos índices ordena la población y la lista de \textit{fitness}. Aquí 
 \begin{algorithm}
 \caption{Función para ordenar la población según su valor \textit{fitness}}
 \begin{algorithmic}[1]
-\Function{OrdenarPoblacionPorFitness}{$fitness$ , $poblacion$}
+\Function{OrdenarPoblacion}{$fitness$ , $poblacion$}
 \State $indicesOrden \gets $ ObtenerIndicesOrdenados($fitness$)
 \State $fitnessOrdenado \gets$ NuevoVectorVacioMismaCapacidad($fitness$)
 \State $poblacionOrdenada \gets$ NuevaMatrizVaciaMismaCapacidad($poblacion$)
@@ -402,7 +402,438 @@ empezando por la función más específica (la cuál solo evalúa un vector de p
 
 \subsection{Algoritmos de comparación}
 
-\subsection{Algoritmos de búsqueda basados en poblaciones}
+\subsubsection{Algoritmo greedy \textit{RELIEF}}
+
+El algoritmo con el que vamos a comparar es el algoritmo para el cálculo de pesos \textit{RELIEF}. Es un algoritmo
+greedy que, comenzando con un $W$ cuyos pesos valen 0, actualiza $W$ para cada $x_i \in X$, buscando para cada $x_i$ cuál es
+su aliado más cercano (elemento que tiene la misma etiqueta que $x_i$ con el criterio de \textit{leave-one-out}, ya que él
+mismo podría ser su vecino más cercano) y su enemigo más cercano (elemento que tiene diferente etiqueta a la que tiene $x_i$).
+
+A la hora de implementarlo, vamos a utilizar 2 KDTree en cada iteración que se van a construir sobre la marcha. En uno se
+encontrarán todos los aliados de $e$ y en el otro estarán todos sus enemigos. Esto puede suponer una gran penalización por el
+tiempo de creación de los árvoles, pero es un tiempo insignificante ya que el algoritmo es muy rápido. Después de construir los
+árboles, se buscará en el caso del aliado más cercano, por el criterio de \textit{leave-one-out}, cuál es el índice de este
+aliado. En el caso del enemigo más cercano, como este no puede ser él mismo, se buscará el índice del vecino más cercano en ese
+árbol. Una vez hecho eso, obtendremos los respectivos aliado y enemigo del conjunto de aliados y enemigos. Una vez teniéndolos,
+ya se puede actualizar el valor de $W$.
+
+Cuando se ha terminado de iterar sobre todos los elementos de $X$, se normaliza $W$ para que esté en el rango $[0, 1]$ 
+eligiendo el $w_i \in W$ que sea más grande. Todos aquellos valores por debajo de 0 se truncan a 0, y el resto se normaliza
+dividiéndolos entre $w_m$ (el $w_i$ más grande).
+
+Antes de ver su implementación, veamos como se inicializa una solución:
+
+\begin{algorithm}[H]
+\caption{Inicialización de un vector de pesos $W$ en \textit{RELIEF}}
+\begin{algorithmic}[1]
+\Function{GenerarWRelief}{$N$}
+\State $W \gets$ VectorVacioCapacidad($N$)
+\ForEach{$w_i \in W$}
+	\State $w_i \gets 0$
+\EndFor
+\State \Return{$W$}
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+Una vez dicho esto, veamos cómo sería la implementación:
+
+\begin{algorithm}[H]
+\caption{Cálculo de los pesos mediante \textit{RELIEF} (I)}
+\begin{algorithmic}[1]
+\Function{RELIEF}{$X$, $Y$}
+\State $N \gets$ ObtenerNumElementos($Y$)
+\State $numCarac \gets $ ObtenerNumCarac($X$)
+\algstore{relief}
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}[H]
+\caption{Cálculo de los pesos mediante \textit{RELIEF} (II)}
+\begin{algorithmic}
+\algrestore{relief}
+\State $W \gets $ GenerarWRelief($numCarac$)
+\For{$i \gets 0$ \textbf{to} $N-1$}
+	\State $x, y \gets X[i], Y[i]$
+	\State $aliados \gets e_a \subset X :$ etiqueta($e_a$) $ = y$
+	\State $enemigos \gets e_e \subset X:$ etiqueta($e_e$) $ \neq y$
+	\State $arbolAliados \gets$ KDTree($aliados$)
+	\State $arbolEnemigos \gets$ KDTree($enemigos$)
+	\State $aliadoCercano \gets arbolAliados$.ObtenerVecinoMasCercanoL1O($x$)
+	\State $enemigoCercano \gets arbolEnemigos$.ObtenerVecinoMasCercano($x$)
+	\State $aliado \gets aliados[aliadoCercano]$
+	\State $enemigo \gets enemigos[enemigoCercano]$
+	\State $W \gets W + \left|x - enemigo\right| - \left|x - aliado\right|$
+\EndFor
+\State $w_m \gets$ \textbf{max}($W$)
+\ForEach{$w_i \in W$}
+	\If{$w_i < 0$}
+		\State $w_i \gets 0$
+	\Else
+		\State $w_i \gets w_i$ / $w_m$
+	\EndIf
+\EndFor
+\State \Return{$W$}
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+\newpage
+
+\subsection{Algoritmos de búsqueda basados en poblaciones y trayectorias}
+
+\subsubsection{Búsqueda Local}
+
+En la práctica anterior se implementó una búsqueda local (búsqueda basada en trayectorias), así que vamos a rescatarla para
+tener una metaheurística de la que poder partir (además de que los AM la necesitarán). Esta búsqueda, como debemos recordar, está basada en el primer mejor (Simple
+Hill Climbing).
+
+La búsqueda local parte de un vector $W$ con valores aleatorios y busca optimizarlo mediante la exploración de los vecinos.
+Esta exploración se realiza modificando con un valor aleatorio generado a partir de una distribución normal con $\mu = 0$ y 
+$\sigma = 0.3$ un $w_i \in W$, quedándose con el cambio en caso de mejorar la función objetivo, o descartándolo en otro caso.
+
+Para realizar lo explicado anteriormente, se genera una permutación del conjunto $\lbrace 0, 1, \dots , N-1 \rbrace$, donde $N$
+es el número de características, y se van escogiendo las características según el orden de la permutación, aplicándoles
+el cambio anteriormente descrito. Si no se produce una mejora, se descarta el cambio realizado. Si no se ha producido mejora
+en la función objetivo con la permutación, se escoge una nueva permutación y se repite el proceso, hasta un máximo de $20
+\cdot N$ evaluaciones sin éxito seguidas de la función objetivo. Si se produce mejora, se acepta el cambio y se genera una
+nueva permutación, repitiendo el proceso. Todo esto se realiza hasta que se hayan realizado 15000 evaluaciones de la función
+objetivo, o hasta que se dé la condición anterior (demasiadas iteraciones sin mejora).
+
+Para inicializar una solución de la forma mencionada anteriormente podemos utilizar la siguiente función:
+
+\begin{algorithm}[H]
+\caption{Inicialización de un vector de pesos $W$ en BL}
+\begin{algorithmic}[1]
+\Function{GenerarWBL}{$N$}
+\State$W \gets$ vector[$N$]
+\ForEach{$w_i \in W$}
+	 \State $w_i \gets$ ValorAleatorioUniformeRango0-1()
+\EndFor
+\State \Return{$W$}
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+El pseudocódigo de la búsqueda local se puede ver aquí:
+
+\begin{algorithm}[H]
+\label{alg:local-search}
+\caption{Cálculo de los pesos mediante la Búsqueda Local (I)}
+\begin{algorithmic}[1]
+\Function{BusquedaLocal}{$datos$, $etiquetas$}
+\State $N \gets $ ObtenerNumCaracteristicas($datos$)
+\State $W \gets$ GenerarWBL($N$)
+\algstore{local}
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}[H]
+\caption{Cálculo de los pesos mediante la Búsqueda Local (II)}
+\begin{algorithmic}
+\algrestore{local}
+\State $evaluaciones \gets 0$
+\State $evaluacionesMalas \gets 0$
+\State $fitness \gets$ Evaluar($datos$, $etiquetas$, $W$)
+\While{$evaluaciones < 15000$}
+\State $Wactual \gets W$
+\State $ordenCaracteristicas \gets $ Permutacion(0 \textbf{to} $N - 1$)
+\ForEach{$carac \in ordenCaracteristicas$}
+	\State $W[carac] \gets W[carac] + $ GenerarValorDistribucionNormal($\mu$, $\sigma$)	
+	\State $W \gets$ NormalizarW($W$)
+	\State $evaluaciones \gets evaluaciones + 1$	
+	\State $nuevoFitness \gets$ Evaluar($X, Y, W$)	
+	\If{$nuevoFitness > fitness$}
+		\State $fitness \gets nuevoFitness$		
+		\State $evaluacionesMalas \gets 0$		
+		\State \textbf{break}
+	\Else
+		\State $evaluacionesMalas \gets evaluacionesMalas + 1$		
+		\State $W[carac] \gets Wactual[carac]$		
+	\EndIf	
+	\If{$evaluaciones > 15000$ \textbf{or} $evaluacionesMalas > 20 \cdot N$}
+		\State \Return{$W$}
+	\EndIf
+\EndFor
+\EndWhile
+\State \Return{$W$}
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+\newpage
+
+\subsubsection{Algoritmos genéticos generacionales}
+
+La primera metaheurística implementada en esta práctica son los AGG (algoritmos genéticos generacionales). Esta versión parte
+de una población inicial de 30 cromosomas generada aleatoriamente y pretende optimizarla con el esquema generacional. Este
+esquema consiste en generar una nueva población, evaluarla y sustituir a la anterior. Sin embargo, con el objetivo de no perder
+la mejor solución hasta el momento, se sigue un esquema de \textbf{elitismo}, el cuál es selectivo. Es decir, si el mejor
+cromosoma de la población anterior es mejor que el mejor cromosoma de la nueva población, se reintroduce el mejor de la
+población anterior sustituyendo al peor de la nueva población. Esto se puede ver a continuación:
+
+\begin{algorithm}[H]
+\caption{Esquema de elitismo selectivo}
+\begin{algorithmic}[1]
+\Procedure{Elitismo}{$poblacionAnt$, $fitAnt$, $poblacionNueva$, $fitNuevo$}
+\State $fitMejorPobAnt \gets fitAnt[0]$
+\State $fitMejorPobNueva \gets fitNuevo[0]$
+\If{$fitMejorPobAnt > fitMejorPobNueva$}
+	\State $poblacionNueva$.InsertarPrimero($poblacionAnt[0]$)
+	\State $poblacionNueva$.EliminarUlitmo()
+	\State $fitNuevo$.InsertarPrimero($fitMejorPobAnt$)
+	\State $fitNuevo$.EliminarUltimo()
+\EndIf
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+Antes de mostrar la implementación del AGG, es importante destacar algunos aspectos. La probabilidad de cruce es de $0.7$,
+mientras que la de mutación es de $0.001$. Para evitar generar muchos números aleatorios tanto a la hora de cruzar como a la
+hora de seleccionar los padres, se siguen algunas estrategias de optimización. Por ejemplo, se calcula el número de parejas
+que se van a cruzar a priori de la forma que $numParejasCruce = (NumCromosomas$ / $2) \cdot probCruce$ y se trunca este valor.
+Por lo tanto, según el número de cromosomas que se escogen en el torneo binario (el número depende del cruce a utilizar), los
+$2numParejasCruce$ primeros cromosomas se van a cruzar, de la forma que el priemero se cruza con el segundo, el tercero con el
+cuarto y así para el resto. Los que no se crucen pasarán su material genético copiándolo. En cuanto a las mutaciones, se calcula
+antes el número de mutaciones a realizar con la forma $numMutaciones = numCromosomas \cdot numGenes \cdot probMutacion$. Como
+este valor puede ser menor que 1, se tiene un contador que acumula $numMutaciones$ hasta que sea mayor o igual a 1, y en cuanto
+se dé eso, se trunca el número de mutaciones y se seleccionan qué cromosomas y genes mutar.
+
+En cuanto a las contidiciones de parada, se tienen que realizar \textbf{15000 evaluaciones} de la función objetivo.
+Con esto dicho, veamos la implementación del AGG:
+
+\begin{algorithm}[H]
+\caption{Algoritmo Genético Generacional con varios cruces posibles}
+\begin{algorithmic}[1]
+\Function{AGG}{$datos$, $etiquetas$, $opCruce$}
+\State $numGenes \gets$ ObtenerNumCaracteristicas($datos$)
+\State Determinar $numParejasCruce$ y $numPadres$ en función de $opCruce$
+\State $numMutaciones$, $contMutaciones \gets $ CalcularNumMutaciones()
+\State $numEvaluaciones \gets 0$
+\State $poblacion \gets$ GenerarPoblacionInicial($numCrom$, $numGenes$)
+\State $fitness \gets$ EvaluarPoblacion($datos$, $etiquetas$, $poblacion$)
+\State $fitness$, $poblacion \gets$ OrdenarPoblacion($fitness$, $poblacion$)
+\State $numEvaluaciones \gets numEvaluaciones + numCrom$
+\While{$numEvaluaciones < 15000$}
+	\State $nuevosCrom \gets$ VectorBooleanoFalsoCapacidad($numCromosomas$)
+	\State $listaPadres \gets $ NuevaLista()
+	\For{$i \gets 0$ \textbf{to} $numPadres - 1$}
+		\State $indPad1$, $indPad2 \gets$ Generar2IndicesAleatorios()
+		\State $listaPadres$.Insertar(TorneoBinario($fitness$, $indPad1$, $indPad2$))
+	\EndFor
+	\State $parejas \gets$ GenerarParejasCruce($listaPadres$, $numParejasCruce$)
+	\State $nuevaPob \gets$ NuevaMatrizVacia()
+	\State $nuevoFit \gets$ NuevoVectorVacio()
+	\ForEach{$pareja \in parejas$}
+		\State $hijos \gets $ opCruce($poblacion$, $pareja.pad1$, $pareja.pad2$, $numGenes$)
+		\State $nuevaPob$.InsertarFila($hijos$)
+	\EndFor
+	\State Copiar los cromosomas de los padres que no cruzan en $nuevaPoblacion$
+	\State Actualizar $nuevosCrom$ donde se hayan generado descendientes
+	\If{$contMutaciones \geq 1$}
+		\State Truncar $contMutaciones$
+		\State Generar las parejas de índices ($gen$, $cromosoma$) a mutar
+		\State Mutacion($nuevaPob$, $gen$, $cromosoma$) para cada pareja
+		\State Actualizar $nuevosCrom$ donde se haya mutado
+	\Else
+		\State $contMutaciones \gets contMutaciones + numMutaciones$
+	\EndIf
+	\For{$i \gets 0$ \textbf{to} $numCrom - 1$}
+		\If{$nuevoCrom[i]$}
+			\State $nuevoFit$.insertar(Evaluar($datos$, $etiquetas$, $nuevaPob[i]$))
+		\Else
+			\State $nuevoFit$.insertar($ftiness[listaPadres[i]]$)
+		\EndIf
+	\EndFor
+	\State $numEvaluaciones \gets numEvaluaciones + nuevosCrom$.Verdaderos()
+	\State $nuevoFit$, $nuevaPob \gets$ OrdenarPoblacion($nuevoFit$, $nuevaPob$)
+	\State Elitismo($poblacion$, $fitness$, $nuevaPob$, $nuevoFit$)
+	\State $poblacion$, $fitness \gets nuevaPob$, $nuevoFit$
+\EndWhile
+\State $W \gets poblacion[0]$
+\State \Return{$W$}
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+\newpage
+
+\subsubsection{Algoritmos genéticos estacionarios}
+
+La segunda metaheurística implementada en esta práctica son los AGE (algoritmos genéticos estacionarios). Esta versión parte de
+una población inicial de 30 cromosomas generada aleatoriamente y pretende optimizarla con el esquema estacionario. Este esquema
+consiste en generar 2 nuevos cromosomas y hacer que combatan contra los últimos 2 cromosomas de la población para ver quién se
+queda dentro (se comparan sus valores \textit{fitness} y se eligen los 2 mejores). A diferencia del anterior esquema, no se
+sustituye toda la población, si no que se determina si los nuevos cromosomas son lo suficientemente buenos como para
+entrar en la población. Como no hay mucha posibilidad de perder la mejor solución, no se utiliza elitismo.
+
+En esta versión, la probabilidad de mutación sigue siendo la misma (0.001), pero ahora la probabilidad de cruce es 1, para
+que se generen siempre esos 2 descendientes. En cuanto al esquema de generar padres, es casi igual que en el caso anterior,
+solo que se tienen que hacer los torneos binarios suficientes para generar 2 hijos (dependerá del cruce, ya que para el
+BLX-$alpha$ solo se necesitan 2 torneos binarios, mientras que para el cruce aritmético se necesitarán 4 ya que cada pareja
+produce solo un descendiente). El esquema de mutaciones, por otra parte, se mantiene casi intacto, ya que ahora solo van a
+poder mutar los nuevos cromosomas generados, que serán solo 2. El resto de condiciones se mantiene igual.
+
+Una vez dicho esto, veamos el pseudocódigo del AGE:
+
+\begin{algorithm}[H]
+\caption{Algoritmo Genético Estacionario con varios cruces posibles (I)}
+\begin{algorithmic}[1]
+\Function{AGG}{$datos$, $etiquetas$, $opCruce$}
+\State $numGenes \gets$ ObtenerNumCaracteristicas($datos$)
+\State $numHijos \gets 2$ \Comment{Se tienen que generar 2 hijos}
+\State Determinar $numPadres$ en función de $opCruce$
+\State $numMutaciones$, $contMutaciones \gets $ CalcularNumMutaciones()
+\State $numEvaluaciones \gets 0$
+\State $poblacion \gets$ GenerarPoblacionInicial($numCrom$, $numGenes$)
+\State $fitness \gets$ EvaluarPoblacion($datos$, $etiquetas$, $poblacion$)
+\State $fitness$, $poblacion \gets$ OrdenarPoblacion($fitness$, $poblacion$)
+\State $numEvaluaciones \gets numEvaluaciones + numCrom$
+\While{$numEvaluaciones < 15000$}
+	\State $listaPadres \gets $ NuevaLista()
+	\For{$i \gets 0$ \textbf{to} $numPadres - 1$}
+		\State $indPad1$, $indPad2 \gets$ Generar2IndicesAleatorios()
+		\State $listaPadres$.Insertar(TorneoBinario($fitness$, $indPad1$, $indPad2$))
+	\EndFor
+	\State $parejas \gets$ GenerarParejasCruce($listaPadres$, $numParejasCruce$)
+	\State $descendientes \gets$ NuevaMatrizVacia()
+	\ForEach{$pareja \in parejas$}
+\algstore{age}
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}[H]
+\caption{Algoritmo Genético Estacionario con varios cruces posibles (II)}
+\begin{algorithmic}
+\algrestore{age}
+		\State $hijos \gets $ opCruce($poblacion$, $pareja.pad1$, $pareja.pad2$, $numGenes$)
+		\State $descendientes$.InsertarFila($hijos$)
+	\EndFor
+	\If{$contMutaciones \geq 1$}
+		\State Truncar $contMutaciones$
+		\State Generar las parejas de índices ($gen$, $cromosoma$) a mutar
+		\State Mutacion($descendientes$, $gen$, $cromosoma$) para cada pareja
+		\State Actualizar $nuevosCrom$ donde se haya mutado
+	\Else
+		\State $contMutaciones \gets contMutaciones + numMutaciones$
+	\EndIf
+	\State $descendientesFit \gets$ EvaluarPoblacion($datos$, $etiquetas$, $descendientes$)
+	\State $descendientesFit$, $descendientes \gets$ OrdenarPoblacion($descendientesFit$, $descendientes$)
+	\State $numEvaluaciones \gets numEvaluaciones + numHijos$
+	\State $pobTorneo \gets$ Concat($poblacion$.Obtener2UltCrom(), $descendientes$)
+	\State $fitTorneo \gets$ Concat($fitness$.Obtener2UltFit(), $descendientesFit$)
+	\State $fitTorneo$, $pobTorneo \gets$ OrdenarPoblacion($fitTorneo$, $nuevaPob$)
+	\State Eliminar 2 últimos cromosomas de $poblacion$ y valores de $fitness$
+	\State $poblacion$.InsertarFinal($pobTorneo$.Obtener2Primeros())
+	\State $fitness$.InsertarFinal($fitTorneo$.Obtener2Primeros())
+	\State $fitness$, $poblacion \gets$  OrdenarPoblacion($fitness$, $poblacion$)
+\EndWhile
+\State $W \gets poblacion[0]$
+\State \Return{$W$}
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+\newpage
+
+\subsubsection{Algoritmos meméticos}
+
+La tercera y última metaheurística implementada en esta práctica son los AM (algoritmos meméticos). Los algoritmos meméticos
+son una hibridación entre los algoritmos genéticos y la búsqueda local con el objetivo de conseguir unos mejores resultados. En
+la implementación realizada se ha utilizado una población de \textbf{10 cromosomas}, con una probabilidad de cruce de 0.7 y una
+probabilidad de mutación de 0.001. La búsqueda local se aplica cada \textbf{10 generaciones}, contando también la población
+inicial. El AGG sobre el que se ha decidido implementar es el AGG con cruce BLX-$\alpha$, ya que es el que ofrecía mejores
+resultados.
+
+Respecto a la búsqueda local que utiliza el AM, esta se parece mucho a la que se ve en la sección \ref{alg:local-search},
+solo que con las siguientes modificaciones:
+
+\begin{itemize}[label=\textbullet]
+	\item La búsqueda local recibe como parámetros también el valor inicial de $W$ con su valor \textit{fitness}, con lo
+	cual no tiene que calcularlos (se eliminarían esas líneas).
+	\item Realiza siempre 80 evaluaciones de la búsqueda local, con lo cuál esa es su condición de parada. No comprueba
+	si han pasado $20 \cdot N$ iteraciones sin que se haya producido mejora.
+	\item Devuelve, a parte del $W$, su valor \textit{fitness}, para no tener que calcularlo de nuevo.
+\end{itemize}
+
+Respecto a los AM, se han implementado 3 versiones, las cuáles aplican la búsqueda local con diferentes criterios: una versión
+que aplica la búsqueda local sobre \textbf{toda la población}, una versión que aplica la búsqueda local sobre los
+\textbf{$0.1 \cdot numCromosomas$ mejores cromosomas}, y una versión que aplica la búsqueda local sobre un número de 
+\textbf{cromosomas aleatorios} dado por $0.1 \cdot numCromosomas$.
+
+El resto de criterios, tanto selección de padres como mutaciones se hace igual que en los AGG. Por tanto, sabiendo todo esto,
+veamos como sería una posible implementación del AM, para cualquiera de los 3 criterios:
+
+\begin{algorithm}[H]
+\caption{Algoritmo Memético con cruce BLX-$\alpha$ y múltiples criterios BL (I)}
+\begin{algorithmic}[1]
+\Function{AGG}{$datos$, $etiquetas$, $criterioBL$}
+\State $numGenes \gets$ ObtenerNumCaracteristicas($datos$)
+\State $numParejasCruce \gets$ Truncar($(numCrom$ / $2) \cdot probCruce$)
+\State $numMutaciones$, $contMutaciones \gets $ CalcularNumMutaciones()
+\State $numEvaluaciones \gets 0$
+\State $generacion \gets 0$
+\State $poblacion \gets$ GenerarPoblacionInicial($numCrom$, $numGenes$)
+\State $fitness \gets$ EvaluarPoblacion($datos$, $etiquetas$, $poblacion$)
+\algstore{am}
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}[H]
+\caption{Algoritmo Memético con cruce BLX-$\alpha$ y múltiples criterios BL (II)}
+\begin{algorithmic}
+\algrestore{am}
+\State $fitness$, $poblacion \gets$ OrdenarPoblacion($fitness$, $poblacion$)
+\State $numEvaluaciones \gets numEvaluaciones + numCrom$
+\State $generacion \gets generacion + 1$
+\While{$numEvaluaciones < 15000$}
+	\State $nuevosCrom \gets$ VectorBooleanoFalsoCapacidad($numCromosomas$)
+	\State $listaPadres \gets $ NuevaLista()
+	\For{$i \gets 0$ \textbf{to} $numCrom - 1$}
+		\State $indPad1$, $indPad2 \gets$ Generar2IndicesAleatorios()
+		\State $listaPadres$.Insertar(TorneoBinario($fitness$, $indPad1$, $indPad2$))
+	\EndFor
+	\State $parejas \gets$ GenerarParejasCruce($listaPadres$, $numParejasCruce$)
+	\State $nuevaPob \gets$ NuevaMatrizVacia()
+	\State $nuevoFit \gets$ NuevoVectorVacio()
+	\ForEach{$pareja \in parejas$}
+		\State $hijos \gets $ opCruce($poblacion$, $pareja.pad1$, $pareja.pad2$, $numGenes$)
+		\State $nuevaPob$.InsertarFila($hijos$)
+	\EndFor
+	\State Copiar los cromosomas de los padres que no cruzan en $nuevaPoblacion$
+	\State Actualizar $nuevosCrom$ donde se hayan generado descendientes
+	\If{$contMutaciones \geq 1$}
+		\State Truncar $contMutaciones$
+		\State Generar las parejas de índices ($gen$, $cromosoma$) a mutar
+		\State Mutacion($nuevaPob$, $gen$, $cromosoma$) para cada pareja
+		\State Actualizar $nuevosCrom$ donde se haya mutado
+	\Else
+		\State $contMutaciones \gets contMutaciones + numMutaciones$
+	\EndIf
+	\For{$i \gets 0$ \textbf{to} $numCrom - 1$}
+		\If{$nuevoCrom[i]$}
+			\State $nuevoFit$.insertar(Evaluar($datos$, $etiquetas$, $nuevaPob[i]$))
+		\Else
+			\State $nuevoFit$.insertar($ftiness[listaPadres[i]]$)
+		\EndIf
+	\EndFor
+	\State $numEvaluaciones \gets numEvaluaciones + nuevosCrom$.Verdaderos()
+	\State $generacion \gets generacion + 1$
+	\State $nuevoFit$, $nuevaPob \gets$ OrdenarPoblacion($nuevoFit$, $nuevaPob$)
+	\State Elitismo($poblacion$, $fitness$, $nuevaPob$, $nuevoFit$)
+	\State $poblacion$, $fitness \gets nuevaPob$, $nuevoFit$
+	\If{$generacion$ \textbf{mod} $10 = 0$}
+		\State Escoger $W \in poblacion$ sobre los que aplicar BL según $criterioBL$
+		\State Aplicar BusquedaLocal($datos$, $etiquetas$, $W$, $fitness_W$)
+		\State Actualizar $numEvaluaciones$
+		\State $fitness$, $poblacion \gets$ OrdenarPoblacion($fitness$, $poblacion$) 
+	\EndIf
+\EndWhile
+\State $W \gets poblacion[0]$
+\State \Return{$W$}
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
 
 \newpage
 
