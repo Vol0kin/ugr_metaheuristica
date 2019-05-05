@@ -5,18 +5,30 @@
 \usepackage[hidelinks]{hyperref}			% Poner enlaces sin marcarlos en rojo
 \usepackage{fancyhdr}						% Modificar encabezados y pies de pagina
 \usepackage{float}							% Insertar figuras
-\usepackage[textwidth=390pt]{geometry}		% Anchura de la pagina
+\usepackage[textwidth=395pt]{geometry}		% Anchura de la pagina
 \usepackage[nottoc]{tocbibind}				% Referencias (no incluir num pagina indice en Indice)
 \usepackage{enumitem}						% Permitir enumerate con distintos simbolos
 \usepackage[T1]{fontenc}					% Usar textsc en sections
 \usepackage{amsmath}						% Símbolos matemáticos
+\usepackage{algorithm}						% Environtment algorithm
+\usepackage[noend]{algpseudocode}			% Pseudocodigo
+\usepackage{listings}
+
+\algnewcommand\algorithmicforeach{\textbf{for each}}
+\algdef{S}[FOR]{ForEach}[1]{\algorithmicforeach\ #1\ \algorithmicdo}
+
+
+\lstset{
+	language=bash
+}
 
 % Comando para poner el nombre de la asignatura
 \newcommand{\asignatura}{Metaheurísticas}
+\newcommand{\autor}{Vladislav Nikolov Vasilev}
 
 % Configuracion de encabezados y pies de pagina
 \pagestyle{fancy}
-\lhead{Vladislav Nikolov Vasilev}
+\lhead{\autor{}}
 \rhead{\asignatura{}}
 \lfoot{Grado en Ingeniería Informática}
 \cfoot{}
@@ -52,7 +64,7 @@
 
 \centering
 
-\textbf{Autor}\\ {Vladislav Nikolov Vasilev}\\[1ex]
+\textbf{Autor}\\ {\autor{}}\\[1ex]
 \textbf{NIE}\\ {X8743846M}\\[1ex]
 \textbf{E-Mail}\\ {vladis890@gmail.com}\\[1ex]
 \textbf{Grupo de prácticas}\\ {MH3 Jueves 17:30-19:30}\\[1ex]
@@ -111,13 +123,356 @@ Por tanto, al combinarlos en una única función a la que llamaremos $F(W)$, la 
 $\alpha \in [0, 1]$. En este caso, se utiliza un $\alpha = 0.5$ para dar la misma importancia a ambos, con lo cuál se pretende
 que se reduzcan al máximo el número de características conservando una $tasa\_clas$ alta.
 
+\section{Descripción de los algoritmos}
+
+\subsection{Consideraciones previas}
+
+Antes de empezar con la descripción formal de los algoritmos implementados, vamos a describir algunos aspectos
+comunes, como por ejemplo cómo se representan e inicializan las soluciones; cómo se representan la población, los padres y las
+elecciones para mutar los cromosomas; cómo se realiza el torneo binario, la mutación y los distintos cruces, y algunas funciones
+utilizadas en muchas partes del código, como por ejemplo la función objetivo o la forma de evaluar a la población. Cabe destacar
+que muchos de los pseudocódigos que aparecen a continuación no se han implementado exactamente igual o no aparecen en el
+código, ya que o bien son operaciones que se han vectorizado o bien ya hay funciones que hacen eso.
+
+Primero vamos a ver como se representa la población, los padres y una elección de mutación. Una población no es más que un
+vector de vectores, o lo que es lo mismo, una matriz de tamaño $N \times M$, donde $N$ es el número de cromosomas (soluciones)
+y $M$ es el número de genes (número de características). Por tanto, ahora tenemos un conjunto de vectores de pesos, lo que
+viene a significar que tenemos múltiples $W$. Esta población está ordenada en todo momento por el valor \textit{fitness}
+de cada cromosoma para facilitar las operaciones posteriores. Un padre $p$ no es más que un índice a un cromosoma de la
+población, con la restricción de que $p \in [0, N)$. Una mutación viene dada por dos valores $c, g$, donde $c$ es el cromosoma
+a mutar y $g$ el gen a mutar. Estos dos valores están sujetos a que $c \in [0, N)$ y a que $g \in [0, M)$.
+
+Como cada fila de la matriz es un vector de pesos $W$, se tiene que cumplir que $\forall w_i \in W, \; w_i \in [0, 1]$. Por
+tanto, para evitar que las soluciones se salgan de este intervalo, se ha implementado una función que se encarga de normalizar
+los valores de $W$ en el rango. La función se ha usado tanto en los algoritmos meméticos como en los genéticos a
+la hora de realizar un cruce o una mutación, para que los valores de los cromosomas siguiesen siendo válidos. La
+implementación de esta función es la siguiente:
+
+\begin{algorithm}[H]
+\caption{Función que normaliza un vector de pesos $W$}
+\begin{algorithmic}[1]
+\Function{NormalizarW}{$W$}
+\ForEach{$w_i \in W$}
+	\If{$w_i < 0$}
+		\State $w_i \gets 0$
+	\ElsIf{$w_1 > 1$}
+		\State $w_i \gets 1$
+	\EndIf
+\EndFor
+\State \textbf{return} $W$
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+Para generar las soluciones iniciales se ha utilizado una función que recibe como parámetros el número de genes y el número de
+cromosomas, y crea una nueva matriz que representa la población, inicializándola con valores aleatorios generados
+mediante una distribución uniforme en el rango $[0, 1]$. Su pseudocódigo se puede ver a continuación:
+
+\begin{algorithm}[H]
+\caption{Función que genera una población inicial}
+\begin{algorithmic}[1]
+\Function{GenerarPoblacionInicial}{$numCrom$, $numGenes$}
+\State $poblacion \gets $ NuevaMatrizVacia($numCrom$, $numGenes$)
+	\For{$i \gets 0$ \textbf{to} $numCrom - 1$}
+		\For{$j \gets 0$ \textbf{to} $numGenes- 1$}
+			\State $poblacion[i][j] \gets $ ValorAleatorioUniformeRango0-1()
+		\EndFor	
+	\EndFor
+\State \textbf{return} $poblacion$
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+Para seleccionar los padres o cromosomas que pasarán su material genético se ha utilizado una función que recibe los índices
+de 2 cromosomas y la lista de valores \textit{fitness}, y devuelve el índice del cromosoma con mejor valor \textit{fitness}.
+Se muestra su implementación a continuación:
+
+\begin{algorithm}[H]
+\caption{Función que realiza un torneo binario y elige el mejor padre}
+\begin{algorithmic}[1]
+\Function{TorneoBinario}{$listaFitness$, $indxCrom1$, $indxCrom2$}
+\State $fitCrom1 \gets listaFitness[indxCrom1]$
+\State $fitCrom2 \gets listaFitness[indxCrom2]$
+\State $mejorPadre \gets indxCrom1$
+\If{$ fitCrom1 < fitCrom2$}
+	\State $mejorPadre \gets indxCrom2$
+\EndIf
+\State \textbf{return} $mejorPadre$
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+En cuanto a los cruces, para el cruce BLX-$\alpha$ se ha creado una función que recibe la población, los índices
+de los padres y aplica el cruce, generando dos descendientes. En este caso se ha especificado que $\alpha = 0.3$.
+Aquí se puede ver como funciona:
+
+\begin{algorithm}[H]
+\caption{Cruce BLX-$\alpha$ con $\alpha = 0.3$ (I)}
+\begin{algorithmic}[1]
+\Function{CruceBLXAlfa}{$poblacion$, $indPadre1$, $indPadre2$, $numGenes$, $\alpha$}
+\State $padre1$, $padre2 \gets poblacion[indPadre1]$, $poblacion[indPadre2]$
+\State $hijo1$, $hijo2$, $C_{min}$, $C_{max}$, $I \gets$ NuevoVectorVacio($numGenes$)
+\For{$i \gets 0$ \textbf{to} $numGenes - 1$}
+	\State $C_{min}[i] \gets$ Minimo($padre1[i]$, $padre2[i]$)
+	\State $C_{max}[i] \gets$ Maximo($padre1[i]$, $padre2[i]$)
+	\State $I[i] \gets C_{max}[i] - C_{min}[i]$)
+\EndFor
+\algstore{blx}
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}[H]
+\caption{Cruce BLX-$\alpha$ con $\alpha = 0.3$ (II)}
+\begin{algorithmic}[1]
+\algrestore{blx}
+\For{$i \gets 0$ \textbf{to} $numGenes - 1$}
+	\State $hijo1[i] \gets$ ValorAleatorioUnifInter($C_{min}[i] - I[i] \cdot \alpha$, $C_{max}[i] + I[i] \cdot \alpha$)
+	\State $hijo2[i] \gets$ ValorAleatorioUnifInter($C_{min}[i] - I[i] \cdot \alpha$, $C_{max}[i] + I[i] \cdot \alpha$)
+\EndFor
+\State NormalizarW($hijo1$), NormalizarW($hijo2$)
+\State \textbf{return} $hijo1$, $hijo2$
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+Para el cruce aritmético (AC) se ha implementado una función que recibe la población y los índices de los padres, y genera
+los descendientes haciendo la media aritmética, como se puede ver aquí:
+
+\begin{algorithm}[H]
+\caption{Función del cruce aritmético}
+\begin{algorithmic}[1]
+\Function{CruceAritmetico}{$poblacion$, $indPad1$, $indPad2$, $numGenes$}
+\State $padre1$, $padre2 \gets poblacion[indPad1]$, $poblacion[indPad2]$
+\State $hijo \gets$ NuevoVectorVacio($numGenes$)
+\For{$i \gets 0$ \textbf{to} $numGenes - 1$}
+	\State $hijo[i] \gets (padre1[i] + padre2[i])$ / 2
+\EndFor
+\State \textbf{return} $hijo$
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+Para la mutación se ha creado una función que recibe la población y los índices del cromosoma y gen a mutar, y añade a dicho
+gen un valor generado por una distribución normal con $\mu = 0$ y $\sigma = 0.3$. Se puede ver a continuación:
+
+\begin{algorithm}[H]
+\caption{Función de mutación}
+\begin{algorithmic}[1]
+\Function{Mutacion}{$pob$, $indCrom$, $indGen$}
+\State $pob[indCrom][indGen] \gets pob[indCrom][indGen] + $ ValorDistribNorm($\mu$, $\sigma$)
+\State NormalizarW($pob[indCrom]$)
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+Vamos a comentar ahora algunos detalles extra. Es importante saber como se calcula la distancia a un vecino, ya que esto juega
+un factor muy importante a la hora de encontrar cuál es el vecino más cercano a un elemento (o el vecino más cercano por el
+criterio \textit{leave-one-out}). En la implementación de la práctica se ha utilizado un KDTree, que es una estructura de datos
+parecida a un árbol binario, solo que de $K$ dimensiones. Por dentro, esta estructura utiliza la distancia Euclídea (distancia
+en línea recta entre dos elementos) para determinar cuál es el elemento más próximo a otro. No hace falta conocer como se
+implementa esta estructura de datos, pero sí es importante conocer cómo se realiza el cálculo de la distancia Euclídea. En el
+siguiente pseudocódigo se puede ver el cálculo:
+
+% Insertar codigo aqui
+
+
+Pasemos a ver ahora la función objetivo, $F(W)$, que es lo que se pretende optimizar. Para evaluar la función objetivo,
+necesitamos calcular $tasa\_clas$ y $tasa\_red$. Para calcular lo primero, podemos seguir la idea detrás del siguiente
+pseudocódigo:
+
+\begin{algorithm}[H]
+\caption{Cálculo de la tasa de clasificación}
+\begin{algorithmic}[1]
+\Function{CalculoTasaClas}{$etiq, etiqPred, N$}
+\State $bienClasificados \gets 0$
+\For{$i \gets 1$ \textbf{to} $N$}
+	\If{$etiq_i = etiqPred_i$}
+		\State $bienClasificados \gets bienCasificados + 1$
+	\EndIf
+\EndFor
+\State $tasa\_clas \gets bienClasificados$ / $N$
+\State \textbf{return} $tasa\_clas$
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+Para calcular $tasa\_red$, suponiendo que queremos saber el número de características por debajo de $0.2$ podemos seguir un
+esquema como el siguiente:
+
+\begin{algorithm}[H]
+\caption{Cálculo de la tasa de reducción}
+\begin{algorithmic}[1]
+\Function{CalculoTasaRed}{$W, N$}
+\State $caracRed \gets 0$
+\ForEach{$w_i \in W$}
+	\If{$w_i < 0.2$}
+		\State $caracRed \gets caracRed + 1$
+	\EndIf
+\EndFor
+\State $tasa\_red \gets caracRed$ / $N$
+\State \textbf{return} $tasa\_red$
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+Y finalmente, para poder calcular la función a optimizar (nuestra función \textit{fitness} u objetivo), teniendo en cuenta que
+usamos un $\alpha = 0.5$ para ponderar las dos tasas, y que anteriormente hemos calculado ambas tasas, podemos seguir el
+siguiente esquema:
+
+\begin{algorithm}[H]
+\caption{Cálculo de la función objetivo o \textit{fitness}}
+\begin{algorithmic}[1]
+\Function{CalculoFuncionFitness}{$tasa\_clas, tasa\_red, \alpha$}
+\State $fitness \gets \alpha \cdot tasa\_clas + (1 - \alpha) \cdot tasa\_red$
+\State \textbf{return} $fitness$
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+Una vez sabiendo todo esto, podemos comenzar a describir las implementaciones de los algoritmos utilizados.
+
+\subsection{Algoritmos de comparación}
+
+\subsection{Algoritmos de búsqueda basados en poblaciones}
+
+\newpage
+
+\section{Desarrollo de la práctica}
+
+La práctica se ha implementado en \textbf{Python3} y ha sido probada en la versión 3.7.1. Por tanto, se recomienda
+encarecidamente utilizar un intérprete de Python3 al ejecutar el código y no uno de la versión 2.X, debio a problemas
+de compatibilidad con ciertas funciones del lenguaje. Se ha probado el código sobre Linux Mint 19 y al estar basado en
+Ubuntu 18 no debería haber problemas de compatibilidad con otros sistemas, además de que Python es un lenguaje muy portable.
+No se ha probado en el entorno \textbf{conda}, pero si se consiguen instalar los módulos necesarios, no debería haber
+problemas.
+
+A la hora de implementar el software, se han utilizado tanto módulos ya incluidos en Python, como el módulo \textbf{time}
+para la medición de tiempos, como módulos científicos y para \textit{machine learning}, como por ejemplo \textbf{numpy} y
+\textbf{sklearn}. Este último se ha utlizado para poder dividir los datos para el \textbf{5 Fold Cross Validation}
+y para obtener un clasificador KNN que poder utilizar para poder probar los resultados obtenidos por cada uno de los
+algoritmos. Para la visualización de datos se ha utilizado \textbf{pandas}, ya que permite conseguir una visualización rápida
+de estos gracias a los DataFrames.
+
+Adicionalmente, la estructura de \textbf{KDTree} utilizada ha sido sacada de un módulo externo llamado
+\textbf{pykdtree}\cite{pykdtree}. Este módulo está implementado en \textbf{Cython} y \textbf{C} y también utiliza
+\textbf{OMP}, con lo cuál su rendimiento va a ser muy superior a otras implementaciones como por ejemplo el \textbf{cKDTree}
+de \textbf{scipy}\footnote{De hecho, pykdtree está basado en cKDTree y libANN, cogiendo lo
+mejor de cada implementación y paralelizando el código con OMP para conseguir unos rendimientos muy superiores a ambos,
+tanto a la hora de crear el árbol como para hacer consultas.}. En cuanto a su uso, las funciones y la forma de construirlo
+son las mismas que las de cKDTree, con lo cuál se puede consultar su documentación\cite{ckdtree} para obtener más información
+sobre su uso.
+
+Siendo ahora más concretos en cuanto a la implementación, se ha creado un módulo que contiene tanto código reutilizado de la
+práctica anterior (creación de particiones, búsqueda local, función de normalización de los datos y funciones objetivo y de
+evaluación de los datos) como código referente a esta práctica (es decir, la implementación de los algoritmos genéticos y
+meméticos). Se ha implementado un algoritmo por cada estrategia del genético (un algoritmo para el AGG y uno para el AGE),
+dando la posibilidad de elegir el operador de cruce a utilizar en cada caso, y una función para el algoritmo memético, que de
+nuevo, ofrece la posibilidad de escoger la estrategia a utilizar. Además, se han implementado una serie de funciones a las
+que se ha llamado clasificadores, que se encargan de recorrer las particiones creadas, de ejecutar los respectivos algoritmos
+pasándoles los datos, entrenar luego un clasificador 1-NN con los pesos calculados y predecir las clases, además de recopilar
+información estadística para mostrarla luego por pantalla. 
+
+Se han utilizado dos semillas aleatorias las cuáles están fijas en el código: una para dividir los datos, y otra para los
+algoritmos implementados, que se fija al justo antes de llamar a la función que le pasa los datos al algoritmo que se vaya a
+ejecutar. Los ficheros ARFF proporcionados se han convertido al formato CSV con un script propio, con el objetivo de facilitar
+la lectura de los datos. Estos archivos también se proporcionan junto con el código fuente implementado.
+
+\newpage
+
+\section{Manual de usuario}
+
+Para poder ejecutar el programa, se necesita un intérprete de \textbf{Python3}, como se ha mencionado anteriormente. Además,
+para poder satisfacer las dependencias se necesita el gestor de paquetes \textbf{pip} (preferiblemente \textbf{pip3}).
+
+Se recomienda instalar las dependencias, las cuáles vienen en el archivo \textbf{requirements.txt}, ya que sin ellas, el
+programa no podrá funcionar. Se recomienda utilizar el script de bash incluido para realizar la instalación, ya que se
+encarga de instalarlo en un entorno virtual para no causar problemas de versiones con paquetes que ya se tengan instaladas en
+el equipo o para no instalar paquetes no deseados. Una vez instalados\footnote{Si se produce algún error durante la
+instalación de los paquetes, puede ser debido a pykdtree, ya que al necesitar un compilador que soporte OMP puede fallar en
+los sistemas OSX. Para evitar estos problemas, el programa puede utilizar un cKDTree de scipy en caso de que a la hora de
+importar pykdtree se produzca un error, suponiendo a cambio una penalización en el tiempo de ejecución.}, para poder utilizar
+el entorno creado se debe ejecutar el siguiente comando:
+
+\begin{lstlisting}
+	$ source ./env/bin/activate
+\end{lstlisting}
+
+Para desactivar el entorno virtual, simplemente basta con ejecutar:
+
+\begin{lstlisting}
+	(env) $ deactivate
+\end{lstlisting}
+
+Para ejecutar el programa basta con ejecutar el siguiente comando:
+
+\begin{lstlisting}
+	$ python3 practica2.py [archivo] [algoritmo]
+\end{lstlisting}
+
+Los argumentos \textbf{archivo} y \textbf{algoritmo} son obligatorios, y sin ellos el programa lanzará una excepción. En
+cuanto a sus posibles valores:
+
+\begin{itemize}[label=\textbullet]
+	\item \textbf{archivo} puede ser: \textbf{colposcopy}, \textbf{ionosphere} o \textbf{texture}.
+	\item \textbf{algoritmo} puede ser:
+	\begin{itemize}[label=$\ast$]
+		\item Para AG: \textbf{genetics-generational-blx}, \textbf{genetics-generational-ac},\\
+		\textbf{genetics-stationary-blx} o \textbf{genetics-stationary-ac}.
+		\item Para AM: \textbf{memetics-all}, \textbf{memetics-best} o \textbf{memetics-rand}.
+	\end{itemize}
+\end{itemize}
+
+A continuación, para ilustrar mejor lo explicado hasta el momento, se ofrece una captura de un ejemplo de ejecución del
+programa. En la imagen se puede ver la siguiente información:
+
+\begin{itemize}[label=\textbullet]
+	\item Se muestra primero el conjunto de datos sobre el que se va a ejecutar, el clasificador que se va a ejecutar,
+	las opciones que se le pasan a ese clasificador (que determinaran qué algoritmo utilizar) y el tiempo total.
+	\item Se puede ver una tabla en la que aparecen los datos referentes a cada partición (tasa de clasificación, tasa de
+	reducción, agrupación y tiempo).
+	\item Se muestran valores estadísticos para cada variable (valores máximo, mínimo, medio, mediana y desviación típica).
+\end{itemize}
+
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.4]{img/out_example.png}
+\caption{Ejemplo de salida de la ejecución con los datos \textbf{texture} y el \textbf{AGG}
+con operador de cruce BLX-$\alpha$.}
+\end{figure}
+
+\newpage
+
+\section{Análisis de resultados y experimentación}
+
+\subsection{Descripción de los casos del problema}
+
+Para analizar el rendimiento de los algoritmos, se han realizado pruebas sobre 3 conjuntos de datos:
+
+\begin{itemize}[label=\textbullet]
+	\item \textbf{Colposcopy}: Conjunto de datos de colposcopias adquirido y anotado por médicos profesionales del Hospital
+	Universitario de Caracas. Las imágenes fueron tomadas al azar de las secuencias colposcópicas. 287 ejemplos con 62
+	características que deben ser clasificados en 2 clases.
+	\item \textbf{Ionosphere}: Conjunto de datos de radar que fueron recogidos por un sistema en \textit{Goose Bay},
+	Labrador. 352 ejemplos con 34 características que deben ser clasificados en 2 clases.
+	\item \textbf{Texture}: Conjunto de datos de extracciones de imágenes para distinguir entre 11 texturas diferentes
+	(césped, piel de becerro prensada, papel hecho a mano, rafia en bucle a una pila alta, lienzo de algodón,...). 550
+	ejemplos con 40 características que deben ser clasificados en 11 clases.
+\end{itemize}
+
+\subsection{Análisis de los resultados}
+
 \newpage
 
 \begin{thebibliography}{5}
 
-\bibitem{nombre-referencia}
-Texto referencia
-\\\url{https://url.referencia.com}
+\bibitem{pykdtree}
+Repositroio de GitHub de pykdtree.
+\\\url{https://github.com/storpipfugl/pykdtree}
+
+\bibitem{ckdtree}
+Documentación de cKDTree.
+\\\url{https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.cKDTree.html}
 
 \end{thebibliography}
 
