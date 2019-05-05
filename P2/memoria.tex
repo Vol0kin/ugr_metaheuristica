@@ -17,6 +17,8 @@
 \algnewcommand\algorithmicforeach{\textbf{for each}}
 \algdef{S}[FOR]{ForEach}[1]{\algorithmicforeach\ #1\ \algorithmicdo}
 
+\algrenewcommand\algorithmicreturn{\textbf{return}}
+
 
 \lstset{
 	language=bash
@@ -138,7 +140,7 @@ Primero vamos a ver como se representa la población, los padres y una elección
 vector de vectores, o lo que es lo mismo, una matriz de tamaño $N \times M$, donde $N$ es el número de cromosomas (soluciones)
 y $M$ es el número de genes (número de características). Por tanto, ahora tenemos un conjunto de vectores de pesos, lo que
 viene a significar que tenemos múltiples $W$. Esta población está ordenada en todo momento por el valor \textit{fitness}
-de cada cromosoma para facilitar las operaciones posteriores. Un padre $p$ no es más que un índice a un cromosoma de la
+de cada cromosoma para facilitar las operaciones posteriores. Un padre $p$ no es más que un índice de un cromosoma de la
 población, con la restricción de que $p \in [0, N)$. Una mutación viene dada por dos valores $c, g$, donde $c$ es el cromosoma
 a mutar y $g$ el gen a mutar. Estos dos valores están sujetos a que $c \in [0, N)$ y a que $g \in [0, M)$.
 
@@ -159,7 +161,7 @@ implementación de esta función es la siguiente:
 		\State $w_i \gets 1$
 	\EndIf
 \EndFor
-\State \textbf{return} $W$
+\State \Return{$W$}
 \EndFunction
 \end{algorithmic}
 \end{algorithm}
@@ -178,7 +180,7 @@ mediante una distribución uniforme en el rango $[0, 1]$. Su pseudocódigo se pu
 			\State $poblacion[i][j] \gets $ ValorAleatorioUniformeRango0-1()
 		\EndFor	
 	\EndFor
-\State \textbf{return} $poblacion$
+\State \Return{$poblacion$}
 \EndFunction
 \end{algorithmic}
 \end{algorithm}
@@ -197,7 +199,7 @@ Se muestra su implementación a continuación:
 \If{$ fitCrom1 < fitCrom2$}
 	\State $mejorPadre \gets indxCrom2$
 \EndIf
-\State \textbf{return} $mejorPadre$
+\State \Return{$mejorPadre$}
 \EndFunction
 \end{algorithmic}
 \end{algorithm}
@@ -230,7 +232,7 @@ Aquí se puede ver como funciona:
 	\State $hijo2[i] \gets$ ValorAleatorioUnifInter($C_{min}[i] - I[i] \cdot \alpha$, $C_{max}[i] + I[i] \cdot \alpha$)
 \EndFor
 \State NormalizarW($hijo1$), NormalizarW($hijo2$)
-\State \textbf{return} $hijo1$, $hijo2$
+\State \Return{$hijo1$, $hijo2$}
 \EndFunction
 \end{algorithmic}
 \end{algorithm}
@@ -247,7 +249,7 @@ los descendientes haciendo la media aritmética, como se puede ver aquí:
 \For{$i \gets 0$ \textbf{to} $numGenes - 1$}
 	\State $hijo[i] \gets (padre1[i] + padre2[i])$ / 2
 \EndFor
-\State \textbf{return} $hijo$
+\State \Return{$hijo$}
 \EndFunction
 \end{algorithmic}
 \end{algorithm}
@@ -258,10 +260,10 @@ gen un valor generado por una distribución normal con $\mu = 0$ y $\sigma = 0.3
 \begin{algorithm}[H]
 \caption{Función de mutación}
 \begin{algorithmic}[1]
-\Function{Mutacion}{$pob$, $indCrom$, $indGen$}
+\Procedure{Mutacion}{$pob$, $indCrom$, $indGen$}
 \State $pob[indCrom][indGen] \gets pob[indCrom][indGen] + $ ValorDistribNorm($\mu$, $\sigma$)
 \State NormalizarW($pob[indCrom]$)
-\EndFunction
+\EndProcedure
 \end{algorithmic}
 \end{algorithm}
 
@@ -273,8 +275,35 @@ en línea recta entre dos elementos) para determinar cuál es el elemento más p
 implementa esta estructura de datos, pero sí es importante conocer cómo se realiza el cálculo de la distancia Euclídea. En el
 siguiente pseudocódigo se puede ver el cálculo:
 
-% Insertar codigo aqui
+\begin{algorithm}[H]
+\caption{Cálculo de la distancia Euclídea entre dos puntos}
+\begin{algorithmic}
+\Function{DistanciaEuclidea}{$e_1, e_2$}
+\State $distancia \gets \sqrt{\sum_{i=1}^{N} (e_1^i - e_2^i)^2}$
+\State \Return{$distancia$}
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
 
+También es importante ver cómo se mantiene la población ordenada. Para hacer esto, se ha creado una función que recibe la
+lista de valores \textit{fitness} y la poblacion, obtiene los índices que dan el orden de forma ascendente de la lista
+y con estos índices ordena la población y la lista de \textit{fitness}. Aquí se puede ver como funciona:
+
+\begin{algorithm}
+\caption{Función para ordenar la población según su valor \textit{fitness}}
+\begin{algorithmic}[1]
+\Function{OrdenarPoblacionPorFitness}{$fitness$ , $poblacion$}
+\State $indicesOrden \gets $ ObtenerIndicesOrdenados($fitness$)
+\State $fitnessOrdenado \gets$ NuevoVectorVacioMismaCapacidad($fitness$)
+\State $poblacionOrdenada \gets$ NuevaMatrizVaciaMismaCapacidad($poblacion$)
+\ForEach{$indice \in indicesOrden$}
+	\State $fitnessOrdenado \gets fitness[indice]$
+	\State $poblacionOrdenada \gets poblacion[indice]$
+\EndFor
+\State \Return{$fitnessOrdenado$, $poblacionOrdenada$}
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
 
 Pasemos a ver ahora la función objetivo, $F(W)$, que es lo que se pretende optimizar. Para evaluar la función objetivo,
 necesitamos calcular $tasa\_clas$ y $tasa\_red$. Para calcular lo primero, podemos seguir la idea detrás del siguiente
@@ -291,7 +320,7 @@ pseudocódigo:
 	\EndIf
 \EndFor
 \State $tasa\_clas \gets bienClasificados$ / $N$
-\State \textbf{return} $tasa\_clas$
+\State \Return{$tasa\_clas$}
 \EndFunction
 \end{algorithmic}
 \end{algorithm}
@@ -300,17 +329,25 @@ Para calcular $tasa\_red$, suponiendo que queremos saber el número de caracter�
 esquema como el siguiente:
 
 \begin{algorithm}[H]
-\caption{Cálculo de la tasa de reducción}
+\caption{Cálculo de la tasa de reducción (I)}
 \begin{algorithmic}[1]
 \Function{CalculoTasaRed}{$W, N$}
 \State $caracRed \gets 0$
 \ForEach{$w_i \in W$}
+\algstore{reduction}
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}[H]
+\caption{Cálculo de la tasa de reducción (II)}
+\begin{algorithmic}
+\algrestore{reduction}
 	\If{$w_i < 0.2$}
 		\State $caracRed \gets caracRed + 1$
 	\EndIf
 \EndFor
 \State $tasa\_red \gets caracRed$ / $N$
-\State \textbf{return} $tasa\_red$
+\State \Return{$tasa\_red$}
 \EndFunction
 \end{algorithmic}
 \end{algorithm}
@@ -324,12 +361,44 @@ siguiente esquema:
 \begin{algorithmic}[1]
 \Function{CalculoFuncionFitness}{$tasa\_clas, tasa\_red, \alpha$}
 \State $fitness \gets \alpha \cdot tasa\_clas + (1 - \alpha) \cdot tasa\_red$
-\State \textbf{return} $fitness$
+\State \Return{$fitness$}
 \EndFunction
 \end{algorithmic}
 \end{algorithm}
 
-Una vez sabiendo todo esto, podemos comenzar a describir las implementaciones de los algoritmos utilizados.
+Para acabar, y antes de pasar a ver la implementación de los algoritmos, veamos otra funcionalidad que se usa en todos los
+algoritmos, que es la forma en la que se evalúa la función objetivo. Para eso, se usa una función que permite evaluar a toda la
+nueva población, la cuál a su vez llama a una función que evalúa cada elemento de la población. Veamos su funcionamiento,
+empezando por la función más específica (la cuál solo evalúa un vector de pesos $W$) hasta la más genérica:
+
+\begin{algorithm}[H]
+\caption{Función para evaluar un vector de pesos $W$}
+\begin{algorithmic}[1]
+\Function{Evaluar}{$datos$, $etiquetas$, $W$}
+\State $datosPesos \gets$ aplicar $w_i \in W$ sobre los $x_i \in datos$ donde $w_i > 0.2$
+\State $arbolKD \gets$ KDTree($datosPesos$)
+\State $vecinos \gets arbolKD$.ObtenerVecinosMasCercanoL1O($datosPesos$)
+\State $pred \gets etiquetas[vecinos]$
+\State $tasa\_clas \gets$ CalcularTasaClas($etiquetas$, $pred$, num. etiquetas)
+\State $tasa\_red \gets$ CalcularTasaRed($W$, num. caracteristicas)
+\State $fitness \gets$ CalculoFuncionFitness($tasa\_clas$, $tasa\_red$)
+\State \Return{$fitness$}
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}[H]
+\caption{Función para evaluar una población}
+\begin{algorithmic}[1]
+\Function{EvaluarPoblacion}{$datos$, $etiquetas$, $poblacion$}
+\State $listaFitness \gets $ NuevoVector()
+\ForEach{$W \in poblacion$}
+	\State $listaFitness$.Añadir(Evaluar($datos$, $etiquetas$, $W$))
+\EndFor
+\State \Return{$listaFitness$}
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
 
 \subsection{Algoritmos de comparación}
 
