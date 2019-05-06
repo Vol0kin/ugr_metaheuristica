@@ -211,7 +211,7 @@ Aquí se puede ver como funciona:
 \begin{algorithm}[H]
 \caption{Cruce BLX-$\alpha$ con $\alpha = 0.3$ (I)}
 \begin{algorithmic}[1]
-\Function{CruceBLXAlfa}{$poblacion$, $indPadre1$, $indPadre2$, $numGenes$, $\alpha$}
+\Function{CruceBLXAlfa}{$poblacion$, $indPadre1$, $indPadre2$, $numGenes$}
 \State $padre1$, $padre2 \gets poblacion[indPadre1]$, $poblacion[indPadre2]$
 \State $hijo1$, $hijo2$, $C_{min}$, $C_{max}$, $I \gets$ NuevoVectorVacio($numGenes$)
 \For{$i \gets 0$ \textbf{to} $numGenes - 1$}
@@ -989,6 +989,21 @@ Para analizar el rendimiento de los algoritmos, se han realizado pruebas sobre 3
 
 \subsection{Análisis de los resultados}
 
+Se han realizado distintas ejecuciones con los datos para cada uno de los algoritmos. Cada conjunto de datos se ha dividido
+con una función de \textbf{sklearn}, y se han mezclado con la \textbf{semialla aleatoria} 40. Antes de ejecutar cada uno de los
+algoritmos con la primera partición de datos se ha fijado como \textbf{semilla} el valor 8912374 (la misma que la práctica 
+anterior para realizar un análisis más justo, ya que si no podría pasar que alguno de los nuevos algoritmos es mejor). Ambas 
+están fijadas en el código y se pueden comprobar. Es muy importante destacar que todas las gráficas que se vean proceden de
+la primera partición de cada conjunto de datos, con el objetivo de el análisis sea sobre los mismos datos, en vez de sobre
+diferentes particiones.
+
+A continuación se muestran los resultados obtenidos para cada algoritmo y para cada uno de los conjuntos de datos, rescatando
+las tablas de la práctica anterior. Se han medido los valores de tasa de clasificación, tasa de reducción, agrupación (función
+objetivo) y tiempo que ha tardado (en segundos). Además se ofrece información extra sobre los valores máximo, mínimo, medio,
+mediana y desviación típica de cada uno de los datos, para poder comparar los datos más fácilmente. Y, como extra, se ha añadido
+una tabla en la que aparecen los valores medios de cada algoritmo, para facilitar la comparación. Estas tablas se pueden ver
+a continuación:
+
 \begin{table}[H]
 \resizebox{\columnwidth}{!}{%
 \begin{tabular}{c|c|c|c|c|c|c|c|c|c|c|c|c|}
@@ -1224,7 +1239,329 @@ en el problema del APC.}
 \caption{Valores medios de los distintos algoritmos para el problema del APC.}
 \end{table}
 
+Antes de realizar el análisis, vamos a describir como se realizará el proceso. Primero se compararán los algoritmos de la misma
+categoría (AGG, AGE y AM). Después, se compararán los mejores genéticos para decidir cuál es el mejor. Luego se compararán los AG
+con los AM para ver cuál de las dos metaheurísticas tiene un mejor rendimiento. Finalmente se comparará la mejor metaheurística
+implementada en esta práctica con los algoritmos de comparación, y se elegirá el mejor. Todo esto se hará para cada conjunto de
+datos, y se llegará a una conclusión.
+
+Para realizar la comparación se atenderán los siguientes criterios:
+
+\begin{itemize}
+	\item En caso de comparar los AGG, AGE y AM, se mirarán los valores medios de tasa de clasificación, tasa de reducción,
+	agrupación y, en menor medida, el tiempo. El mejor de los algoritmos será el que destaque en más campos.
+	\item A la hora de comparar la mejor metaheurística de esta práctica con los algoritmos de comparación, si se compara con
+	la búsqueda local se mirarán todas las características anterires menos el tiempo. En caso de compararla con alguna
+	de las otras, solo se mirará la tasa de clasificación, ya que no sería justo comparar las otras características porque esas
+	técnicas no reducen o su objetivo no es reducir ni maximizar un valor \textit{fitness}.
+\end{itemize}
+
+Con esto dicho, comencemos el análisis.
+
+Vamos a comenzar por el conjunto de datos \textit{Colposcopy}. Comenzando por los AGG, nos encontramos que el AGG con cruce
+BLX-$\alpha$ es muy superior al AGG con cruce aritmético, ya que todos sus valores medios son más elevados que los de su
+contraparte. Solo en el caso de la tasa de clasificación tienen valores muy cercanos, debido a que puede ser que se haya
+producido \textit{overfitting} con el entrenamiento, pero en el resto de casos, reduce más, tiene una mayor tasa de agrupación y,
+de media, tarda menos, lo cuál siempre es un punto fuerte en este tipo de metaheurísticas.
+
+Si echamos un vistazo a los AGE vemos que sucede algo similar, ya que los valores obtenidos por el BLX-$\alpha$ son superiores
+en todos los aspectos menos en clasificación, donde a pesar de ser superiores, la diferencia es muy poca (solo de 0.03). Por tanto
+ya tenemos un claro mejor AGE de entre los dos.
+
+Observando los AM nos encontramos con que, en este caso, el AM que aplica la búsqueda local sobre toda la población es el mejor.
+Hay que tener en cuenta que los AM se han construido sobre el AGG con operador de cruce BLX-$\alpha$ y sobre esta base se ha
+introducido una búsqueda local, con lo cuál, los resultados obtenidos se espera que sean o bien muy próximos a los del genético
+o bien un poco superiores. Volviendo a nuestra comparación de los AM, el algoritmo que aplica la búsqueda local sobre toda la
+población domina a los otros en casi todos los aspectos, ya que produce mejores tasas de clasificación y reducción y una mejor
+agrupación, pero en cuanto a tiempo pierde contra el que aplica una búsqueda local sobre un cromosoma aleatorio. El segundo mejor
+memético sería el que aplica la búsqueda local sobre un cromosoma aleatorio, y en último lugar iría el que lo hace sobre el
+mejor de la población. De aquí podemos pensar que al aplicar la BL sobre el mejor se pueden dar problemas, ya que si los
+descendientes que genera el mejor cromosoma son peores que él, no hay nada que se pueda hacer, por mucho elitismo que se tenga.
+Puede ser que el mejor se haya optimizado tanto que haya caído en un óptimo local, y que al aplicar sobre él una búsqueda local no
+se obtengan unos buenos resultados, y que además, por mucho que se le cruce con otros cromosomas, como son peores que él, no se
+produce una mejora real. En conclusión, en este problema el mejor AM es el que aplica la búsqueda local sobre toda la población,
+ya que combina una estrategia de explorar con los genéticos y de explotar con la búsqueda local, teniendo distintos cromosomas
+en diferentes regiones del espacio con muy buenos valores (aunque también puede pasar que todos estén en la misma zona pero tengan
+unos valores \textit{fitness} muy buenos.
+
+Para ver un poco mejor los AM, se han extraído las siguientes gráficas:
+
+\begin{figure}[H]
+\centering
+\begin{minipage}{.5\textwidth}
+	\centering
+	\includegraphics[scale=0.43]{img/am-all-colposcopy.png}
+	\caption{Evolución del mejor y peor cromosoma de la población.}
+\end{minipage}%
+\begin{minipage}{.5\textwidth}
+	\centering
+	\includegraphics[scale=0.43]{img/bars-colposcopy.png}
+	\caption{Comparación entre las evaluaciones en los AM.}
+\end{minipage}
+\end{figure}
+
+Como se puede ver, los valores \textit{fitness} de la población pegan picos cuando se aplica la búsqueda local sobre ellos y
+suben mucho, excepto casi al final, donde se estancan y van subiendo y bajando en el caso del peor cromosoma, probablemente
+debido a los cruces o a que una mutación ha hecho que baje el \textit{fitness}. En el segundo gráfico se puede ver como
+la búsqueda local representa un mayor número de evaluaciones en caso de aplicarla sobre toda la población que la parte de los
+genéticos, mientras que en los otros dos casos los números son muy similares, ya que aplicarlo sobre un cromosoma aleatorio
+o el mejor conducirá a realizar aproximadamente el mismo número de evaluaciones en cada parte. Por tanto, al aplicar la BL
+sobre toda la población se está explotando más de lo que se explora, lo cuál puede llevar a malos resultados en otros problemas.
+
+Volviendo a los genéticos, nos encontramos que el mejor de ellos es el AGG con BLX, ya que supera a su contraparte de los AGE
+en casi todos los aspectos menos en reducción media, donde se ve un poco reducido respecto a su homónimo. Por tanto, el mejor
+de los 2 es el AGG con BLX.
+
+En las siguientes gráficas se puede ver un poco el funcionamiento de los distintos genéticos:
+
+\begin{figure}[H]
+\centering
+\begin{minipage}{.5\textwidth}
+	\centering
+	\includegraphics[scale=0.43]{img/agg-blx-colposcopy.png}
+	\caption{AGG con BLX.}
+\end{minipage}%
+\begin{minipage}{.5\textwidth}
+	\centering
+	\includegraphics[scale=0.43]{img/agg-ac-colposcopy.png}
+	\caption{AGG con cruce aritmético.}
+\end{minipage}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.6]{img/age-blx-colposcopy.png}
+\caption{AGE con BLX.}
+\end{figure}
+
+Como se puede ver, el AGG con BLX crece más partiendo de un valor muy similar a los otros, y se estanca menos veces, aunque a
+partir de las 300 generaciones crece muy poco a poco, ya que los resultados van convergiendo. En el caso del AGG con CA sucede
+algo parecido, solo que la tasa de crecimiento es mucho más pequeña. Esto se debe a que los valores de los genes van acercándose,
+ya que es un cruce basado en la media aritmética, con lo cuál se tienden a equilibrar los valores muy dispares. El AGE con BLX,
+en cambio, parece que mejora mucho y muy bien, pero la diferencia entre el peor y el mejor cromosoma se hace casi imperceptible
+en un momento, llegando a converger casi toda la población en aproximadamente 500 generaciones. Se puede ver que, la diferencia
+entre estos dos cromosomas a partir de entonces es casi despreciable, pero que, aun así, se sigue mejorando el \textit{fitness},
+debido posiblemente a las mutaciones y a algún que otro cruce bueno.
+
+Y ahora, comparando losgenéticos con los meméticos, vemos claramente que el mejor algoritmo es el AM con BL sobre toda la 
+población en todas las características. Si comparamos ahora ese ganador con los otros algoritmos, nos encontramos que en cuanto
+a tiempo medio es el peor, pero en cuanto a clasificación le gana a todos, reduce más que la BL a secas y obtiene unas mejores
+tasas de agrupación y reducción que ésta. Con lo cuál, para esta partición de datos, el \textbf{AM con BL sobre toda la población}
+es el claro ganador, ya que ofrece los mejores resultados.
+
+Pasemos ahora a comparar el conjunto de datos \textit{Ionosphere} y empecemos con los AGG. Aquí se puede ver, aunque de forma un
+poco más difícil, que el mejor AGG es de nuevo el que utiliza BLX. Esto se debe a que, aunque en un principio el BLX ofrezca una
+tasa de clasificación más baja, si se comparan los otros aspectos se puede ver que es muy superior en todo, ya que reduce más,
+la agrupación es mucho mayor y el tiempo, aunque sea un factor menos determinante (estamos hablando de algoritmos que en general
+se sabe que van a ser más lentos), también es menor, lo cuál le da una pequeña ventaja. Por tanto, de nuevo se da que el claro
+ganador es el AGG con BLX, aunque clasifique un poco peor debido a que posiblemente se haya producido \textit{overfitting}.
+
+Mirando ahora a los AGE sucede algo parecido que con los AGG. El AGE con BLX es el ganador en casi todos los aspectos menos en
+tasa de clasificación, ya que posiblemente haya alguna partición cuya tasa de clasificación sea muy baja (como se da en este
+caso). Sin embargo, en el resto de los casos sigue siendo muy superior, con lo cuál de nuevo, tenemos otro claro ganador.
+
+Pasando ahora a los AM, nos encontramos que, en este caso, el mejor AM es el que aplica la BL sobre el mejor. Esto se debe a que
+es el que obtiene una mayor tasa de clasificación, muy superior al resto de AM y una mayor tasa de agrupación. Entre los otros
+AM, encontramos que el que aplica la BL sobre toda la población es el que obtiene una mayor tasa de reducción, pero debidamente
+a que reduzca tanto, no es capaz de generalizar muy bien, con lo cuál su tasa de clasificación es muy inferir al resto. El AM
+que aplica la BL sobre un cromosoma aleatorio tiene una muy buena tasa de reducción y un muy buen tiempo, pero debido a que
+la diferencia de tiempos entre el que la aplica sobre el mejor y este no es significativa, no supone una gran mejora. Además,
+observando la tasa de clasificación, es peor que el AM sobre el mejor cromosoma, y en cuanto a agrupación es un poquito peor
+que el AM con BL sobre el mejor. Con lo cual, en este conjunto de datos concreto nos encontramos que, a diferencia de en
+\textit{Colposcopy}, donde el peor era el AM que aplicaba la BL sobre el mejor cromosoma y el mejor era el que la aplicaba sobre
+toda la población, aquí nos encontramos con una situación totalmente opuesta. Esto puede deberse posiblemente a que el número de
+características sea demasiado pequeño, con lo cual la BL sobre toda la población es una mala idea, ya que no tiene un margen
+suficiente para intentar mejorar a toda la población.
+
+De nuevo, vamos a ver algunas gráficas para ver como se comportan los algoritmos meméticos, viendo de nuevo el mejor de ellos
+junto con un gráfico de barras para ver donde se pasa más tiempo evaluando la función objetivo:
+
+\begin{figure}[H]
+\centering
+\begin{minipage}{.5\textwidth}
+	\centering
+	\includegraphics[scale=0.43]{img/am-best-ionosphere.png}
+	\caption{Evolución del mejor y peor cromosoma de la población.}
+\end{minipage}%
+\begin{minipage}{.5\textwidth}
+	\centering
+	\includegraphics[scale=0.43]{img/bars-ionosphere.png}
+	\caption{Comparación entre las evaluaciones en los AM.}
+\end{minipage}
+\end{figure}
+
+En el gráfico de la izquierda se puede ver como cada vez que se aplica la BL sobre el mejor de la población se producen picos
+con respecto al peor cromosoma, es decir, que el valor \textit{fitness} del mejor va mejorando más. Sin embargo, se puede ver
+que hay un punto, a partir de cerca de las 200 generaciones que el mejor se estanca, posiblemente debido a que no se produce
+ningún hijo mejor, ninguna mutación puede hacerlo mejorar y la BL no encuentra un buen movimiento para él. Sin embargo, casi al
+final parece que, posiblemente con algún cruce o mutación se sale de esa zona de estancamiento y se mejora el \textit{fitness}.
+En el gráfico de la derecha se puede ver lo que se ha comentado antes. Debido a que hay menos características (32 en este caso),
+el número de evaluaciones que realiza la búsqueda local es menor en casi todos los casos (aunque no se note mucho al aplicarla
+sobre toda la población, ya que se van a realizar muchas BL). Se puede ver en los otros dos casos (BL sobre el mejor y sobre uno
+aleatorio que se aplica el genético aproximadamente un 20\% más que en el conjunto de datos anterior.
+
+Comparando ahora las dos estrategias genéticas, nos encontramos que, de forma nada sorprendente, el AGG con BLX es mejor en
+absolutamente todos los aspectos (menos en reducción, donde ambos reducen igual). Esto se puede deber a que o bien se muta más en
+el AGG, ya que la mutación se puede aplicar sobre alguno de los 30 cromosomas que han sido generados para sustituir a la población
+frente a los 2 posibles nuevos cromosmas, que además no mutan siempre, ya que es más raro que se produzca en este caso; o bien a
+que se producen más cruces, y por tanto, el mejor cromosoma tiene más probabilidades de salir en los torneos binarios.
+mejor de los casos). Para ver un poco mejor estos algoritmos, veamos las siguientes gráficas:
+
+\begin{figure}[H]
+\centering
+\begin{minipage}{.5\textwidth}
+	\centering
+	\includegraphics[scale=0.43]{img/agg-blx-ionosphere.png}
+	\caption{AGG con BLX.}
+\end{minipage}%
+\begin{minipage}{.5\textwidth}
+	\centering
+	\includegraphics[scale=0.43]{img/agg-ac-ionosphere.png}
+	\caption{AGG con cruce aritmético.}
+\end{minipage}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.6]{img/age-ac-ionosphere.png}
+\caption{AGE con cruce aritmético.}
+\end{figure}
+
+Como se puede ver, de nuevo, el AGG con BLX crece más, pero también se estanca más a menudo, ya que no se produce ninguna mejora
+durante muchas generaciones a partir de las 200. El AGG con CA no se estanca tanto, pero deja una mayor diferencia entre el
+mejor y el peor, con lo cuál, la población no converge tanto hacia el mejor cromosoma, cosa que pasaba en el caso contrario.
+En el AGE con CA se puede ver como casi toda la polación converge muy rápidamente, pero que sin embargo sigue mejorando, aunque
+sea de forma un poco más lenta. Es por eso qu posiblemente sea peor que el AGE con BLX, ya que al hacer la media, como se ha
+dicho antes, se tiende a que se equilibren más los cromosomas a valores medios, con lo cuál se reduce la disparidad entre los
+extremos de la población.
+
+Comparando los AG y los AM ganadores, podemos ver que claramente el mejor de ellos es el AM con BL sobre el mejor de la población,
+ya que comparándolo con el mejor genético (el AGG con BLX), se puede ver que es muy superior a este en todos los valores medios.
+Con lo cuál, tenemos otra victoria de los meméticos sobre los genéticos, lo cuál parece ir indicando que es una buena idea
+hibridar las filosofía de exploración de los genéticos con la filosofía de explotación de los meméticos.
+
+Y ahora, comparando todos los resultados medios, podemos ver que el ganador absoluto de nuevo es el \textbf{AM con BL sobre el
+mejor}. Se puede ver como clasifica mucho mejor que las técnicas estudiadas en la práctica anterior, como reduce un poco menos
+que la BL a secas, pero como en la agrupación es capaz de ganarla de forma significativa (estamos hablando de casi del 2\% de
+mejora). Comparar el tiempo no sería muy justo, ya que el AM es una búsqueda basada en poblaciones mientras que la otra es una
+búsqueda basada en trayectorias. Sin embargo, aquí podemos ver que la BL de la que partimos para constuir los meméticos
+es bastante buena, ya que hibridándola con los AG nos da muy buenos resultados.
+
+Pasemos ahora a estudiar el último conjunto de datos, \textit{Texture}, y comencemos de nuevo con los AGG. De nuevo, y para
+sorpresa de nadie, el AGG con cruce BLX es mejor en casi todos los aspectos que su rival, el AGG con CA, menos en tasa de
+clasificación, donde es un poco peor (aproximadamente un 2\% inferior). Pero, debido a que reduce más, es capaz de obetener
+una mayor tasa de reducción y una mejor agrupación, siendo capaz, por tanto, de a lo mejor generalizar mejor que el AGG con CA
+en caso de disponer de más datos.
+
+Pasando a analizar ahora a estudiar los AGE, nos encontramos de nuevo que el mejor es el AGE con BLX y, a diferencia de los AGG
+para este conjunto de datos, nos encontramos que aquí el BLX domina sobre el CA en todos los aspectos, haciéndolo por tanto muy
+superior al otro, por los motivos ya comentados anteriormente (la media tiende a equilibrar más la población, en este caso, los
+pocos descendientes que se generan, los cuáles son los únicos capaces de mejorar la población).
+
+Estudiando el caso de los AM, nos encontramos ante un caso difícil, ya que los 3 algoritmos dan muy buenos resultados. El AM que
+aplica la BL sobre toda la población ofrece una mejor tasa de clasificación, pero en cuanto a reducción es el que peor va. El AM
+que aplica la BL sobre el mejor es el que tarda menos y ofrece una mejor tasa de reducción, pero en cuanto a clasificación se ve
+superado por el anterior y en agrupación no es tan bueno. Con lo cuál, solo nos queda uno: el AM que aplica la BL sobre un
+cromosoma aleatorio. Este es el algoritmo que ofrece la mejor tasa de agrupación, con lo cuál es la técnica más equilibrada, ya
+que clasifica de media muy bien (mejor que el que aplica la BL sobre el mejor) y reduce de media mejor que el que aplica la BL 
+sobre toda la población, con lo cuál, con unos resultados tan equilibrados, es el que podría llegar a tener mejores resultados
+si dispusiéramos de más datos para probar. Así que, debido a lo equilibrado que es, vamos a quedarnos con el AM que aplica la BL
+sobre un cromosoma aleatorio.
+
+Para ver un poco mejor a estos algoritmos, vamos a ver algunas gráficas que comparan el AM que aplica la BL sobre toda la
+población, el que la aplica sobre un cromosoma aleatorio y los gráficos de barras de la cantidad de evaluaciones que se utilizan
+en la BL y en el genético:
+
+\begin{figure}[H]
+\centering
+\begin{minipage}{.5\textwidth}
+	\centering
+	\includegraphics[scale=0.43]{img/am-rand-texture.png}
+	\caption{AM con BL sobre un cromosoma aleatorio.}
+\end{minipage}%
+\begin{minipage}{.5\textwidth}
+	\centering
+	\includegraphics[scale=0.43]{img/am-all-texture.png}
+	\caption{AM con BL sobre un toda la población.}
+\end{minipage}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.6]{img/bars-texture.png}
+\caption{Comparación entre las evaluaciones en los AM.}
+\end{figure}
+
+Se puede ver como el que aplica la BL sobre un cromosoma aleatorio llega más rápido a su óptimo, y por tanto, es el que más rápido
+converge de los dos, y se puede ver como el peor cromosoma va cambiando mucho mientras que el mejor ya ha llegado a un óptimo
+local. El que aplica BL sobre toda la población hace que el \textit{fitness} del mejor y peor crezca de una forma más equilibrada
+hasta que llega al punto de convergencia, donde el mejor se estanca mientras que el peor va variando y se puede ver que la
+distancia entre ellos va creciendo o decreciendo según qué generación sea. Y, observando el gráfico de barras, podemos ver que,
+como pasaba en el conjunto de datos anterior, las evaluaciones de la BL y el AG más o menos se equilibran cuando se aplica la BL
+sobre un cromosoma aleatorio o el mejor, mientras que en el otro caso se sigue evaluando poco el genético. Sin embargo, a
+diferencia del caso anterior, se ve como se reduce un poco el número de evaluaciones del genético en todos los casos, ya que
+esta vez hay más características, con lo cuál, se aplica un poco más la BL que el caso anterior.
+
+Evaluando ahora el mejor genético, nos encontramos que de nuevo el mejor es el AGG con BLX, ya que, a pesar de ofrecer de media
+una tasa de clasificación un poco peor, nos encontramos que reduce más, tiene una mayor agrupación y un menor tiempo, con lo
+cuál lo hace preferible sobre su homónimo con otro criterio.
+
+Las siguientes gráficas ayudan a ver esta idea:
+
+\begin{figure}[H]
+\centering
+\begin{minipage}{.5\textwidth}
+	\centering
+	\includegraphics[scale=0.43]{img/agg-blx-texture.png}
+	\caption{AGG con BLX.}
+\end{minipage}%
+\begin{minipage}{.5\textwidth}
+	\centering
+	\includegraphics[scale=0.43]{img/agg-ac-texture.png}
+	\caption{AGG con cruce aritmético.}
+\end{minipage}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.6]{img/age-blx-texture.png}
+\caption{AGE con BLX.}
+\end{figure}
+
+Como se puede ver, de nuevo, el AGG con BLX es donde más crece el mejor valor y se puede ver como la diferencia entre el mejor
+y el peor se va haciendo cada vez más y más sutil. En el caso del AGG con CA, se puede ver como hay un poco más de variabilidad,
+posiblemente porque en ese conjunto de datos no se consigue que toda la población converja al mejor cromosoma, si no que hay
+un poco más de variedad. En cuanto al AGE con BLX, se puede ver como los valores \textit{fitness} del mejor y el peor van
+mejorando, pero que la población ha convergido desde muy pronto, ya que a penas hay diferencia entre los dos extremos.
+
+Analizando ahora la mejor metaheurística, nos encontramos que el AM con BL sobre un cromosoma aleatorio es mejor en casi todos
+los sentidos que el AGG con BLX, menos en tasa de clasificación, donde es un poco inferior. Sin embargo, le gana en todos los
+otros aspectos, siendo esto de nuevo una victoria de los meméticos sobre los genéticos, mostrándonos que es una muy buena idea
+el hibridar algoritmos que exploran mucho como pueden ser los AG con algoritmos que explotan mucho, como puede ser la BL.
+
+Comparando ahora la mejor metaheurística con el resto de algoritmos nos encontramos que, en este caso, nuestro AM produce unas
+tasas de clasificación mucho peores que por ejemplo el \textit{RELIEF}, el 1-NN o la BL. Si comparamos el AM con la BL, podemos
+ver que, no obstante, nuestra metaheurística ofrece unos mejores valores medios que la BL en general, menos en la tasa de
+clasificación. Por tanto, si nos atendiésemos a este criterio, podemos decir que el AM es mucho mejor que la BL, ya que se puede
+dar el caso de que generalice mejor luego, o que posiblemente haya alguna partición que reduzca mucho la tasa de clasificación,
+como sucede en este caso. Si nos atendemos solamente a la tasa de clasificación, el mejor sería el \textbf{\textit{RELIEF}}, 
+pero como este no es capaz de reducir, nadie nos dice que con nuevas particiones o más datos sea capaz de tener un rendimiento
+inferior. Sin embargo esto es un indicativo de que el algoritmo greedy que tenemos es muy bueno, y que por tanto merece la pena
+intentar combinarlo con nuestras metaheurísticas, que es lo que se propone a continuación, con el objetivo de ver si se produce
+alguna mejora.
+
 \subsection{Experimentación}
+
+En este breve apartado vamos a intentar combinar el AGG con BLX y el AM con BL sobre el mejor cromosoma junto con el
+\textit{RELIEF} para intentar mejorar nuestros resultados.
+
+Lo que se ha hecho es inicializar una población con la solución obtenida por \textit{RELIEF} modificando un 25\% de los genes
+de cada cromosoma de forma aleatoria. Es decir, se ha intentado hacer una especie de GRASP, ya que se ha partido del greedy,
+se ha obtenido una población con él y se ha modificado de forma aleatoria cada cromosoma de la población para introducir
+diversidad en ésta.
+
+Los resultados obtenidos se pueden ver en las siguientes tablas:
+
 
 \begin{table}[H]
 \resizebox{\columnwidth}{!}{%
@@ -1293,7 +1630,123 @@ sobre un cromosoma aleatorio  de la población en el problema del APC.}
 \caption{Valores medios de los distintos algoritmos más los algoritmos modificados para el problema del APC.}
 \end{table}
 
+Vamos a relizar un estudio breve para cada conjunto de datos para ver si se produce o no mucha mejora y si merece la pena intentar
+implementarlo o no.
+
+En el conjunto de datos \textit{Colposcopy} nos encontramos que el AM con \textit{RELIEF} no consigue muy buenos resultados,
+ya que se queda muy por detrás del mejor algoritmo de ese conjunto de datos. El AGG-BLX con \textit{RELIEF}, sin embargo, si
+que ha sufrido una importante mejora, ya que se queda muy cerca en tasa de clasficación y agrupación media respecto al mejor AM,
+mientras que baja en tasa de reducción y el tiempo es ligeramente superior al mejor AM. Con lo cuál, en este caso, podemos ver
+que ha supuesto una buena mejora sobre el AGG con BLX que ya había anteriormente, ya que lo mejora con creces, y se queda
+relativamente cerca del mejor algoritmo.
+
+A continuación se muetran algunas gráficas de como evolucionan los dos algoritmos nuevos:
+
+\begin{figure}[H]
+\centering
+\begin{minipage}{.5\textwidth}
+	\centering
+	\includegraphics[scale=0.43]{img/agg-blx-relief-colposcopy.png}
+	\caption{AGG con BLX y población inicializada con \textit{RELIEF} aleatorio.}
+\end{minipage}%
+\begin{minipage}{.5\textwidth}
+	\centering
+	\includegraphics[scale=0.43]{img/am-best-relief-colposcopy.png}
+	\caption{AM con BL sobre el mejor y población inicializada con \textit{RELIEF} aleatorio.}
+\end{minipage}
+\end{figure}
+
+Se puede ver como en el caso del genético casi no se estanca, ya que hay más diversidad, mientras que en el caso del memético
+sí que se estanca el mejor y lo hace relativamente pronto.
+
+Pasemos ahora al conjunto de datos \textit{Ionosphere}. Aquí sucede algo similar. El AM con \textit{RELIEF} no es capaz de
+tener unos buenos resultados medios, mientras que el AGG con \textit{RELIEF} gana al AGG con BLX normal en tasa de clasificación
+y agrupación, pero baja un poco en reducción y empeora un poco el tiempo. Sin embargo, como no estamos considerando mucho el
+tiempo, se puede decir que mejora con creces a los AGG. Y de nuevo, como en el caso anterior, se queda muy cerca del mejor
+algoritmo, el AM con BL sobre el mejor. Es un poco peor que el mejor algoritmo, pero es capaz de ofrecer unos resultados
+muy buenos.
+
+A continuación se muetran algunas gráficas para ver los nuevos algoritmos en acción:
+
+\begin{figure}[H]
+\centering
+\begin{minipage}{.5\textwidth}
+	\centering
+	\includegraphics[scale=0.43]{img/agg-blx-relief-ionosphere.png}
+	\caption{AGG con BLX y población inicializada con \textit{RELIEF} aleatorio.}
+\end{minipage}%
+\begin{minipage}{.5\textwidth}
+	\centering
+	\includegraphics[scale=0.43]{img/am-best-relief-ionosphere.png}
+	\caption{AM con BL sobre el mejor y población inicializada con \textit{RELIEF} aleatorio.}
+\end{minipage}
+\end{figure}
+
+Aquí, como en el caso anterior, el AGG con \textit{RELIEF} crece mucho casi sin estancarse, lo cuál explicaría sus buenos
+resultados. Sin embargo, el AM con \textit{RELIEF} se estanca muy rápido en un óptimo local y no es capaz de mejorar nada, lo
+cuál explicaría sus malos resultados.
+
+Finalmente, llegamos de nuevo al conjunto de datos \textit{Texture}. Aquí, sin embargo, nuestra nueva implementación resulta
+insatisfactoria, ya que no hemos obtenido ninguna mejora respecto a la mejor metaheurística, el AM con BL sobre un cromosoma
+aleatorio, por no decir que en cuanto a tasas de clasificación se refiere nuestros nuevos algoritmos se han quedado
+muy lejos del \textit{RELIEF} original. El AGG con \textit{RELIEF} no se acerca al mejor genético, el AGG con BLX (solo en tasa
+de clasificación, pero en el resto baja). El AM con \textit{RELIEF} es el peor AM, ya que es el que ofrece peores valores medios.
+
+A continuación se pueden ver algunas gráficas de estos dos algoritmos:
+
+\begin{figure}[H]
+\centering
+\begin{minipage}{.5\textwidth}
+	\centering
+	\includegraphics[scale=0.43]{img/agg-blx-relief-texture.png}
+	\caption{AGG con BLX y población inicializada con \textit{RELIEF} aleatorio.}
+\end{minipage}%
+\begin{minipage}{.5\textwidth}
+	\centering
+	\includegraphics[scale=0.43]{img/am-best-relief-texture.png}
+	\caption{AM con BL sobre el mejor y población inicializada con \textit{RELIEF} aleatorio.}
+\end{minipage}
+\end{figure}
+
+Relativamente hablando, el AGG con \textit{RELIEF} no se estanca, pero su valor \textit{fitness} no crece lo suficiente como
+en los casos anteriores. El AM con \textit{RELIEF} se estanca igual de rápido que en el conjunto de datos anterior, lo cuál
+explicaría su mal comportamiento.
+
+Como pequeña conclusión, nuestra pequeña versión de GRASP ha mejorado los algoritmos genéticos en los dos primeros
+conjuntos de datos, pero en el último no lo suficiente. Sin embargo, de media ha empeorado nuestros algoritmos meméticos, ya que
+no tienen los mismos resultados que antes, con lo cuál, en el caso de los meméticos, es mejor no mezclar demasiadas técnicas, ya
+que de antes ya teníamos un genético y un memético. Para no dejar un tan mal sabor de boca, podemos decir que es una idea
+interesante ofrecer una población generada por un greedy y luego modificar componentes aleatorios de ésta a un AG, ya que con
+su capacidad de exploración, y con la diversidad de las soluciones iniciales, puede que sea capaz de explorar el espacio
+mucho mejor que generando al población inicial de forma aleatoria pura (se puede ver como el AGG con esta técnica llega a
+acercarse en cuanto a resultados a los mejores meméticos, con lo cuál no es un mal punto de partida).
+
 \subsection{Conclusión}
+
+Como conclusión a nuestro análisis general, podemos ver que las técnicas que hemos implementado en esta práctica han dado unos
+resultados bastante buenos. 
+
+Por una parte, los algoritmos genéticos nos han permitido explorar el espacio de soluciones de una forma efectiva
+en busca de una mejor solución. Por lo general, el esquema generacional ha ofrecido unos mejores resultados que el estacionario,
+ya que ha sido capaz de meter mayor diversidad al proceso de búsqueda al permitir más cruces y mutaciones, con lo cuál,
+se puede tener una población más diversa y dispersa siempre y cuando se tengan \textbf{suficientes datos}. El elitismo, como
+hemos podido ver, es una técnica muy interesante para intentar mantener la mejor solución actual en los AGG con tal de no
+perderla, ya que en caso de no haberla aplicado, posiblemente los resultados medios obtenidos hubiesen sido peores, ya que
+no se garantizaría la conservación del mejor cromosoma encontrado hasta el momento.
+
+Por otro lado, los algoritmos meméticos nos han mostrado que combinar los buenos resultados que ya daban los algoritmos genéticos
+y su capacidad explorativa con los también relativamente buenos resultados que nos daba la búsqueda local y su capacidad
+explotativa ha sido una buena idea, ya que nos ha permitido obtener unas soluciones muy buenas en casi todos los conjuntos
+de datos de los que disponíamos (menos en el último, donde si se comparase solamente la tasa de clasificación ganaría de nuevo
+\textit{RELIEF}). Sin embargo, no hemos podido demostrar cuál es el mejor memético, ya que cada versión ha dado unos buenos
+resultados en unos conjuntos de datos y un poco peores en otros. Por tanto, de aquí podemos extraer que lo importante sería
+probar las tres técnicas que se han sugerido con el problema concreto y quedarnos con aquella que ofrezca unos mejores resultados,
+ya que cada problema es un mundo y no existe una metaheurística general que resuelva todos nuestros problemas de la mejor manera
+posible.
+
+Para terminar, como conclusión final podemos decir que las metaheurísticas han ofrecido unos buenos resultados, y que a la hora
+de enfrentarnos con un problema de verdad, no debemos dudar en probar diversas técnicas y en escoger \textbf{aquella 
+metaheurística que mejor se adapte a nuestro problema}, es decir, la que nos permita obtener los mejores resultados. 
 
 \newpage
 
