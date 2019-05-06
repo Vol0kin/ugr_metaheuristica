@@ -402,9 +402,36 @@ empezando por la función más específica (la cuál solo evalúa un vector de p
 
 \subsection{Algoritmos de comparación}
 
+\subsection{Clasificador 1-NN}
+
+El primer algoritmo con el que compararemos es el 1-NN que utiliza todas las características, tal como hacíamos en la 
+práctica anterior.
+
+Este clasificador lo que hace es, dado un conjunto de valores $X$ que pertenecen a una muestra y un elemento $e$, decir cuál es el
+$x \in X$ más cercano a $e$, y por tanto, decir que $e$ pertenece a la misma clase $x$. Para determinar cuál es el elemento más
+cercano se puede usar alguna métrica de distancia, como por ejemplo la distancia Euclídea, descrita anteriormente. A la hora de
+implementarlo, para poder acelerar los cálculos, se puede usar un KDTree, ya que permite realizar una consulta rápida (en los
+casos más favorables su complejidad temporal es $\mathcal{O} (\log n)$, mientras que en el peor caso es $\mathcal{O}(n)$)
+utilizando la distancia Euclídea para determinar el vecino más cercano, con la penalización de que tarda un tiempo
+$\mathcal{O}(n)$ en ser construido. Para poder ver un esquema de su funcionamiento, se ofrece el siguiente pseudocódigo:
+
+\begin{algorithm}[H]
+\caption{Clasificador 1-NN}
+\begin{algorithmic}[1]
+\Function{KNN}{$X$, $y$, $e$}
+\State $arbolKD \gets$ KDTree($X$)
+\State $x \gets arbolKD$.VecinoMasCercano($e$)
+\State $etiqueta \gets y[x]$
+\State \Return{$etiqueta$}
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+\newpage
+
 \subsubsection{Algoritmo greedy \textit{RELIEF}}
 
-El algoritmo con el que vamos a comparar es el algoritmo para el cálculo de pesos \textit{RELIEF}. Es un algoritmo
+Otro algoritmo con el que vamos a comparar es el algoritmo para el cálculo de pesos \textit{RELIEF}. Es un algoritmo
 greedy que, comenzando con un $W$ cuyos pesos valen 0, actualiza $W$ para cada $x_i \in X$, buscando para cada $x_i$ cuál es
 su aliado más cercano (elemento que tiene la misma etiqueta que $x_i$ con el criterio de \textit{leave-one-out}, ya que él
 mismo podría ser su vecino más cercano) y su enemigo más cercano (elemento que tiene diferente etiqueta a la que tiene $x_i$).
@@ -444,6 +471,7 @@ Una vez dicho esto, veamos cómo sería la implementación:
 \Function{RELIEF}{$X$, $Y$}
 \State $N \gets$ ObtenerNumElementos($Y$)
 \State $numCarac \gets $ ObtenerNumCarac($X$)
+\State $W \gets $ GenerarWRelief($numCarac$)
 \algstore{relief}
 \end{algorithmic}
 \end{algorithm}
@@ -452,7 +480,6 @@ Una vez dicho esto, veamos cómo sería la implementación:
 \caption{Cálculo de los pesos mediante \textit{RELIEF} (II)}
 \begin{algorithmic}
 \algrestore{relief}
-\State $W \gets $ GenerarWRelief($numCarac$)
 \For{$i \gets 0$ \textbf{to} $N-1$}
 	\State $x, y \gets X[i], Y[i]$
 	\State $aliados \gets e_a \subset X :$ etiqueta($e_a$) $ = y$
@@ -480,13 +507,11 @@ Una vez dicho esto, veamos cómo sería la implementación:
 
 \newpage
 
-\subsection{Algoritmos de búsqueda basados en poblaciones y trayectorias}
-
 \subsubsection{Búsqueda Local}
 
-En la práctica anterior se implementó una búsqueda local (búsqueda basada en trayectorias), así que vamos a rescatarla para
-tener una metaheurística de la que poder partir (además de que los AM la necesitarán). Esta búsqueda, como debemos recordar, está basada en el primer mejor (Simple
-Hill Climbing).
+En la primera práctica se implementó una búsqueda local (búsqueda basada en trayectorias), así que vamos a rescatarla para
+tener un algoritmo más de comparación, ademñas de que los AM la necesitarán luego, aunque ligeramente modificada. Esta búsqueda,
+como debemos recordar, está basada en el primer mejor (Simple Hill Climbing).
 
 La búsqueda local parte de un vector $W$ con valores aleatorios y busca optimizarlo mediante la exploración de los vecinos.
 Esta exploración se realiza modificando con un valor aleatorio generado a partir de una distribución normal con $\mu = 0$ y 
@@ -524,6 +549,7 @@ El pseudocódigo de la búsqueda local se puede ver aquí:
 \Function{BusquedaLocal}{$datos$, $etiquetas$}
 \State $N \gets $ ObtenerNumCaracteristicas($datos$)
 \State $W \gets$ GenerarWBL($N$)
+\State $evaluaciones \gets 0$
 \algstore{local}
 \end{algorithmic}
 \end{algorithm}
@@ -532,7 +558,6 @@ El pseudocódigo de la búsqueda local se puede ver aquí:
 \caption{Cálculo de los pesos mediante la Búsqueda Local (II)}
 \begin{algorithmic}
 \algrestore{local}
-\State $evaluaciones \gets 0$
 \State $evaluacionesMalas \gets 0$
 \State $fitness \gets$ Evaluar($datos$, $etiquetas$, $W$)
 \While{$evaluaciones < 15000$}
@@ -562,6 +587,8 @@ El pseudocódigo de la búsqueda local se puede ver aquí:
 \end{algorithm}
 
 \newpage
+
+\subsection{Algoritmos de búsqueda basados en poblaciones}
 
 \subsubsection{Algoritmos genéticos generacionales}
 
@@ -1030,7 +1057,7 @@ Para analizar el rendimiento de los algoritmos, se han realizado pruebas sobre 3
 \begin{tabular}{c|c|c|c|c|c|c|c|c|c|c|c|c|}
 \cline{2-13}
                                             & \multicolumn{4}{c|}{\textbf{Colposcopy}}                                 & \multicolumn{4}{c|}{\textbf{Ionosphere}}                        & \multicolumn{4}{c|}{\textbf{Texture}}                           \\ \cline{2-13} 
-                                            & \textbf{\%\_clas} & \textit{\textbf{\%red}} & \textbf{Agr.} & \textbf{T} & \textbf{\%\_clas} & \textbf{\%red} & \textbf{Agr.} & \textbf{T} & \textbf{\%\_clas} & \textbf{\%red} & \textbf{Agr.} & \textbf{T} \\ \hline
+                                            & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} \\ \hline
 \multicolumn{1}{|c|}{\textbf{Partición 1}}  & 77.97             & 72.58                   & 75.27         & 10.26      & 83.1              & 85.29          & 84.2          & 5.0        & 90.91             & 85.0           & 87.95         & 6.29       \\ \hline
 \multicolumn{1}{|c|}{\textbf{Partición 2}}  & 66.67             & 72.58                   & 69.62         & 10.79      & 82.86             & 88.24          & 85.55         & 4.36       & 86.36             & 82.5           & 84.43         & 6.63       \\ \hline
 \multicolumn{1}{|c|}{\textbf{Partición 3}}  & 78.95             & 59.68                   & 69.31         & 13.95      & 88.57             & 85.29          & 86.93         & 4.69       & 93.64             & 77.5           & 85.57         & 6.88       \\ \hline
@@ -1051,7 +1078,7 @@ Para analizar el rendimiento de los algoritmos, se han realizado pruebas sobre 3
 \begin{tabular}{c|c|c|c|c|c|c|c|c|c|c|c|c|}
 \cline{2-13}
                                             & \multicolumn{4}{c|}{\textbf{Colposcopy}}                                 & \multicolumn{4}{c|}{\textbf{Ionosphere}}                        & \multicolumn{4}{c|}{\textbf{Texture}}                           \\ \cline{2-13} 
-                                            & \textbf{\%\_clas} & \textit{\textbf{\%red}} & \textbf{Agr.} & \textbf{T} & \textbf{\%\_clas} & \textbf{\%red} & \textbf{Agr.} & \textbf{T} & \textbf{\%\_clas} & \textbf{\%red} & \textbf{Agr.} & \textbf{T} \\ \hline
+                                            & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} \\ \hline
 \multicolumn{1}{|c|}{\textbf{Partición 1}}  & 81.36             & 58.06                   & 69.71         & 18.7       & 87.32             & 61.76          & 74.54         & 9.83       & 93.64             & 75.0           & 84.32         & 8.72       \\ \hline
 \multicolumn{1}{|c|}{\textbf{Partición 2}}  & 73.68             & 51.61                   & 62.65         & 17.91      & 85.71             & 70.59          & 78.15         & 9.98       & 90.91             & 77.5           & 84.2          & 8.04       \\ \hline
 \multicolumn{1}{|c|}{\textbf{Partición 3}}  & 66.67             & 54.84                   & 60.75         & 14.76      & 90.0              & 64.71          & 77.35         & 9.03       & 92.73             & 62.5           & 77.61         & 10.16      \\ \hline
@@ -1073,7 +1100,7 @@ Para analizar el rendimiento de los algoritmos, se han realizado pruebas sobre 3
 \begin{tabular}{c|c|c|c|c|c|c|c|c|c|c|c|c|}
 \cline{2-13}
                                             & \multicolumn{4}{c|}{\textbf{Colposcopy}}                                 & \multicolumn{4}{c|}{\textbf{Ionosphere}}                        & \multicolumn{4}{c|}{\textbf{Texture}}                           \\ \cline{2-13} 
-                                            & \textbf{\%\_clas} & \textit{\textbf{\%red}} & \textbf{Agr.} & \textbf{T} & \textbf{\%\_clas} & \textbf{\%red} & \textbf{Agr.} & \textbf{T} & \textbf{\%\_clas} & \textbf{\%red} & \textbf{Agr.} & \textbf{T} \\ \hline
+                                            & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} \\ \hline
 \multicolumn{1}{|c|}{\textbf{Partición 1}}  & 69.49             & 72.58                   & 71.04         & 11.01      & 88.73             & 91.18          & 89.95         & 5.58       & 88.18             & 80.0           & 84.09         & 8.03       \\ \hline
 \multicolumn{1}{|c|}{\textbf{Partición 2}}  & 71.93             & 70.97                   & 71.45         & 11.7       & 85.71             & 88.24          & 86.97         & 6.71       & 85.45             & 75.0           & 80.23         & 7.94       \\ \hline
 \multicolumn{1}{|c|}{\textbf{Partición 3}}  & 68.42             & 64.52                   & 66.47         & 13.99      & 81.43             & 82.35          & 81.89         & 8.23       & 94.55             & 85.0           & 89.77         & 6.83       \\ \hline
@@ -1094,7 +1121,7 @@ Para analizar el rendimiento de los algoritmos, se han realizado pruebas sobre 3
 \begin{tabular}{c|c|c|c|c|c|c|c|c|c|c|c|c|}
 \cline{2-13}
                                             & \multicolumn{4}{c|}{\textbf{Colposcopy}}                                 & \multicolumn{4}{c|}{\textbf{Ionosphere}}                        & \multicolumn{4}{c|}{\textbf{Texture}}                           \\ \cline{2-13} 
-                                            & \textbf{\%\_clas} & \textit{\textbf{\%red}} & \textbf{Agr.} & \textbf{T} & \textbf{\%\_clas} & \textbf{\%red} & \textbf{Agr.} & \textbf{T} & \textbf{\%\_clas} & \textbf{\%red} & \textbf{Agr.} & \textbf{T} \\ \hline
+                                            & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} \\ \hline
 \multicolumn{1}{|c|}{\textbf{Partición 1}}  & 74.58             & 59.68                   & 67.13         & 15.52      & 85.92             & 61.76          & 73.84         & 10.09      & 95.45             & 72.5           & 83.98         & 9.33       \\ \hline
 \multicolumn{1}{|c|}{\textbf{Partición 2}}  & 68.42             & 66.13                   & 67.28         & 13.6       & 87.14             & 64.71          & 75.92         & 11.17      & 90.0              & 75.0           & 82.5          & 9.81       \\ \hline
 \multicolumn{1}{|c|}{\textbf{Partición 3}}  & 68.42             & 67.74                   & 68.08         & 14.62      & 90.0              & 73.53          & 81.76         & 8.93       & 89.09             & 70.0           & 79.55         & 9.6        \\ \hline
@@ -1115,7 +1142,7 @@ Para analizar el rendimiento de los algoritmos, se han realizado pruebas sobre 3
 \begin{tabular}{c|c|c|c|c|c|c|c|c|c|c|c|c|}
 \cline{2-13}
                                             & \multicolumn{4}{c|}{\textbf{Colposcopy}}                                 & \multicolumn{4}{c|}{\textbf{Ionosphere}}                        & \multicolumn{4}{c|}{\textbf{Texture}}                           \\ \cline{2-13} 
-                                            & \textbf{\%\_clas} & \textit{\textbf{\%red}} & \textbf{Agr.} & \textbf{T} & \textbf{\%\_clas} & \textbf{\%red} & \textbf{Agr.} & \textbf{T} & \textbf{\%\_clas} & \textbf{\%red} & \textbf{Agr.} & \textbf{T} \\ \hline
+                                            & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} \\ \hline
 \multicolumn{1}{|c|}{\textbf{Partición 1}}  & 69.49             & 85.48                   & 77.49         & 7.15       & 80.28             & 88.24          & 84.26         & 3.91       & 88.18             & 85.0           & 86.59         & 4.74       \\ \hline
 \multicolumn{1}{|c|}{\textbf{Partición 2}}  & 68.42             & 80.65                   & 74.53         & 8.19       & 87.14             & 88.24          & 87.69         & 3.57       & 87.27             & 85.0           & 86.14         & 5.23       \\ \hline
 \multicolumn{1}{|c|}{\textbf{Partición 3}}  & 80.7              & 83.87                   & 82.29         & 7.56       & 75.71             & 88.24          & 81.97         & 3.82       & 93.64             & 82.5           & 88.07         & 5.51       \\ \hline
@@ -1137,7 +1164,7 @@ APC.}
 \begin{tabular}{c|c|c|c|c|c|c|c|c|c|c|c|c|}
 \cline{2-13}
                                             & \multicolumn{4}{c|}{\textbf{Colposcopy}}                                 & \multicolumn{4}{c|}{\textbf{Ionosphere}}                        & \multicolumn{4}{c|}{\textbf{Texture}}                           \\ \cline{2-13} 
-                                            & \textbf{\%\_clas} & \textit{\textbf{\%red}} & \textbf{Agr.} & \textbf{T} & \textbf{\%\_clas} & \textbf{\%red} & \textbf{Agr.} & \textbf{T} & \textbf{\%\_clas} & \textbf{\%red} & \textbf{Agr.} & \textbf{T} \\ \hline
+                                            & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} \\ \hline
 \multicolumn{1}{|c|}{\textbf{Partición 1}}  & 72.88             & 83.87                   & 78.38         & 5.88       & 90.14             & 91.18          & 90.66         & 2.94       & 87.27             & 85.0           & 86.14         & 4.31       \\ \hline
 \multicolumn{1}{|c|}{\textbf{Partición 2}}  & 71.93             & 83.87                   & 77.9          & 6.73       & 90.0              & 91.18          & 90.59         & 2.97       & 90.91             & 87.5           & 89.2          & 4.22       \\ \hline
 \multicolumn{1}{|c|}{\textbf{Partición 3}}  & 70.18             & 83.87                   & 77.02         & 6.62       & 94.29             & 82.35          & 88.32         & 3.85       & 95.45             & 87.5           & 91.48         & 4.35       \\ \hline
@@ -1159,7 +1186,7 @@ del APC.}
 \begin{tabular}{c|c|c|c|c|c|c|c|c|c|c|c|c|}
 \cline{2-13}
                                             & \multicolumn{4}{c|}{\textbf{Colposcopy}}                                 & \multicolumn{4}{c|}{\textbf{Ionosphere}}                        & \multicolumn{4}{c|}{\textbf{Texture}}                           \\ \cline{2-13} 
-                                            & \textbf{\%\_clas} & \textit{\textbf{\%red}} & \textbf{Agr.} & \textbf{T} & \textbf{\%\_clas} & \textbf{\%red} & \textbf{Agr.} & \textbf{T} & \textbf{\%\_clas} & \textbf{\%red} & \textbf{Agr.} & \textbf{T} \\ \hline
+                                            & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} \\ \hline
 \multicolumn{1}{|c|}{\textbf{Partición 1}}  & 72.88             & 83.87                   & 78.38         & 5.88       & 90.14             & 91.18          & 90.66         & 2.94       & 87.27             & 85.0           & 86.14         & 4.31       \\ \hline
 \multicolumn{1}{|c|}{\textbf{Partición 2}}  & 71.93             & 83.87                   & 77.9          & 6.73       & 90.0              & 91.18          & 90.59         & 2.97       & 90.91             & 87.5           & 89.2          & 4.22       \\ \hline
 \multicolumn{1}{|c|}{\textbf{Partición 3}}  & 70.18             & 83.87                   & 77.02         & 6.62       & 94.29             & 82.35          & 88.32         & 3.85       & 95.45             & 87.5           & 91.48         & 4.35       \\ \hline
@@ -1181,7 +1208,7 @@ en el problema del APC.}
 \begin{tabular}{c|c|c|c|c|c|c|c|c|c|c|c|c|}
 \cline{2-13}
                                               & \multicolumn{4}{c|}{\textbf{Colposcopy}}                                 & \multicolumn{4}{c|}{\textbf{Ionosphere}}                        & \multicolumn{4}{c|}{\textbf{Texture}}                           \\ \cline{2-13} 
-                                              & \textbf{\%\_clas} & \textit{\textbf{\%red}} & \textbf{Agr.} & \textbf{T} & \textbf{\%\_clas} & \textbf{\%red} & \textbf{Agr.} & \textbf{T} & \textbf{\%\_clas} & \textbf{\%red} & \textbf{Agr.} & \textbf{T} \\ \hline
+                                              & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} \\ \hline
 \multicolumn{1}{|c|}{\textbf{1-NN}}           & 74,88             & 0                       & 37,44         & 0.00039    & 86,33             & 0              & 43,16         & 0.00039    & 92,36             & 0              & 46,18         & 0.00049    \\ \hline
 \multicolumn{1}{|c|}{\textbf{RELIEF}}         & 74,23             & 39,35                   & 56,79         & 0.03659    & 88,89             & 2,94           & 45,92         & 0.03987    & 94,91             & 7,50           & 51,20         & 0.08739    \\ \hline
 \multicolumn{1}{|c|}{\textbf{BL}}             & 72,06             & 81,29                   & 76,68         & 2.73476    & 86,32             & 88,24          & 87,28         & 0.67943    & 91,09             & 82,50          & 86,80         & 1.09861    \\ \hline
@@ -1204,7 +1231,7 @@ en el problema del APC.}
 \begin{tabular}{c|c|c|c|c|c|c|c|c|c|c|c|c|}
 \cline{2-13}
                                             & \multicolumn{4}{c|}{\textbf{Colposcopy}}                                 & \multicolumn{4}{c|}{\textbf{Ionosphere}}                        & \multicolumn{4}{c|}{\textbf{Texture}}                           \\ \cline{2-13} 
-                                            & \textbf{\%\_clas} & \textit{\textbf{\%red}} & \textbf{Agr.} & \textbf{T} & \textbf{\%\_clas} & \textbf{\%red} & \textbf{Agr.} & \textbf{T} & \textbf{\%\_clas} & \textbf{\%red} & \textbf{Agr.} & \textbf{T} \\ \hline
+                                            & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} \\ \hline
 \multicolumn{1}{|c|}{\textbf{Partición 1}}  & 76.27             & 79.03                   & 77.65         & 8.34       & 94.37             & 85.29          & 89.83         & 6.67       & 90.91             & 85.0           & 87.95         & 6.32       \\ \hline
 \multicolumn{1}{|c|}{\textbf{Partición 2}}  & 77.19             & 77.42                   & 77.31         & 9.16       & 84.29             & 82.35          & 83.32         & 6.64       & 90.0              & 77.5           & 83.75         & 6.12       \\ \hline
 \multicolumn{1}{|c|}{\textbf{Partición 3}}  & 78.95             & 80.65                   & 79.8          & 6.61       & 92.86             & 85.29          & 89.08         & 6.5        & 90.0              & 82.5           & 86.25         & 5.93       \\ \hline
@@ -1226,7 +1253,7 @@ del APC.}
 \begin{tabular}{c|c|c|c|c|c|c|c|c|c|c|c|c|}
 \cline{2-13}
                                             & \multicolumn{4}{c|}{\textbf{Colposcopy}}                                 & \multicolumn{4}{c|}{\textbf{Ionosphere}}                        & \multicolumn{4}{c|}{\textbf{Texture}}                           \\ \cline{2-13} 
-                                            & \textbf{\%\_clas} & \textit{\textbf{\%red}} & \textbf{Agr.} & \textbf{T} & \textbf{\%\_clas} & \textbf{\%red} & \textbf{Agr.} & \textbf{T} & \textbf{\%\_clas} & \textbf{\%red} & \textbf{Agr.} & \textbf{T} \\ \hline
+                                            & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} \\ \hline
 \multicolumn{1}{|c|}{\textbf{Partición 1}}  & 71.19             & 82.26                   & 76.72         & 5.97       & 83.1              & 88.24          & 85.67         & 3.15       & 87.27             & 87.5           & 87.39         & 3.86       \\ \hline
 \multicolumn{1}{|c|}{\textbf{Partición 2}}  & 64.91             & 82.26                   & 73.59         & 6.04       & 85.71             & 88.24          & 86.97         & 3.27       & 86.36             & 85.0           & 85.68         & 4.46       \\ \hline
 \multicolumn{1}{|c|}{\textbf{Partición 3}}  & 75.44             & 87.1                    & 81.27         & 4.21       & 80.0              & 91.18          & 85.59         & 3.39       & 92.73             & 85.0           & 88.86         & 4.78       \\ \hline
@@ -1248,7 +1275,7 @@ sobre un cromosoma aleatorio  de la población en el problema del APC.}
 \begin{tabular}{c|c|c|c|c|c|c|c|c|c|c|c|c|}
 \cline{2-13}
                                                        & \multicolumn{4}{c|}{\textbf{Colposcopy}}                                 & \multicolumn{4}{c|}{\textbf{Ionosphere}}                        & \multicolumn{4}{c|}{\textbf{Texture}}                           \\ \cline{2-13} 
-                                                       & \textbf{\%\_clas} & \textit{\textbf{\%red}} & \textbf{Agr.} & \textbf{T} & \textbf{\%\_clas} & \textbf{\%red} & \textbf{Agr.} & \textbf{T} & \textbf{\%\_clas} & \textbf{\%red} & \textbf{Agr.} & \textbf{T} \\ \hline
+                                                       & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} \\ \hline
 \multicolumn{1}{|c|}{\textbf{1-NN}}                    & 74,88             & 0                       & 37,44         & 0.00039    & 86,33             & 0              & 43,16         & 0.00039    & 92,36             & 0              & 46,18         & 0.00049    \\ \hline
 \multicolumn{1}{|c|}{\textbf{RELIEF}}                  & 74,23             & 39,35                   & 56,79         & 0.03659    & 88,89             & 2,94           & 45,92         & 0.03987    & 94,91             & 7,50           & 51,20         & 0.08739    \\ \hline
 \multicolumn{1}{|c|}{\textbf{BL}}                      & 72,06             & 81,29                   & 76,68         & 2.73476    & 86,32             & 88,24          & 87,28         & 0.67943    & 91,09             & 82,50          & 86,80         & 1.09861    \\ \hline
