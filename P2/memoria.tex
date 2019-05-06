@@ -962,6 +962,312 @@ Para analizar el rendimiento de los algoritmos, se han realizado pruebas sobre 3
 
 \subsection{Análisis de los resultados}
 
+\begin{table}[H]
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\cline{2-13}
+\multicolumn{1}{l|}{}                       & \multicolumn{4}{c|}{\textbf{Colposcopy}}                                                   & \multicolumn{4}{c|}{\textbf{Ionosphere}}                                                   & \multicolumn{4}{c|}{\textbf{Texture}}                                                      \\ \cline{2-13} 
+\multicolumn{1}{l|}{}                       & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 1}}  & 79,66                      & 0                       & 39,83                  & 0,00049    & 85,92                      & 0                       & 42,96                  & 0,00045    & 91,82                      & 0                       & 45,91                  & 0,00056    \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 2}}  & 66,67                      & 0                       & 33,33                  & 0,00037    & 85,71                      & 0                       & 42,86                  & 0,00037    & 91,82                      & 0                       & 45,91                  & 0,00048    \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 3}}  & 71,93                      & 0                       & 35,96                  & 0,00035    & 88,57                      & 0                       & 44,29                  & 0,00036    & 93,64                      & 0                       & 46,82                  & 0,00044    \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 4}}  & 82,46                      & 0                       & 41,23                  & 0,00035    & 87,14                      & 0                       & 43,57                  & 0,00039    & 93,64                      & 0                       & 46,82                  & 0,00046    \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 5}}  & 73,68                      & 0                       & 36,84                  & 0,00035    & 84,29                      & 0                       & 42,14                  & 0,00039    & 90,91                      & 0                       & 45,45                  & 0,00049    \\ \hline
+\multicolumn{1}{|c|}{\textbf{Media}}        & 74,88                      & 0                       & 37,44                  & 0,00038    & 86,33                      & 0                       & 43,16                  & 0,00039    & 92,36                      & 0                       & 46,18                  & 0,00049    \\ \hline
+\multicolumn{1}{|c|}{\textbf{Máximo}}       & 82,46                      & 0                       & 41,23                  & 0,00049    & 88,57                      & 0                       & 44,29                  & 0,00048    & 93,64                      & 0                       & 46,82                  & 0,00056    \\ \hline
+\multicolumn{1}{|c|}{\textbf{Mínimo}}       & 66,67                      & 0                       & 33,33                  & 0,00035    & 84,29                      & 0                       & 42,14                  & 0,00036    & 90,91                      & 0                       & 45,45                  & 0,00044    \\ \hline
+\multicolumn{1}{|c|}{\textbf{Mediana}}      & 73,68                      & 0                       & 36,84                  & 0,00035    & 85,92                      & 0                       & 42,96                  & 0,00039    & 91,82                      & 0                       & 45,91                  & 0,00048    \\ \hline
+\multicolumn{1}{|c|}{\textbf{Desv. Típica}} & 5,62                       & 0                       & 2,81                   & 0,000056   & 1,44                       & 0                       & 0,72                   & 0,000033   & 1,09                       & 0                       & 0,55                   & 0,00004    \\ \hline
+\end{tabular}
+}%
+\caption{Resultados obtenidos por el algoritmo 1-NN en el problema del APC.}
+\end{table}
+
+\begin{table}[H]
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\cline{2-13}
+\multicolumn{1}{l|}{}                       & \multicolumn{4}{c|}{\textbf{Colposcopy}}                                                   & \multicolumn{4}{c|}{\textbf{Ionosphere}}                                                   & \multicolumn{4}{c|}{\textbf{Texture}}                                                      \\ \cline{2-13} 
+\multicolumn{1}{l|}{}                       & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 1}}  & 72,88                      & 29,03                   & 50,96                  & 0,04223180 & 87,32                      & 2,94                    & 45,13                  & 0,04617286 & 93,64                      & 7,50                    & 50,57                  & 0,09011912 \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 2}}  & 70,18                      & 25,81                   & 47,99                  & 0,03592849 & 91,43                      & 2,94                    & 47,18                  & 0,04701781 & 94,55                      & 15,00                   & 54,77                  & 0,08130646 \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 3}}  & 68,42                      & 48,39                   & 58,40                  & 0,03983450 & 91,43                      & 2,94                    & 47,18                  & 0,03659153 & 95,45                      & 7,50                    & 51,48                  & 0,08078218 \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 4}}  & 77,19                      & 64,52                   & 70,85                  & 0,03201556 & 90,00                      & 2,94                    & 46,47                  & 0,03484225 & 97,27                      & 5,00                    & 51,14                  & 0,08749294 \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 5}}  & 82,46                      & 29,03                   & 55,74                  & 0,03293490 & 84,29                      & 2,94                    & 43,61                  & 0,03472829 & 93,64                      & 2,50                    & 48,07                  & 0,09723902 \\ \hline
+\multicolumn{1}{|c|}{\textbf{Media}}        & 74,23                      & 39,35                   & 56,79                  & 0,03658905 & 88,89                      & 2,94                    & 45,92                  & 0,03987055 & 94,91                      & 7,50                    & 51,20                  & 0,08738794 \\ \hline
+\multicolumn{1}{|c|}{\textbf{Máximo}}       & 82,46                      & 64,52                   & 70,85                  & 0,04223180 & 91,43                      & 2,94                    & 47,18                  & 0,04701781 & 97,27                      & 15,00                   & 54,77                  & 0,09723902 \\ \hline
+\multicolumn{1}{|c|}{\textbf{Mínimo}}       & 68,42                      & 25,81                   & 47,99                  & 0,03201556 & 84,29                      & 2,94                    & 43,61                  & 0,03472829 & 93,64                      & 2,50                    & 48,07                  & 0,08078218 \\ \hline
+\multicolumn{1}{|c|}{\textbf{Mediana}}      & 72,88                      & 29,03                   & 55,74                  & 0,03592849 & 90,00                      & 2,94                    & 46,47                  & 0,03659153 & 94,55                      & 7,50                    & 51,14                  & 0,08749294 \\ \hline
+\multicolumn{1}{|c|}{\textbf{Desv. Típica}} & 5,07                       & 14,91                   & 7,91                   & 0,00392631 & 2,75                       & 0,00                    & 1,37                   & 0,00553680 & 1,36                       & 4,18                    & 2,15                   & 0,00608498 \\ \hline
+\end{tabular}
+}%
+\caption{Resultados obtenidos por el algoritmo \textit{RELIEF} en el problema del APC.}
+\end{table}
+
+\begin{table}[H]
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\cline{2-13}
+                                            & \multicolumn{4}{c|}{\textbf{Colposcopy}}                                                   & \multicolumn{4}{c|}{\textbf{Ionosphere}}                                                   & \multicolumn{4}{c|}{\textbf{Texture}}                                                      \\ \cline{2-13} 
+                                            & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 1}}  & 81,36                      & 83,87                   & 82,61                  & 2,47677159 & 88,73                      & 85,29                   & 87,01                  & 0,74606109 & 92,73                      & 77,50                   & 85,11                  & 0,81571221 \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 2}}  & 71,93                      & 82,26                   & 77,09                  & 2,88534594 & 88,57                      & 79,41                   & 83,99                  & 0,83731246 & 89,09                      & 85,00                   & 87,05                  & 0,86508775 \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 3}}  & 70,18                      & 82,26                   & 76,22                  & 2,59485793 & 80,00                      & 94,12                   & 87,06                  & 0,42965746 & 95,45                      & 82,50                   & 88,98                  & 1,02096820 \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 4}}  & 71,93                      & 82,26                   & 77,09                  & 2,90626860 & 88,57                      & 91,18                   & 89,87                  & 0,75856829 & 90,91                      & 85,00                   & 87,95                  & 1,56289935 \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 5}}  & 64,91                      & 75,81                   & 70,36                  & 2,81053543 & 85,71                      & 91,18                   & 88,45                  & 0,62555575 & 87,27                      & 82,50                   & 84,89                  & 1,22837043 \\ \hline
+\multicolumn{1}{|c|}{\textbf{Media}}        & 72,06                      & 81,29                   & 76,68                  & 2,73475590 & 86,32                      & 88,24                   & 87,28                  & 0,67943101 & 91,09                      & 82,50                   & 86,80                  & 1,09860759 \\ \hline
+\multicolumn{1}{|c|}{\textbf{Máximo}}       & 81,36                      & 83,87                   & 82,61                  & 2,90626860 & 88,73                      & 94,12                   & 89,87                  & 0,83731246 & 95,45                      & 85,00                   & 88,98                  & 1,56289935 \\ \hline
+\multicolumn{1}{|c|}{\textbf{Mínimo}}       & 64,91                      & 75,81                   & 70,36                  & 2,47677159 & 80,00                      & 79,41                   & 83,99                  & 0,42965746 & 87,27                      & 77,50                   & 84,89                  & 0,81571221 \\ \hline
+\multicolumn{1}{|c|}{\textbf{Mediana}}      & 71,93                      & 82,26                   & 77,09                  & 2,81053543 & 88,57                      & 91,18                   & 87,06                  & 0,74606109 & 90,91                      & 82,50                   & 87,05                  & 1,02096820 \\ \hline
+\multicolumn{1}{|c|}{\textbf{Desv. Típica}} & 5,31                       & 2,81                    & 3,89                   & 0,16968432 & 3,35                       & 5,26                    & 1,95                   & 0,14206914 & 2,84                       & 2,74                    & 1,59                   & 0,27312796 \\ \hline
+\end{tabular}
+}%
+\caption{Resultados obtenidos por el algoritmo BL en el problema del APC.}
+\end{table}
+
+\begin{table}[H]
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\cline{2-13}
+                                            & \multicolumn{4}{c|}{\textbf{Colposcopy}}                                 & \multicolumn{4}{c|}{\textbf{Ionosphere}}                        & \multicolumn{4}{c|}{\textbf{Texture}}                           \\ \cline{2-13} 
+                                            & \textbf{\%\_clas} & \textit{\textbf{\%red}} & \textbf{Agr.} & \textbf{T} & \textbf{\%\_clas} & \textbf{\%red} & \textbf{Agr.} & \textbf{T} & \textbf{\%\_clas} & \textbf{\%red} & \textbf{Agr.} & \textbf{T} \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 1}}  & 77.97             & 72.58                   & 75.27         & 10.26      & 83.1              & 85.29          & 84.2          & 5.0        & 90.91             & 85.0           & 87.95         & 6.29       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 2}}  & 66.67             & 72.58                   & 69.62         & 10.79      & 82.86             & 88.24          & 85.55         & 4.36       & 86.36             & 82.5           & 84.43         & 6.63       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 3}}  & 78.95             & 59.68                   & 69.31         & 13.95      & 88.57             & 85.29          & 86.93         & 4.69       & 93.64             & 77.5           & 85.57         & 6.88       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 4}}  & 77.19             & 74.19                   & 75.69         & 9.55       & 91.43             & 91.18          & 91.3          & 3.88       & 89.09             & 85.0           & 87.05         & 6.26       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 5}}  & 71.93             & 72.58                   & 72.26         & 10.97      & 81.43             & 76.47          & 78.95         & 5.98       & 89.09             & 82.5           & 85.8          & 6.28       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Media}}        & 74.54             & 70.32                   & 72.43         & 11.1       & 85.48             & 85.29          & 85.39         & 4.78       & 89.82             & 82.5           & 86.16         & 6.47       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Máximo}}       & 78.95             & 74.19                   & 75.69         & 13.95      & 91.43             & 91.18          & 91.3          & 5.98       & 93.64             & 85.0           & 87.95         & 6.88       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Mínimo}}       & 66.67             & 59.68                   & 69.31         & 9.55       & 81.43             & 76.47          & 78.95         & 3.88       & 86.36             & 77.5           & 84.43         & 6.26       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Mediana}}      & 77.19             & 72.58                   & 72.26         & 10.79      & 83.1              & 85.29          & 85.55         & 4.69       & 89.09             & 82.5           & 85.8          & 6.29       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Desv. Típica}} & 4.63              & 5.36                    & 2.7           & 1.51       & 3.84              & 4.92           & 4.01          & 0.7        & 2.4               & 2.74           & 1.22          & 0.25       \\ \hline
+\end{tabular}
+}%
+\caption{Resultados obtenidos por el AGG con cruce BLX-$\alpha$ en el problema del APC.}
+\end{table}
+
+\begin{table}[H]
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\cline{2-13}
+                                            & \multicolumn{4}{c|}{\textbf{Colposcopy}}                                 & \multicolumn{4}{c|}{\textbf{Ionosphere}}                        & \multicolumn{4}{c|}{\textbf{Texture}}                           \\ \cline{2-13} 
+                                            & \textbf{\%\_clas} & \textit{\textbf{\%red}} & \textbf{Agr.} & \textbf{T} & \textbf{\%\_clas} & \textbf{\%red} & \textbf{Agr.} & \textbf{T} & \textbf{\%\_clas} & \textbf{\%red} & \textbf{Agr.} & \textbf{T} \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 1}}  & 81.36             & 58.06                   & 69.71         & 18.7       & 87.32             & 61.76          & 74.54         & 9.83       & 93.64             & 75.0           & 84.32         & 8.72       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 2}}  & 73.68             & 51.61                   & 62.65         & 17.91      & 85.71             & 70.59          & 78.15         & 9.98       & 90.91             & 77.5           & 84.2          & 8.04       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 3}}  & 66.67             & 54.84                   & 60.75         & 14.76      & 90.0              & 64.71          & 77.35         & 9.03       & 92.73             & 62.5           & 77.61         & 10.16      \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 4}}  & 78.95             & 54.84                   & 66.89         & 16.96      & 91.43             & 64.71          & 78.07         & 8.22       & 90.91             & 67.5           & 79.2          & 9.85       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 5}}  & 71.93             & 48.39                   & 60.16         & 18.4       & 81.43             & 61.76          & 71.6          & 10.36      & 90.91             & 55.0           & 72.95         & 12.62      \\ \hline
+\multicolumn{1}{|c|}{\textbf{Media}}        & 74.52             & 53.55                   & 64.03         & 17.35      & 87.18             & 64.71          & 75.94         & 9.48       & 91.82             & 67.5           & 79.66         & 9.88       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Máximo}}       & 81.36             & 58.06                   & 69.71         & 18.7       & 91.43             & 70.59          & 78.15         & 10.36      & 93.64             & 77.5           & 84.32         & 12.62      \\ \hline
+\multicolumn{1}{|c|}{\textbf{Mínimo}}       & 66.67             & 48.39                   & 60.16         & 14.76      & 81.43             & 61.76          & 71.6          & 8.22       & 90.91             & 55.0           & 72.95         & 8.04       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Mediana}}      & 73.68             & 54.84                   & 62.65         & 17.91      & 87.32             & 64.71          & 77.35         & 9.83       & 90.91             & 67.5           & 79.2          & 9.85       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Desv. Típica}} & 5.2               & 3.29                    & 3.69          & 1.42       & 3.5               & 3.22           & 2.54          & 0.76       & 1.15              & 8.22           & 4.28          & 1.57       \\ \hline
+\end{tabular}
+}%
+\caption{Resultados obtenidos por el AGG con cruce aritmético en el problema del APC.}
+\end{table}
+
+
+\begin{table}[H]
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\cline{2-13}
+                                            & \multicolumn{4}{c|}{\textbf{Colposcopy}}                                 & \multicolumn{4}{c|}{\textbf{Ionosphere}}                        & \multicolumn{4}{c|}{\textbf{Texture}}                           \\ \cline{2-13} 
+                                            & \textbf{\%\_clas} & \textit{\textbf{\%red}} & \textbf{Agr.} & \textbf{T} & \textbf{\%\_clas} & \textbf{\%red} & \textbf{Agr.} & \textbf{T} & \textbf{\%\_clas} & \textbf{\%red} & \textbf{Agr.} & \textbf{T} \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 1}}  & 69.49             & 72.58                   & 71.04         & 11.01      & 88.73             & 91.18          & 89.95         & 5.58       & 88.18             & 80.0           & 84.09         & 8.03       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 2}}  & 71.93             & 70.97                   & 71.45         & 11.7       & 85.71             & 88.24          & 86.97         & 6.71       & 85.45             & 75.0           & 80.23         & 7.94       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 3}}  & 68.42             & 64.52                   & 66.47         & 13.99      & 81.43             & 82.35          & 81.89         & 8.23       & 94.55             & 85.0           & 89.77         & 6.83       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 4}}  & 77.19             & 80.65                   & 78.92         & 10.92      & 80.0              & 85.29          & 82.65         & 5.73       & 94.55             & 67.5           & 81.02         & 10.15      \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 5}}  & 71.93             & 70.97                   & 71.45         & 11.41      & 84.29             & 79.41          & 81.85         & 6.69       & 91.82             & 77.5           & 84.66         & 8.06       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Media}}        & 71.79             & 71.94                   & 71.86         & 11.81      & 84.03             & 85.29          & 84.66         & 6.59       & 90.91             & 77.0           & 83.95         & 8.2        \\ \hline
+\multicolumn{1}{|c|}{\textbf{Máximo}}       & 77.19             & 80.65                   & 78.92         & 13.99      & 88.73             & 91.18          & 89.95         & 8.23       & 94.55             & 85.0           & 89.77         & 10.15      \\ \hline
+\multicolumn{1}{|c|}{\textbf{Mínimo}}       & 68.42             & 64.52                   & 66.47         & 10.92      & 80.0              & 79.41          & 81.85         & 5.58       & 85.45             & 67.5           & 80.23         & 6.83       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Mediana}}      & 71.93             & 70.97                   & 71.45         & 11.41      & 84.29             & 85.29          & 82.65         & 6.69       & 91.82             & 77.5           & 84.09         & 8.03       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Desv. Típica}} & 3.03              & 5.16                    & 4.0           & 1.13       & 3.1               & 4.16           & 3.26          & 0.94       & 3.59              & 5.79           & 3.37          & 1.07       \\ \hline
+\end{tabular}
+}%
+\caption{Resultados obtenidos por el AGE con cruce BLX-$\alpha$ en el problema del APC.}
+\end{table}
+
+\begin{table}[H]
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\cline{2-13}
+                                            & \multicolumn{4}{c|}{\textbf{Colposcopy}}                                 & \multicolumn{4}{c|}{\textbf{Ionosphere}}                        & \multicolumn{4}{c|}{\textbf{Texture}}                           \\ \cline{2-13} 
+                                            & \textbf{\%\_clas} & \textit{\textbf{\%red}} & \textbf{Agr.} & \textbf{T} & \textbf{\%\_clas} & \textbf{\%red} & \textbf{Agr.} & \textbf{T} & \textbf{\%\_clas} & \textbf{\%red} & \textbf{Agr.} & \textbf{T} \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 1}}  & 74.58             & 59.68                   & 67.13         & 15.52      & 85.92             & 61.76          & 73.84         & 10.09      & 95.45             & 72.5           & 83.98         & 9.33       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 2}}  & 68.42             & 66.13                   & 67.28         & 13.6       & 87.14             & 64.71          & 75.92         & 11.17      & 90.0              & 75.0           & 82.5          & 9.81       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 3}}  & 68.42             & 67.74                   & 68.08         & 14.62      & 90.0              & 73.53          & 81.76         & 8.93       & 89.09             & 70.0           & 79.55         & 9.6        \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 4}}  & 77.19             & 69.35                   & 73.27         & 12.62      & 85.71             & 64.71          & 75.21         & 11.07      & 82.73             & 70.0           & 76.36         & 10.9       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 5}}  & 70.18             & 69.35                   & 69.77         & 11.34      & 84.29             & 70.59          & 77.44         & 11.03      & 91.82             & 72.5           & 82.16         & 10.52      \\ \hline
+\multicolumn{1}{|c|}{\textbf{Media}}        & 71.76             & 66.45                   & 69.1          & 13.54      & 86.61             & 67.06          & 76.84         & 10.46      & 89.82             & 72.0           & 80.91         & 10.03      \\ \hline
+\multicolumn{1}{|c|}{\textbf{Máximo}}       & 77.19             & 69.35                   & 73.27         & 15.52      & 90.0              & 73.53          & 81.76         & 11.17      & 95.45             & 75.0           & 83.98         & 10.9       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Mínimo}}       & 68.42             & 59.68                   & 67.13         & 11.34      & 84.29             & 61.76          & 73.84         & 8.93       & 82.73             & 70.0           & 76.36         & 9.33       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Mediana}}      & 70.18             & 67.74                   & 68.08         & 13.6       & 85.92             & 64.71          & 75.92         & 11.03      & 90.0              & 72.5           & 82.16         & 9.81       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Desv. Típica}} & 3.53              & 3.59                    & 2.29          & 1.47       & 1.92              & 4.32           & 2.72          & 0.86       & 4.16              & 1.87           & 2.68          & 0.59       \\ \hline
+\end{tabular}
+}%
+\caption{Resultados obtenidos por el AGE con cruce aritmético en el problema del APC.}
+\end{table}
+
+\begin{table}[H]
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\cline{2-13}
+                                            & \multicolumn{4}{c|}{\textbf{Colposcopy}}                                 & \multicolumn{4}{c|}{\textbf{Ionosphere}}                        & \multicolumn{4}{c|}{\textbf{Texture}}                           \\ \cline{2-13} 
+                                            & \textbf{\%\_clas} & \textit{\textbf{\%red}} & \textbf{Agr.} & \textbf{T} & \textbf{\%\_clas} & \textbf{\%red} & \textbf{Agr.} & \textbf{T} & \textbf{\%\_clas} & \textbf{\%red} & \textbf{Agr.} & \textbf{T} \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 1}}  & 69.49             & 85.48                   & 77.49         & 7.15       & 80.28             & 88.24          & 84.26         & 3.91       & 88.18             & 85.0           & 86.59         & 4.74       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 2}}  & 68.42             & 80.65                   & 74.53         & 8.19       & 87.14             & 88.24          & 87.69         & 3.57       & 87.27             & 85.0           & 86.14         & 5.23       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 3}}  & 80.7              & 83.87                   & 82.29         & 7.56       & 75.71             & 88.24          & 81.97         & 3.82       & 93.64             & 82.5           & 88.07         & 5.51       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 4}}  & 84.21             & 83.87                   & 84.04         & 7.8        & 85.71             & 94.12          & 89.92         & 3.43       & 91.82             & 85.0           & 88.41         & 5.39       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 5}}  & 78.95             & 83.87                   & 81.41         & 7.79       & 84.29             & 91.18          & 87.73         & 3.68       & 92.73             & 82.5           & 87.61         & 5.75       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Media}}        & 76.35             & 83.55                   & 79.95         & 7.7        & 82.63             & 90.0           & 86.31         & 3.68       & 90.73             & 84.0           & 87.36         & 5.32       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Máximo}}       & 84.21             & 85.48                   & 84.04         & 8.19       & 87.14             & 94.12          & 89.92         & 3.91       & 93.64             & 85.0           & 88.41         & 5.75       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Mínimo}}       & 68.42             & 80.65                   & 74.53         & 7.15       & 75.71             & 88.24          & 81.97         & 3.43       & 87.27             & 82.5           & 86.14         & 4.74       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Mediana}}      & 78.95             & 83.87                   & 81.41         & 7.79       & 84.29             & 88.24          & 87.69         & 3.68       & 91.82             & 85.0           & 87.61         & 5.39       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Desv. Típica}} & 6.28              & 1.58                    & 3.46          & 0.34       & 4.15              & 2.35           & 2.83          & 0.17       & 2.53              & 1.22           & 0.87          & 0.34       \\ \hline
+\end{tabular}
+}%
+\caption{Resultados obtenidos por el AM con cruce BLX-$\alpha$ y Búsqueda Local sobre toda la población en el problema del
+APC.}
+\end{table}
+
+\begin{table}[H]
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\cline{2-13}
+                                            & \multicolumn{4}{c|}{\textbf{Colposcopy}}                                 & \multicolumn{4}{c|}{\textbf{Ionosphere}}                        & \multicolumn{4}{c|}{\textbf{Texture}}                           \\ \cline{2-13} 
+                                            & \textbf{\%\_clas} & \textit{\textbf{\%red}} & \textbf{Agr.} & \textbf{T} & \textbf{\%\_clas} & \textbf{\%red} & \textbf{Agr.} & \textbf{T} & \textbf{\%\_clas} & \textbf{\%red} & \textbf{Agr.} & \textbf{T} \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 1}}  & 72.88             & 83.87                   & 78.38         & 5.88       & 90.14             & 91.18          & 90.66         & 2.94       & 87.27             & 85.0           & 86.14         & 4.31       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 2}}  & 71.93             & 83.87                   & 77.9          & 6.73       & 90.0              & 91.18          & 90.59         & 2.97       & 90.91             & 87.5           & 89.2          & 4.22       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 3}}  & 70.18             & 83.87                   & 77.02         & 6.62       & 94.29             & 82.35          & 88.32         & 3.85       & 95.45             & 87.5           & 91.48         & 4.35       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 4}}  & 75.44             & 80.65                   & 78.04         & 8.95       & 90.0              & 82.35          & 86.18         & 4.7        & 85.45             & 87.5           & 86.48         & 4.48       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 5}}  & 59.65             & 82.26                   & 70.95         & 7.66       & 87.14             & 91.18          & 89.16         & 2.75       & 81.82             & 85.0           & 83.41         & 4.58       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Media}}        & 70.01             & 82.9                    & 76.46         & 7.17       & 90.31             & 87.65          & 88.98         & 3.44       & 88.18             & 86.5           & 87.34         & 4.39       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Máximo}}       & 75.44             & 83.87                   & 78.38         & 8.95       & 94.29             & 91.18          & 90.66         & 4.7        & 95.45             & 87.5           & 91.48         & 4.58       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Mínimo}}       & 59.65             & 80.65                   & 70.95         & 5.88       & 87.14             & 82.35          & 86.18         & 2.75       & 81.82             & 85.0           & 83.41         & 4.22       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Mediana}}      & 71.93             & 83.87                   & 77.9          & 6.73       & 90.0              & 91.18          & 89.16         & 2.97       & 87.27             & 87.5           & 86.48         & 4.35       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Desv. Típica}} & 5.45              & 1.29                    & 2.79          & 1.06       & 2.28              & 4.32           & 1.66          & 0.73       & 4.67              & 1.22           & 2.77          & 0.13       \\ \hline
+\end{tabular}
+}%
+\caption{Resultados obtenidos por el AM con cruce BLX-$\alpha$ y Búsqueda Local sobre el mejor de la población en el problema
+del APC.}
+\end{table}
+
+\begin{table}[H]
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\cline{2-13}
+                                            & \multicolumn{4}{c|}{\textbf{Colposcopy}}                                 & \multicolumn{4}{c|}{\textbf{Ionosphere}}                        & \multicolumn{4}{c|}{\textbf{Texture}}                           \\ \cline{2-13} 
+                                            & \textbf{\%\_clas} & \textit{\textbf{\%red}} & \textbf{Agr.} & \textbf{T} & \textbf{\%\_clas} & \textbf{\%red} & \textbf{Agr.} & \textbf{T} & \textbf{\%\_clas} & \textbf{\%red} & \textbf{Agr.} & \textbf{T} \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 1}}  & 72.88             & 83.87                   & 78.38         & 5.88       & 90.14             & 91.18          & 90.66         & 2.94       & 87.27             & 85.0           & 86.14         & 4.31       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 2}}  & 71.93             & 83.87                   & 77.9          & 6.73       & 90.0              & 91.18          & 90.59         & 2.97       & 90.91             & 87.5           & 89.2          & 4.22       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 3}}  & 70.18             & 83.87                   & 77.02         & 6.62       & 94.29             & 82.35          & 88.32         & 3.85       & 95.45             & 87.5           & 91.48         & 4.35       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 4}}  & 75.44             & 80.65                   & 78.04         & 8.95       & 90.0              & 82.35          & 86.18         & 4.7        & 85.45             & 87.5           & 86.48         & 4.48       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 5}}  & 59.65             & 82.26                   & 70.95         & 7.66       & 87.14             & 91.18          & 89.16         & 2.75       & 81.82             & 85.0           & 83.41         & 4.58       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Media}}        & 70.01             & 82.9                    & 76.46         & 7.17       & 90.31             & 87.65          & 88.98         & 3.44       & 88.18             & 86.5           & 87.34         & 4.39       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Máximo}}       & 75.44             & 83.87                   & 78.38         & 8.95       & 94.29             & 91.18          & 90.66         & 4.7        & 95.45             & 87.5           & 91.48         & 4.58       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Mínimo}}       & 59.65             & 80.65                   & 70.95         & 5.88       & 87.14             & 82.35          & 86.18         & 2.75       & 81.82             & 85.0           & 83.41         & 4.22       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Mediana}}      & 71.93             & 83.87                   & 77.9          & 6.73       & 90.0              & 91.18          & 89.16         & 2.97       & 87.27             & 87.5           & 86.48         & 4.35       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Desv. Típica}} & 5.45              & 1.29                    & 2.79          & 1.06       & 2.28              & 4.32           & 1.66          & 0.73       & 4.67              & 1.22           & 2.77          & 0.13       \\ \hline
+\end{tabular}
+}%
+\caption{Resultados obtenidos por el AM con cruce BLX-$\alpha$ y Búsqueda Local sobre un cromosoma aleatorio  de la población
+en el problema del APC.}
+\end{table}
+
+\begin{table}[H]
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\cline{2-13}
+                                              & \multicolumn{4}{c|}{\textbf{Colposcopy}}                                 & \multicolumn{4}{c|}{\textbf{Ionosphere}}                        & \multicolumn{4}{c|}{\textbf{Texture}}                           \\ \cline{2-13} 
+                                              & \textbf{\%\_clas} & \textit{\textbf{\%red}} & \textbf{Agr.} & \textbf{T} & \textbf{\%\_clas} & \textbf{\%red} & \textbf{Agr.} & \textbf{T} & \textbf{\%\_clas} & \textbf{\%red} & \textbf{Agr.} & \textbf{T} \\ \hline
+\multicolumn{1}{|c|}{\textbf{1-NN}}           & 74,88             & 0                       & 37,44         & 0.00039    & 86,33             & 0              & 43,16         & 0.00039    & 92,36             & 0              & 46,18         & 0.00049    \\ \hline
+\multicolumn{1}{|c|}{\textbf{RELIEF}}         & 74,23             & 39,35                   & 56,79         & 0.03659    & 88,89             & 2,94           & 45,92         & 0.03987    & 94,91             & 7,50           & 51,20         & 0.08739    \\ \hline
+\multicolumn{1}{|c|}{\textbf{BL}}             & 72,06             & 81,29                   & 76,68         & 2.73476    & 86,32             & 88,24          & 87,28         & 0.67943    & 91,09             & 82,50          & 86,80         & 1.09861    \\ \hline
+\multicolumn{1}{|c|}{\textbf{AGG-BLX}}        & 74.54             & 70.32                   & 72.43         & 11.1       & 85.48             & 85.29          & 85.39         & 4.78       & 89.82             & 82.5           & 86.16         & 6.47       \\ \hline
+\multicolumn{1}{|c|}{\textbf{AGG-CA}}         & 74.52             & 53.55                   & 64.03         & 17.35      & 87.18             & 64.71          & 75.94         & 9.48       & 91.82             & 67.5           & 79.66         & 9.88       \\ \hline
+\multicolumn{1}{|c|}{\textbf{AGE-BLX}}        & 71.79             & 71.94                   & 71.86         & 11.81      & 84.03             & 85.29          & 84.66         & 6.59       & 90.91             & 77.0           & 83.95         & 8.2        \\ \hline
+\multicolumn{1}{|c|}{\textbf{AGE-CA}}         & 71.76             & 66.45                   & 69.1          & 13.54      & 86.61             & 67.06          & 76.84         & 10.46      & 89.82             & 72.0           & 80.91         & 10.03      \\ \hline
+\multicolumn{1}{|c|}{\textbf{AM-(10,1.0)}}    & 76.35             & 83.55                   & 79.95         & 7.7        & 82.63             & 90.0           & 86.31         & 3.68       & 90.73             & 84.0           & 87.36         & 5.32       \\ \hline
+\multicolumn{1}{|c|}{\textbf{AM-(10,0.1)}}    & 73.87             & 83.23                   & 78.55         & 6.14       & 86.03             & 88.82          & 87.43         & 3.22       & 89.27             & 86.0           & 87.64         & 4.52       \\ \hline
+\multicolumn{1}{|c|}{\textbf{AM-(10,0.1mej)}} & 70.01             & 82.9                    & 76.46         & 7.17       & 90.31             & 87.65          & 88.98         & 3.44       & 88.18             & 86.5           & 87.34         & 4.39       \\ \hline
+\end{tabular}
+}%
+\caption{Valores medios de los distintos algoritmos para el problema del APC.}
+\end{table}
+
+\subsection{Experimentación}
+
+\begin{table}[H]
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\cline{2-13}
+                                            & \multicolumn{4}{c|}{\textbf{Colposcopy}}                                 & \multicolumn{4}{c|}{\textbf{Ionosphere}}                        & \multicolumn{4}{c|}{\textbf{Texture}}                           \\ \cline{2-13} 
+                                            & \textbf{\%\_clas} & \textit{\textbf{\%red}} & \textbf{Agr.} & \textbf{T} & \textbf{\%\_clas} & \textbf{\%red} & \textbf{Agr.} & \textbf{T} & \textbf{\%\_clas} & \textbf{\%red} & \textbf{Agr.} & \textbf{T} \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 1}}  & 76.27             & 79.03                   & 77.65         & 8.34       & 94.37             & 85.29          & 89.83         & 6.67       & 90.91             & 85.0           & 87.95         & 6.32       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 2}}  & 77.19             & 77.42                   & 77.31         & 9.16       & 84.29             & 82.35          & 83.32         & 6.64       & 90.0              & 77.5           & 83.75         & 6.12       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 3}}  & 78.95             & 80.65                   & 79.8          & 6.61       & 92.86             & 85.29          & 89.08         & 6.5        & 90.0              & 82.5           & 86.25         & 5.93       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 4}}  & 73.68             & 82.26                   & 77.97         & 5.82       & 90.0              & 91.18          & 90.59         & 6.06       & 89.09             & 80.0           & 84.55         & 6.2        \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 5}}  & 75.44             & 80.65                   & 78.04         & 8.27       & 90.0              & 70.59          & 80.29         & 9.05       & 85.45             & 82.5           & 83.98         & 6.56       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Media}}        & 76.31             & 80.0                    & 78.15         & 7.64       & 90.3              & 82.94          & 86.62         & 6.98       & 89.09             & 81.5           & 85.3          & 6.23       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Máximo}}       & 78.95             & 82.26                   & 79.8          & 9.16       & 94.37             & 91.18          & 90.59         & 9.05       & 90.91             & 85.0           & 87.95         & 6.56       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Mínimo}}       & 73.68             & 77.42                   & 77.31         & 5.82       & 84.29             & 70.59          & 80.29         & 6.06       & 85.45             & 77.5           & 83.75         & 5.93       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Mediana}}      & 76.27             & 80.65                   & 77.97         & 8.27       & 90.0              & 85.29          & 89.08         & 6.64       & 90.0              & 82.5           & 84.55         & 6.2        \\ \hline
+\multicolumn{1}{|c|}{\textbf{Desv. Típica}} & 1.75              & 1.64                    & 0.86          & 1.23       & 3.45              & 6.81           & 4.07          & 1.06       & 1.91              & 2.55           & 1.59          & 0.21       \\ \hline
+\end{tabular}
+}%
+\caption{Resultados obtenidos por el AGG con cruce BLX-$\alpha$ y población inicial obtenida por \textit{RELIEF} en el problema
+del APC.}
+\end{table}
+
+\begin{table}[H]
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\cline{2-13}
+                                            & \multicolumn{4}{c|}{\textbf{Colposcopy}}                                 & \multicolumn{4}{c|}{\textbf{Ionosphere}}                        & \multicolumn{4}{c|}{\textbf{Texture}}                           \\ \cline{2-13} 
+                                            & \textbf{\%\_clas} & \textit{\textbf{\%red}} & \textbf{Agr.} & \textbf{T} & \textbf{\%\_clas} & \textbf{\%red} & \textbf{Agr.} & \textbf{T} & \textbf{\%\_clas} & \textbf{\%red} & \textbf{Agr.} & \textbf{T} \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 1}}  & 71.19             & 82.26                   & 76.72         & 5.97       & 83.1              & 88.24          & 85.67         & 3.15       & 87.27             & 87.5           & 87.39         & 3.86       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 2}}  & 64.91             & 82.26                   & 73.59         & 6.04       & 85.71             & 88.24          & 86.97         & 3.27       & 86.36             & 85.0           & 85.68         & 4.46       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 3}}  & 75.44             & 87.1                    & 81.27         & 4.21       & 80.0              & 91.18          & 85.59         & 3.39       & 92.73             & 85.0           & 88.86         & 4.78       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 4}}  & 80.7              & 85.48                   & 83.09         & 4.65       & 92.86             & 82.35          & 87.61         & 4.36       & 92.73             & 85.0           & 88.86         & 4.62       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 5}}  & 73.68             & 87.1                    & 80.39         & 4.62       & 87.14             & 88.24          & 87.69         & 3.37       & 84.55             & 85.0           & 84.77         & 4.32       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Media}}        & 73.18             & 84.84                   & 79.01         & 5.09       & 85.76             & 87.65          & 86.7          & 3.51       & 88.73             & 85.5           & 87.11         & 4.41       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Máximo}}       & 80.7              & 87.1                    & 83.09         & 6.04       & 92.86             & 91.18          & 87.69         & 4.36       & 92.73             & 87.5           & 88.86         & 4.78       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Mínimo}}       & 64.91             & 82.26                   & 73.59         & 4.21       & 80.0              & 82.35          & 85.59         & 3.15       & 84.55             & 85.0           & 84.77         & 3.86       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Mediana}}      & 73.68             & 85.48                   & 80.39         & 4.65       & 85.71             & 88.24          & 86.97         & 3.37       & 87.27             & 85.0           & 87.39         & 4.46       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Desv. Típica}} & 5.18              & 2.19                    & 3.42          & 0.76       & 4.3               & 2.88           & 0.91          & 0.43       & 3.38              & 1.0            & 1.66          & 0.31       \\ \hline
+\end{tabular}
+}%
+\caption{Resultados obtenidos por el AM con cruce BLX-$\alpha$, población inicial obtenida por \textit{RELIEF} y Búsqueda Local
+sobre un cromosoma aleatorio  de la población en el problema del APC.}
+\end{table}
+
+\begin{table}[H]
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\cline{2-13}
+                                                       & \multicolumn{4}{c|}{\textbf{Colposcopy}}                                 & \multicolumn{4}{c|}{\textbf{Ionosphere}}                        & \multicolumn{4}{c|}{\textbf{Texture}}                           \\ \cline{2-13} 
+                                                       & \textbf{\%\_clas} & \textit{\textbf{\%red}} & \textbf{Agr.} & \textbf{T} & \textbf{\%\_clas} & \textbf{\%red} & \textbf{Agr.} & \textbf{T} & \textbf{\%\_clas} & \textbf{\%red} & \textbf{Agr.} & \textbf{T} \\ \hline
+\multicolumn{1}{|c|}{\textbf{1-NN}}                    & 74,88             & 0                       & 37,44         & 0.00039    & 86,33             & 0              & 43,16         & 0.00039    & 92,36             & 0              & 46,18         & 0.00049    \\ \hline
+\multicolumn{1}{|c|}{\textbf{RELIEF}}                  & 74,23             & 39,35                   & 56,79         & 0.03659    & 88,89             & 2,94           & 45,92         & 0.03987    & 94,91             & 7,50           & 51,20         & 0.08739    \\ \hline
+\multicolumn{1}{|c|}{\textbf{BL}}                      & 72,06             & 81,29                   & 76,68         & 2.73476    & 86,32             & 88,24          & 87,28         & 0.67943    & 91,09             & 82,50          & 86,80         & 1.09861    \\ \hline
+\multicolumn{1}{|c|}{\textbf{AGG-BLX}}                 & 74.54             & 70.32                   & 72.43         & 11.1       & 85.48             & 85.29          & 85.39         & 4.78       & 89.82             & 82.5           & 86.16         & 6.47       \\ \hline
+\multicolumn{1}{|c|}{\textbf{AGG-CA}}                  & 74.52             & 53.55                   & 64.03         & 17.35      & 87.18             & 64.71          & 75.94         & 9.48       & 91.82             & 67.5           & 79.66         & 9.88       \\ \hline
+\multicolumn{1}{|c|}{\textbf{AGE-BLX}}                 & 71.79             & 71.94                   & 71.86         & 11.81      & 84.03             & 85.29          & 84.66         & 6.59       & 90.91             & 77.0           & 83.95         & 8.2        \\ \hline
+\multicolumn{1}{|c|}{\textbf{AGE-CA}}                  & 71.76             & 66.45                   & 69.1          & 13.54      & 86.61             & 67.06          & 76.84         & 10.46      & 89.82             & 72.0           & 80.91         & 10.03      \\ \hline
+\multicolumn{1}{|c|}{\textbf{AM-(10,1.0)}}             & 76.35             & 83.55                   & 79.95         & 7.7        & 82.63             & 90.0           & 86.31         & 3.68       & 90.73             & 84.0           & 87.36         & 5.32       \\ \hline
+\multicolumn{1}{|c|}{\textbf{AM-(10,0.1)}}             & 73.87             & 83.23                   & 78.55         & 6.14       & 86.03             & 88.82          & 87.43         & 3.22       & 89.27             & 86.0           & 87.64         & 4.52       \\ \hline
+\multicolumn{1}{|c|}{\textbf{AM-(10,0.1mej)}}          & 70.01             & 82.9                    & 76.46         & 7.17       & 90.31             & 87.65          & 88.98         & 3.44       & 88.18             & 86.5           & 87.34         & 4.39       \\ \hline
+\multicolumn{1}{|c|}{\textbf{AGG-BLX + RELIEF}}        & 76.31             & 80.0                    & 78.15         & 7.64       & 90.3              & 82.94          & 86.62         & 6.98       & 89.09             & 81.5           & 85.3          & 6.23       \\ \hline
+\multicolumn{1}{|c|}{\textbf{AM-(10,0.1mej) + RELIEF}} & 73.18             & 84.84                   & 79.01         & 5.09       & 85.76             & 87.65          & 86.7          & 3.51       & 88.73             & 85.5           & 87.11         & 4.41       \\ \hline
+\end{tabular}
+}%
+\caption{Valores medios de los distintos algoritmos más los algoritmos modificados para el problema del APC.}
+\end{table}
+
+\subsection{Conclusión}
+
 \newpage
 
 \begin{thebibliography}{5}
