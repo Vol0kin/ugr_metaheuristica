@@ -1,0 +1,42 @@
+Contenidos de los directorios:
+
+# BIN
+
+Contiene los datos para poder ejecutar los programas. Contiene tanto los .arff
+proporcionados originalmente, como los .arff convertidos a .csv para poder ser
+utilizados por el programa. 
+
+Contiene los archivos:
+
++ colposcopy.arff 
++ colposcopy.csv 
++ ionosphere.arff 
++ ionosphere.csv 
++ texture.arff 
++ texture.csv 
+
+# FUENTES
+
+Contiene el archivo .py ejecutable de la practica, al igual que un archivo con 
+los modulos de Python que se tienen que instalar y un script para instalarlos 
+en un entorno virtual.
+
+Tambien se incluye un modulo llamado algorithms donde estan implementados
+los algoritmos generales de la practica.
+
+Contiene los archivos:
+
++ practica2.py: Contiene el codigo ejecutable practica 
++ requirements.txt: Contiene los modulos a ser instalados
++ install.sh: Codigo para instalar requirements.txt
+
+El directorio algorithms contiene:
+
++ __init__.py: Archivo para inicializar el módulo
++ classifiers.py: Archivo que contiene los distontos clasificadores de la practica (clasificador genético y memético)
++ genetics.py: Archivo que contiene la implementación de los AG
++ memetics.py: Contiene la implementacin de los AM
++ utils.py: Contiene funciones utiles (normalizarW)
++ kfold.py: Contiene funciones para crear las particiones y normalizar los datos
++ metris.py: Contiene funciones para medir metricas (funcion objetivo, tasa de clasificacion y reduccion, etc)
+
