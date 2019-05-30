@@ -21,3 +21,15 @@ def normalize_w(w):
     normal_w[normal_w > 1.0] = 1.0
 
     return normal_w
+
+def generate_initial_w(N):
+    """
+    Funcion para generar un valor de w inicial con valores aleatorios
+    uniformes en el rango [0, 1]
+
+    :param Numero de valores aletorios que generar
+
+    :return Devuelve un nuevo vector w con valores aleatorios
+    """
+
+    return np.random.uniform(0.0, 1.0, N)
