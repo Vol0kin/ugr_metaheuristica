@@ -50,7 +50,7 @@ def cooling_scheme(temperature, beta):
     return new_temmperature
 
 
-def neighbor_operator(w, mu=0.0, sigma=0.3):
+def neighbor_operator(w, mean=0.0, sigma=0.3):
     """
     Operador de movimiento por el vecindario. Genera un nuevo vecino
 
@@ -63,7 +63,8 @@ def neighbor_operator(w, mu=0.0, sigma=0.3):
     
     # Generar vecino
     trait = np.random.choice(np.arange(w.shape[0]))
-    neighbor = w[trait] + np.random.normal(mu, sigma)
+    neighbor = np.copy(w)
+    neighbor[trait] += np.random.normal(mean, sigma)
 
     # Normalizar vecino
     neighbor = utils.normalize_w(neighbor)
@@ -95,13 +96,13 @@ def simulated_annealing(X, y, max_evaluations=15000):
 
     # Establecer valores de max vecions, max exitos y M
     max_neigh = 10 * N
-    max_success = round(0.1 * N)
+    max_success = round(0.1 * max_neigh)
     M = round(max_evaluations / max_neigh)
 
     # Inicializar evaluaciones, iteraciones y exitos
     num_evaluations = 0
     num_iterations = 0
-    num_success = 0
+    num_success = 1
 
     # Evaluar la solucion inicial y guardar como mejor evaluacion
     C = metrics.evaluate(X, y, w)
@@ -114,6 +115,15 @@ def simulated_annealing(X, y, max_evaluations=15000):
 
     # Generar beta
     beta = generate_beta(temperature, t_end, M)
+
+    #print('Initial Temperature: ', temperature)
+    #print('Final Temperature: ', t_end)
+    #print('M: ', M)
+    #print('N: ', N)
+    #print('Max neighbors: ', max_neigh)
+    #print('Max success: ', max_success)
+    #print('Beta: ', beta)
+    #print('w: ', best_w)
 
     # Mientras no se hayan dado M iteraciones y haya habido al menos un exito
     # realizar la busqueda mediante enfriamiento simulado
