@@ -6,7 +6,7 @@ import algorithms.classifiers
 
 # Posibles archivos y algoritmos
 files = ('colposcopy', 'ionosphere', 'texture')
-algorithm_list = ('sa', 'ils')
+algorithm_list = ('sa', 'ils', 'der', 'de')
 
 # Leer archivo y algoritmo de entrada
 in_file = sys.argv[1]
@@ -45,7 +45,10 @@ if 'sa' in in_algorithm:
     algo = algorithms.classifiers.SearchAlgorithm.SA
 elif 'ils' in in_algorithm:
     algo = algorithms.classifiers.SearchAlgorithm.ILS
-
+elif 'der' in in_algorithm:
+    algo = algorithms.classifiers.SearchAlgorithm.DER
+else:
+    algo = algorithms.classifiers.SearchAlgorithm.DE
 
 print('Conjunto de datos: {}'.format(in_file))
 print('Clasificador utilizado: {}'.format(algo))

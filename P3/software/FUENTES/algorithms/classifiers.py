@@ -7,12 +7,15 @@ from . import metrics
 from . import kfold
 from . import ils
 from . import simulated_annealing as sa
+from . import differential_evolution as de
 
 # Modulo para los distintos clasificadores implementados
 
 class SearchAlgorithm(Enum):
     SA = 1
     ILS = 2
+    DER = 3
+    DE = 4
 
 
 def classifier(train_part, test_part, search_algorithm):
@@ -51,14 +54,21 @@ def classifier(train_part, test_part, search_algorithm):
     # y prueba, obtener los w, entrenar el modelo y predecir las etiquetas
     # Comprobar luego la precision del ajuste
     for train, test in zip(train_part, test_part):
+        # Establecer parametros de los algoritmos
+        params = {'X': train[0], 'y': train[1]}
         # Determinar funcion a ejecutar
+
         if search_algorithm == SearchAlgorithm.SA:
             weights_func = sa.simulated_annealing
         elif search_algorithm == SearchAlgorithm.ILS:
             weights_func = ils.ils
+        else:
+            weights_func = de.differential_evolution 
 
-        # Establecer parametros de los algoritmos
-        params = {'X': train[0], 'y': train[1]}
+            if search_algorithm == SearchAlgorithm.DER:
+                params['use_best'] = False
+            else:
+                params['use_best'] = True
 
         # Tiempo antes de lanzar la Busqueda Local
         t1 = time.time()
