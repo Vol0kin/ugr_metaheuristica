@@ -1,0 +1,512 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[spanish,es-nodecimaldot]{babel}	% Utilizar español
+\usepackage[utf8]{inputenc}					% Caracteres UTF-8
+\usepackage{graphicx}						% Imagenes
+\usepackage[hidelinks]{hyperref}			% Poner enlaces sin marcarlos en rojo
+\usepackage{fancyhdr}						% Modificar encabezados y pies de pagina
+\usepackage{float}							% Insertar figuras
+\usepackage[textwidth=390pt]{geometry}		% Anchura de la pagina
+\usepackage[nottoc]{tocbibind}				% Referencias (no incluir num pagina indice en Indice)
+\usepackage{enumitem}						% Permitir enumerate con distintos simbolos
+\usepackage[T1]{fontenc}					% Usar textsc en sections
+\usepackage{amsmath}						% Símbolos matemáticos
+\usepackage{algorithm}						% Environtment algorithm
+\usepackage[noend]{algpseudocode}			% Pseudocodigo
+\usepackage{listings}
+
+\algnewcommand\algorithmicforeach{\textbf{for each}}
+\algdef{S}[FOR]{ForEach}[1]{\algorithmicforeach\ #1\ \algorithmicdo}
+
+\algrenewcommand\algorithmicreturn{\textbf{return}}
+
+
+\lstset{
+	language=bash
+}
+
+% Comando para poner el nombre de la asignatura
+\newcommand{\asignatura}{Metaheurísticas}
+\newcommand{\autor}{Vladislav Nikolov Vasilev}
+
+% Configuracion de encabezados y pies de pagina
+\pagestyle{fancy}
+\lhead{\autor{}}
+\rhead{\asignatura{}}
+\lfoot{Grado en Ingeniería Informática}
+\cfoot{}
+\rfoot{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}		% Linea cabeza de pagina
+\renewcommand{\footrulewidth}{0.4pt}		% Linea pie de pagina
+
+\begin{document}
+\pagenumbering{gobble}
+
+% Pagina de titulo
+\begin{titlepage}
+
+\begin{minipage}{\textwidth}
+
+\centering
+
+\includegraphics[scale=0.3]{img/ugr.png}\\
+
+\textsc{\Large \asignatura{}\\[0.2cm]}
+\textsc{GRADO EN INGENIERÍA INFORMÁTICA}\\[0.3cm]
+
+\noindent\rule[-1ex]{\textwidth}{1pt}\\[1.5ex]
+\textsc{{\Huge PRÁCTICA 3\\[1pt]}}
+\textsc{{\Large \\Enfriamiento Simulado, Búsqueda Local Reiterada y Evolución Diferencial para el Problema del Aprendizaje de Pesos en Características}}
+\noindent\rule[-1ex]{\textwidth}{2pt}\\[1ex]
+
+\end{minipage}
+
+\vspace{0.18cm}
+
+\begin{minipage}{\textwidth}
+
+\centering
+
+\textbf{Autor}\\ {\autor{}}\\[1ex]
+\textbf{NIE}\\ {X8743846M}\\[1ex]
+\textbf{E-Mail}\\ {vladis890@gmail.com}\\[1ex]
+\textbf{Grupo de prácticas}\\ {MH3 Jueves 17:30-19:30}\\[1ex]
+\textbf{Rama}\\ {Computación y Sistemas Inteligentes}\\[1ex]
+\vspace{0.2cm}
+
+\includegraphics[scale=0.3]{img/etsiit.jpeg}
+
+\vspace{0.3cm}
+\textsc{Escuela Técnica Superior de Ingenierías Informática y de Telecomunicación}\\
+\vspace{1cm}
+\textsc{Curso 2018-2019}
+\end{minipage}
+\end{titlepage}
+
+\pagenumbering{arabic}
+\tableofcontents
+\thispagestyle{empty}				% No usar estilo en la pagina de indice
+
+\newpage
+
+\setlength{\parskip}{1em}
+
+\section{Descripción del problema}
+
+El problema que se aborda en esta práctica es el Aprendizaje de Pesos en Características (APC). Es un problema típico de
+\textit{machine learning} en el cuál se pretende optimizar el rendimiento de un clasificador basado en vecinos más cercanos.
+Esto se consigue mediante la ponderación de las características de entrada con un vector de pesos $W$, el cuál utiliza
+codificación real (cada $w_i \in W$ es un número real), con el objetivo de modificar sus valores a la hora de calcular la
+distancia. Cada vector $W$ se expresa como $W = \lbrace w_1, w_2, \dots , w_n \rbrace$, siendo $n$ el número de dimensiones
+del vector de características, y cumpliéndose además que $\forall w_i \in W, \; w_i \in [0, 1]$.\par
+
+El clasificador considerado para este problema es el 1-NN (genéricamente, un clasificador $k$-NN, con $k$ vecinos, siendo
+en este caso $k = 1$), es decir, aquél que clasifica un elemento según su primer vecino más cercano utilizando alguna medida
+de distancia (en este caso, utilizando la distancia Euclídea). Cabe destacar que no en todos los casos se usará el clasificador
+1-NN ya que se pueden dar casos en los que el vecino más cercano de un elemento sea él mismo. Por ese motivo, en algunas
+técnicas/algoritmos se usará un 1-NN con el criterio de \textit{leave-one-out}, es decir, que se busca el vecino más cercano
+pero excluyéndose a él mismo.\par
+
+El objetivo propuesto es aprender el vector de pesos $W$
+mediante una serie de algoritmos, de tal forma que al optimizar el clasificador se mejore tanto la precisión de éste como su
+complejidad, es decir, que se considere un menor número de características. Estos dos parámetros, a los que llamaremos $tasa\_
+clas$ y $tasa\_red$, respectivamente, se pueden expresar de la siguiente forma:
+
+\[tasa\_clas = 100 \cdot \frac{nº \; instancias \; bien \; clasificadas \; en \; T}{nº \; instancias \; en \; T}\]
+\[tasa\_red = 100 \cdot \frac{nº \; valores \; w_i < 0.2}{nº \; caracteristicas}\]
+
+\noindent siendo $T$ el tamaño del conjunto de datos sobre que el que se evalúa el clasificador.\par
+
+Por tanto, al combinarlos en una única función a la que llamaremos $F(W)$, la cuál será nuestra función objetivo a optimizar
+(maximizar), tenemos que:
+
+\[F(W) = \alpha \cdot tasa\_clas(W) + (1 - \alpha) \cdot tasa\_red(W)\] 
+
+\noindent siendo $\alpha$ la importancia que se le asigna a la tasa de clasificación y a la de reducción, cumpliendo que
+$\alpha \in [0, 1]$. En este caso, se utiliza un $\alpha = 0.5$ para dar la misma importancia a ambos, con lo cuál se pretende
+que se reduzcan al máximo el número de características conservando una $tasa\_clas$ alta.
+
+\section{Descripción de los algoritmos}
+
+\subsection{Consideraciones previas}
+
+Antes de empezar con la descripción formal de los algoritmos implementados, vamos a describir algunos aspectos
+comunes, como por ejemplo cómo se representan e inicializan las soluciones en todos los casos, cómo se representa la función
+objetivo o \textit{fitness} y cómo se evalúan las soluciones. También vamos a comentar brevemente otros aspectos, como por
+ejemplo cómo mantener las soluciones factibles después de aplicarles alguna mutación o transformación (es decir, que se
+mantengan en el rango dado), entre otros.
+Cabe destacar que muchos de los pseudocódigos que aparecen a continuación no se han implementado exactamente igual o no aparecen
+en el código, ya que o bien son operaciones que se han vectorizado o bien ya hay funciones que hacen eso.
+
+Como se dijo al principio, cada solución es un vector de valores reales $W$ en el que $\forall w_i \in W, \; w_i \in [0, 1]$.
+En el caso de la \textbf{Evolución Diferencial} se tendrá un conjunto vectores que formarán la población, ya que sigue un esquema
+basado en poblaciones. Esto se volverá a comentar más adelante, cuando se hable con más detenimiento de esta técnica.
+
+Para evitar que las soluciones se salgan de este intervalo, se ha implementado una función que se encarga de normalizar los valores
+de $W$ en el rango. La función se ha usado, por ejemplo, en la búsqueda local, para hacer que al aplicar el operador
+de generación de un nuevo vecino la solución siguiese siendo válida. La implementación de esta función es la siguiente:
+
+\begin{algorithm}[H]
+\caption{Función que normaliza un vector de pesos $W$}
+\begin{algorithmic}[1]
+\Function{NormalizarW}{$W$}
+\ForEach{$w_i \in W$}
+	\If{$w_i < 0$}
+		\State $w_i \gets 0$
+	\ElsIf{$w_1 > 1$}
+		\State $w_i \gets 1$
+	\EndIf
+\EndFor
+\State \Return{$W$}
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+Para generar las soluciones iniciale se han seguido dos esquemas. En uno de ellos, el cuál es utilizado por el \textbf{Enfriamiento
+Simulado} y la \textbf{ILS}, se genera un único vector de pesos inicial con valores aleatorios dados por una distribución uniforme
+en el rango $[0, 1]$. En el otro esquema, el cuál es seguido por la \textbf{Evolución Diferencial} se lleva a cabo algo muy parecido,
+solo que en vez de generar una única solución inicial, se generan una serie de $M$ soluciones iniciales, donde $M$ es el tamaño de
+la población. Los pseudocódigos de estos dos esquemas se pueden ver a continuación:
+
+\begin{algorithm}[H]
+\caption{Inicialización de un vector de pesos $W$}
+\begin{algorithmic}[1]
+\Function{GenerarWAleatorio}{$N$}
+\State$W \gets$ vector[$N$]
+\ForEach{$w_i \in W$}
+	 \State $w_i \gets$ ValorAleatorioUniformeRango0-1()
+\EndFor
+\State \Return{$W$}
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}[H]
+\caption{Generación de una población inicial en \textbf{Evolución Diferencial}}
+\begin{algorithmic}[1]
+\Function{GenerarPoblacionInicial}{$numCrom$, $numGenes$}
+\State $poblacion \gets $ NuevaMatrizVacia($numCrom$, $numGenes$)
+	\For{$i \gets 0$ \textbf{to} $numCrom - 1$}
+		\For{$j \gets 0$ \textbf{to} $numGenes- 1$}
+			\State $poblacion[i][j] \gets $ ValorAleatorioUniformeRango0-1()
+		\EndFor	
+	\EndFor
+\State \Return{$poblacion$}
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+Vamos a comentar ahora algunos detalles extra. Es importante saber como se calcula la distancia a un vecino, ya que esto juega
+un factor muy importante a la hora de encontrar cuál es el vecino más cercano a un elemento (o el vecino más cercano por el
+criterio \textit{leave-one-out}). En la implementación de la práctica se ha utilizado un KDTree, que es una estructura de datos
+parecida a un árbol binario, solo que de $K$ dimensiones. Por dentro, esta estructura utiliza la distancia Euclídea (distancia
+en línea recta entre dos elementos) para determinar cuál es el elemento más próximo a otro. No hace falta conocer como se
+implementa esta estructura de datos, pero sí es importante conocer cómo se realiza el cálculo de la distancia Euclídea. En el
+siguiente pseudocódigo se puede ver el cálculo:
+
+\begin{algorithm}[H]
+\caption{Cálculo de la distancia Euclídea entre dos puntos}
+\begin{algorithmic}
+\Function{DistanciaEuclidea}{$e_1, e_2$}
+\State $distancia \gets \sqrt{\sum_{i=1}^{N} (e_1^i - e_2^i)^2}$
+\State \Return{$distancia$}
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+Para la \textbf{Evolución Diferencial} sería interesante intentar mantener la población ordenada por valor \textit{fitness}, ya que
+eso nos va a simplificar bastante el trabajo para uno de los procesos de mutación. Para hacer esto, se ha creado una función que
+recibe la lista de valores \textit{fitness} y la poblacion, obtiene los índices que dan el orden de forma ascendente de la lista
+y con estos índices ordena la población y la lista de \textit{fitness}. Aquí se puede ver como funciona:
+
+\begin{algorithm}
+\caption{Función para ordenar la población según su valor \textit{fitness}}
+\begin{algorithmic}[1]
+\Function{OrdenarPoblacion}{$fitness$ , $poblacion$}
+\State $indicesOrden \gets $ ObtenerIndicesOrdenados($fitness$)
+\State $fitnessOrdenado \gets$ NuevoVectorVacioMismaCapacidad($fitness$)
+\State $poblacionOrdenada \gets$ NuevaMatrizVaciaMismaCapacidad($poblacion$)
+\ForEach{$indice \in indicesOrden$}
+	\State $fitnessOrdenado \gets fitness[indice]$
+	\State $poblacionOrdenada \gets poblacion[indice]$
+\EndFor
+\State \Return{$fitnessOrdenado$, $poblacionOrdenada$}
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+Pasemos a ver ahora la función objetivo, $F(W)$, que es lo que se pretende optimizar. Para evaluar la función objetivo,
+necesitamos calcular $tasa\_clas$ y $tasa\_red$. Para calcular lo primero, podemos seguir la idea detrás del siguiente
+pseudocódigo:
+
+\begin{algorithm}[H]
+\caption{Cálculo de la tasa de clasificación}
+\begin{algorithmic}[1]
+\Function{CalculoTasaClas}{$etiq, etiqPred, N$}
+\State $bienClasificados \gets 0$
+\For{$i \gets 1$ \textbf{to} $N$}
+	\If{$etiq_i = etiqPred_i$}
+		\State $bienClasificados \gets bienCasificados + 1$
+	\EndIf
+\EndFor
+\State $tasa\_clas \gets bienClasificados$ / $N$
+\State \Return{$tasa\_clas$}
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+Para calcular $tasa\_red$, suponiendo que queremos saber el número de características por debajo de $0.2$ podemos seguir un
+esquema como el siguiente:
+
+\begin{algorithm}[H]
+\caption{Cálculo de la tasa de reducción (I)}
+\begin{algorithmic}[1]
+\Function{CalculoTasaRed}{$W, N$}
+\State $caracRed \gets 0$
+\ForEach{$w_i \in W$}
+	\If{$w_i < 0.2$}
+		\State $caracRed \gets caracRed + 1$
+	\EndIf
+\EndFor
+\State $tasa\_red \gets caracRed$ / $N$
+\State \Return{$tasa\_red$}
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+Y finalmente, para poder calcular la función a optimizar (nuestra función \textit{fitness} u objetivo), teniendo en cuenta que
+usamos un $\alpha = 0.5$ para ponderar las dos tasas, y que anteriormente hemos calculado ambas tasas, podemos seguir el
+siguiente esquema:
+
+\begin{algorithm}[H]
+\caption{Cálculo de la función objetivo o \textit{fitness}}
+\begin{algorithmic}[1]
+\Function{CalculoFuncionFitness}{$tasa\_clas, tasa\_red, \alpha$}
+\State $fitness \gets \alpha \cdot tasa\_clas + (1 - \alpha) \cdot tasa\_red$
+\State \Return{$fitness$}
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+Para acabar, y antes de pasar a ver la implementación de los algoritmos, veamos otra funcionalidad que se usa en todos los
+algoritmos, que es la forma en la que se evalúa la función objetivo. Podemos evaluar la función objetivo tanto para una solución
+como para una población de soluciones. Por tanto, vamos a tener dos funciones que nos permitan evaluar las soluciones: una para
+una única solución y una para toda una población de individuos (soluciones), la cuál por debajo utilizará la evaluación simple
+tantas veces como individuos tenga la población. Vamos a ver el funcionamiento de estas funciones comenzando primero por
+la que evalúa una única solución, y veamos luego la función que evalúa toda una población de soluciones:
+
+\begin{algorithm}[H]
+\caption{Función para evaluar un vector de pesos $W$}
+\begin{algorithmic}[1]
+\Function{Evaluar}{$datos$, $etiquetas$, $W$}
+\State $datosPesos \gets$ aplicar $w_i \in W$ sobre los $x_i \in datos$ donde $w_i > 0.2$
+\State $arbolKD \gets$ KDTree($datosPesos$)
+\State $vecinos \gets arbolKD$.ObtenerVecinosMasCercanoL1O($datosPesos$)
+\State $pred \gets etiquetas[vecinos]$
+\State $tasa\_clas \gets$ CalcularTasaClas($etiquetas$, $pred$, num. etiquetas)
+\State $tasa\_red \gets$ CalcularTasaRed($W$, num. caracteristicas)
+\State $fitness \gets$ CalculoFuncionFitness($tasa\_clas$, $tasa\_red$)
+\State \Return{$fitness$}
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}[H]
+\caption{Función para evaluar una población}
+\begin{algorithmic}[1]
+\Function{EvaluarPoblacion}{$datos$, $etiquetas$, $poblacion$}
+\State $listaFitness \gets $ NuevoVector()
+\ForEach{$W \in poblacion$}
+	\State $listaFitness$.Añadir(Evaluar($datos$, $etiquetas$, $W$))
+\EndFor
+\State \Return{$listaFitness$}
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+\newpage
+
+\subsection{Algoritmos de comparación}
+
+\subsubsection{Clasificador 1-NN}
+
+El primer algoritmo con el que compararemos es el 1-NN que utiliza todas las características, tal como hacíamos en la 
+práctica anterior.
+
+Este clasificador lo que hace es, dado un conjunto de valores $X$ que pertenecen a una muestra y un elemento $e$, decir cuál es el
+$x \in X$ más cercano a $e$, y por tanto, decir que $e$ pertenece a la misma clase $x$. Para determinar cuál es el elemento más
+cercano se puede usar alguna métrica de distancia, como por ejemplo la distancia Euclídea, descrita anteriormente. A la hora de
+implementarlo, para poder acelerar los cálculos, se puede usar un KDTree, ya que permite realizar una consulta rápida (en los
+casos más favorables su complejidad temporal es $\mathcal{O} (\log n)$, mientras que en el peor caso es $\mathcal{O}(n)$)
+utilizando la distancia Euclídea para determinar el vecino más cercano, con la penalización de que tarda un tiempo
+$\mathcal{O}(n)$ en ser construido. Para poder ver un esquema de su funcionamiento, se ofrece el siguiente pseudocódigo:
+
+\begin{algorithm}[H]
+\caption{Clasificador 1-NN}
+\begin{algorithmic}[1]
+\Function{KNN}{$X$, $y$, $e$}
+\State $arbolKD \gets$ KDTree($X$)
+\State $x \gets arbolKD$.VecinoMasCercano($e$)
+\State $etiqueta \gets y[x]$
+\State \Return{$etiqueta$}
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+\newpage
+
+\subsubsection{Algoritmo greedy \textit{RELIEF}}
+
+Otro algoritmo con el que vamos a comparar es el algoritmo para el cálculo de pesos \textit{RELIEF}. Es un algoritmo
+greedy que, comenzando con un $W$ cuyos pesos valen 0, actualiza $W$ para cada $x_i \in X$, buscando para cada $x_i$ cuál es
+su aliado más cercano (elemento que tiene la misma etiqueta que $x_i$ con el criterio de \textit{leave-one-out}, ya que él
+mismo podría ser su vecino más cercano) y su enemigo más cercano (elemento que tiene diferente etiqueta a la que tiene $x_i$).
+
+A la hora de implementarlo, vamos a utilizar 2 KDTree en cada iteración que se van a construir sobre la marcha. En uno se
+encontrarán todos los aliados de $e$ y en el otro estarán todos sus enemigos. Esto puede suponer una gran penalización por el
+tiempo de creación de los árvoles, pero es un tiempo insignificante ya que el algoritmo es muy rápido. Después de construir los
+árboles, se buscará en el caso del aliado más cercano, por el criterio de \textit{leave-one-out}, cuál es el índice de este
+aliado. En el caso del enemigo más cercano, como este no puede ser él mismo, se buscará el índice del vecino más cercano en ese
+árbol. Una vez hecho eso, obtendremos los respectivos aliado y enemigo del conjunto de aliados y enemigos. Una vez teniéndolos,
+ya se puede actualizar el valor de $W$.
+
+Cuando se ha terminado de iterar sobre todos los elementos de $X$, se normaliza $W$ para que esté en el rango $[0, 1]$ 
+eligiendo el $w_i \in W$ que sea más grande. Todos aquellos valores por debajo de 0 se truncan a 0, y el resto se normaliza
+dividiéndolos entre $w_m$ (el $w_i$ más grande).
+
+Antes de ver su implementación, veamos como se inicializa una solución:
+
+\begin{algorithm}[H]
+\caption{Inicialización de un vector de pesos $W$ en \textit{RELIEF}}
+\begin{algorithmic}[1]
+\Function{GenerarWRelief}{$N$}
+\State $W \gets$ VectorVacioCapacidad($N$)
+\ForEach{$w_i \in W$}
+	\State $w_i \gets 0$
+\EndFor
+\State \Return{$W$}
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+Una vez dicho esto, veamos cómo sería la implementación:
+
+\begin{algorithm}[H]
+\caption{Cálculo de los pesos mediante \textit{RELIEF} (I)}
+\begin{algorithmic}[1]
+\Function{RELIEF}{$X$, $Y$}
+\State $N \gets$ ObtenerNumElementos($Y$)
+\State $numCarac \gets $ ObtenerNumCarac($X$)
+\State $W \gets $ GenerarWRelief($numCarac$)
+\algstore{relief}
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}[H]
+\caption{Cálculo de los pesos mediante \textit{RELIEF} (II)}
+\begin{algorithmic}
+\algrestore{relief}
+\For{$i \gets 0$ \textbf{to} $N-1$}
+	\State $x, y \gets X[i], Y[i]$
+	\State $aliados \gets e_a \subset X :$ etiqueta($e_a$) $ = y$
+	\State $enemigos \gets e_e \subset X:$ etiqueta($e_e$) $ \neq y$
+	\State $arbolAliados \gets$ KDTree($aliados$)
+	\State $arbolEnemigos \gets$ KDTree($enemigos$)
+	\State $aliadoCercano \gets arbolAliados$.ObtenerVecinoMasCercanoL1O($x$)
+	\State $enemigoCercano \gets arbolEnemigos$.ObtenerVecinoMasCercano($x$)
+	\State $aliado \gets aliados[aliadoCercano]$
+	\State $enemigo \gets enemigos[enemigoCercano]$
+	\State $W \gets W + \left|x - enemigo\right| - \left|x - aliado\right|$
+\EndFor
+\State $w_m \gets$ \textbf{max}($W$)
+\ForEach{$w_i \in W$}
+	\If{$w_i < 0$}
+		\State $w_i \gets 0$
+	\Else
+		\State $w_i \gets w_i$ / $w_m$
+	\EndIf
+\EndFor
+\State \Return{$W$}
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+\newpage
+
+\subsubsection{Búsqueda Local}
+
+En la primera práctica se implementó una búsqueda local (búsqueda basada en trayectorias), así que vamos a rescatarla para
+tener un algoritmo más de comparación, ademñas de que los AM la necesitarán luego, aunque ligeramente modificada. Esta búsqueda,
+como debemos recordar, está basada en el primer mejor (Simple Hill Climbing).
+
+La búsqueda local parte de un vector $W$ con valores aleatorios y busca optimizarlo mediante la exploración de los vecinos.
+Esta exploración se realiza modificando con un valor aleatorio generado a partir de una distribución normal con $\mu = 0$ y 
+$\sigma = 0.3$ un $w_i \in W$, quedándose con el cambio en caso de mejorar la función objetivo, o descartándolo en otro caso.
+
+Para realizar lo explicado anteriormente, se genera una permutación del conjunto $\lbrace 0, 1, \dots , N-1 \rbrace$, donde $N$
+es el número de características, y se van escogiendo las características según el orden de la permutación, aplicándoles
+el cambio anteriormente descrito. Si no se produce una mejora, se descarta el cambio realizado. Si no se ha producido mejora
+en la función objetivo con la permutación, se escoge una nueva permutación y se repite el proceso, hasta un máximo de $20
+\cdot N$ evaluaciones sin éxito seguidas de la función objetivo. Si se produce mejora, se acepta el cambio y se genera una
+nueva permutación, repitiendo el proceso. Todo esto se realiza hasta que se hayan realizado 15000 evaluaciones de la función
+objetivo, o hasta que se dé la condición anterior (demasiadas iteraciones sin mejora).
+
+El pseudocódigo de la búsqueda local se puede ver aquí:
+
+\begin{algorithm}[H]
+\label{alg:local-search}
+\caption{Cálculo de los pesos mediante la Búsqueda Local (I)}
+\begin{algorithmic}[1]
+\Function{BusquedaLocal}{$datos$, $etiquetas$}
+\State $N \gets $ ObtenerNumCaracteristicas($datos$)
+\State $W \gets$ GenerarWAleatorio($N$)
+\State $evaluaciones \gets 0$
+\State $evaluacionesMalas \gets 0$
+\State $fitness \gets$ Evaluar($datos$, $etiquetas$, $W$)
+\While{$evaluaciones < 15000$}
+\State $Wactual \gets W$
+\State $ordenCaracteristicas \gets $ Permutacion(0 \textbf{to} $N - 1$)
+\ForEach{$carac \in ordenCaracteristicas$}
+	\State $W[carac] \gets W[carac] + $ GenerarValorDistribucionNormal($\mu$, $\sigma$)	
+	\State $W \gets$ NormalizarW($W$)
+	\State $evaluaciones \gets evaluaciones + 1$
+	\State $nuevoFitness \gets$ Evaluar($X, Y, W$)		
+\algstore{local}
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}[H]
+\caption{Cálculo de los pesos mediante la Búsqueda Local (II)}
+\begin{algorithmic}
+\algrestore{local}
+	\If{$nuevoFitness > fitness$}
+		\State $fitness \gets nuevoFitness$		
+		\State $evaluacionesMalas \gets 0$		
+		\State \textbf{break}
+	\Else
+		\State $evaluacionesMalas \gets evaluacionesMalas + 1$		
+		\State $W[carac] \gets Wactual[carac]$		
+	\EndIf	
+	\If{$evaluaciones > 15000$ \textbf{or} $evaluacionesMalas > 20 \cdot N$}
+		\State \Return{$W$}
+	\EndIf
+\EndFor
+\EndWhile
+\State \Return{$W$}
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+\newpage
+
+\newpage
+
+\begin{thebibliography}{5}
+
+\bibitem{nombre-referencia}
+Texto referencia
+\\\url{https://url.referencia.com}
+
+\end{thebibliography}
+
+\end{document}
+
