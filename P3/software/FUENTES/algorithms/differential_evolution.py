@@ -105,8 +105,6 @@ def differential_evolution(X, y, use_best, pop_size=50, cr=0.5, f=0.5,
             # Obtener indices donde cruzar y donde no
             cross_idx = np.where(prob_array < cr)
             individual_idx = np.where(prob_array >= cr)
-#            print(cross_idx)
-#            print(individual_idx)
 
             # Generar descendiente
             offspring = np.empty_like(population[i])

@@ -58,7 +58,6 @@ np.random.seed(8912374)
 
 class_rate, red_rate, aggrupation, times = algorithms.classifiers.classifier(train_part, test_part, algo)
 
-
 print('Tiempo total: {}'.format(times.sum()))
 
 class_rate *= 100
