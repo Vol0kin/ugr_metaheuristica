@@ -1240,9 +1240,9 @@ en el problema del APC.}
 \cline{2-13}
                                                                                                & \multicolumn{4}{c|}{\textbf{Colposcopy}}                                                          & \multicolumn{4}{c|}{\textbf{Ionosphere}}                                                          & \multicolumn{4}{c|}{\textbf{Texture}}                                                            \\ \cline{2-13} 
                                                                                                & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T}        & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T}        & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T}       \\ \hline
-\multicolumn{1}{|c|}{\textbf{1-NN}}                                                            & 74,88                      & 0                       & 37,44                  & 0,000388717651367 & 86,33                      & 0                       & 43,16                  & 0,000394868850708 & 92,36                      & 0                       & 46,18                  & 0,00048770904541 \\ \hline
-\multicolumn{1}{|c|}{\textbf{RELIEF}}                                                          & 74,23                      & 39,35                   & 56,79                  & 0,03658905        & 88,89                      & 2,94                    & 45,92                  & 0,03987055        & 94,91                      & 7,50                    & 51,20                  & 0,08738794       \\ \hline
-\multicolumn{1}{|c|}{\textbf{BL}}                                                              & 72,06                      & 81,29                   & 76,68                  & 2,73475590        & 86,32                      & 88,24                   & 87,28                  & 0,67943101        & 91,09                      & 82,50                   & 86,80                  & 1,09860759       \\ \hline
+\multicolumn{1}{|c|}{\textbf{1-NN}}                                                            & 74.88                      & 0                       & 37.44                  & 0.00039    & 86.33                      & 0                       & 43.16                  & 0.00039    & 92.36                      & 0                       & 46.18                  & 0.00049    \\ \hline
+\multicolumn{1}{|c|}{\textbf{RELIEF}}                                                          & 74.23                      & 39.35                   & 56.79                  & 0.03659    & 88.89                      & 2.94                    & 45.92                  & 0.03987    & 94.91                      & 7.50                    & 51.20                  & 0.08739    \\ \hline
+\multicolumn{1}{|c|}{\textbf{BL}}                                                              & 72.06                      & 81.29                   & 76.68                  & 2.73476    & 86.32                      & 88.24                   & 87.28                  & 0.67943    & 91.09                      & 82.50                   & 86.80                  & 1.09861    \\ \hline
 \multicolumn{1}{|c|}{\textbf{AGG-BLX}}                                                         & 74.54                      & 70.32                   & 72.43                  & 11.1              & 85.48                      & 85.29                   & 85.39                  & 4.78              & 89.82                      & 82.5                    & 86.16                  & 6.47             \\ \hline
 \multicolumn{1}{|c|}{\textbf{AGG-CA}}                                                          & 74.52                      & 53.55                   & 64.03                  & 17.35             & 87.18                      & 64.71                   & 75.94                  & 9.48              & 91.82                      & 67.5                    & 79.66                  & 9.88             \\ \hline
 \multicolumn{1}{|c|}{\textbf{AGE-BLX}}                                                         & 71.79                      & 71.94                   & 71.86                  & 11.81             & 84.03                      & 85.29                   & 84.66                  & 6.59              & 90.91                      & 77.0                    & 83.95                  & 8.2              \\ \hline
@@ -1259,7 +1259,319 @@ en el problema del APC.}
 \caption{Resultados medios obtenidos en el problema del APC.}
 \end{table}
 
+Con las tablas de resultados ya vistas, solo nos queda analizar los resultados obtenidos para ver cómo se comportan las nuevas
+técnicas respecto a las anteriores. Para realizar ese análisis vamos a ayudarnos de la tabla de resultados medios, ya que es
+donde se pueden ver todos los resultados en conjunto. También nos vamos a ayudar de gráficas, las cuáles han sido \textbf{todas}
+obtenidas a partir de la \textbf{Partición 1} de los distintos conjuntos de datos, de forma que sea fácil compararlos todos entre
+ellos para ver cómo se comportan. Además, es esperable que los resultados obtenidos en esta partición sean similares a los que se
+pueden conseguir en las otras, y por tanto, con analizar una de ellas sabríamos lo que sucede de forma aproximada en las otras.
+
+Es importante destacar que también se han incluido las tablas de los resultados obtenidos por los Algoritmos Genéticos y los
+Algoritmos Meméticos, ya que también queremos comparar con ellos.
+
+Para comparar las distintas técnicas vamos a fijarnos principalmente en la \textbf{tasa de clasificación}, la \textbf{tasa de
+reducción} y la \textbf{agrupación}, dándole especial importancia a ésta última. El \textbf{tiempo} también es un factor importante.
+No obstante, dos de los algoritmos están basados en trayectorias, mientras que el otro está basado en poblaciones. Por tanto,
+intentar comparar los tiempos para decidir cuál de ellos es el mejor no parece la mejor idea, ya que sería una comparación injusta.
+Además, aunque haya dos técnicas que siguen el esquema de las búsquedas basadas en trayectorias, una va a realizar un mayor número
+de evaluaciones a la función objetivo que la otra, con lo cuál, como es obvio, terminará antes. Así que, para intentar ser justos,
+no vamos a considerar el tiempo como un factor decisivo, pero en caso de que exista mucha similaridad entre los resultados obtenidos
+por dos técnicas, vamos a preferir quedarnos con aquella que tarde menos.
+
+Hay que tener en cuenta que existen técnicas, como por ejemplo el \textit{RELIEF} o el 1-NN que no ofrecen reducción, ya que no
+tienen esa capacidad. Por tanto, para comparar con ellos, nos centraremos solamente en la tasa de clasificación. A pesar de eso,
+en caso de que exista similaridad entre los resultados, preferiremos aquella técnica que \textbf{obtenga una buena tasa de
+clasificación reduciendo además el número de características utilizadas}.
+
+Una vez dicho esto, vamos a explicar brevemente la metodología que vamos a seguir para compara los resultados. Vamos a ir para cada
+conjunto de datos comparando primero los resultados obtenidos por el Enfriamiento Simulado y la ILS, y vamos a ver cuál de ellas
+ofrece unos mejores resultados. A continuación observaremos cuál de las dos estrategias de mutación de la Evolución Diferencial
+y nos quedaremos con la mejor. Posteriormente compararemos las mejores técnicas de cada categoría y escogeremos la mejor.
+Finalmente, compararemos la mejor nueva metaheurística con el resto, y nos quedaremos con la mejor de ellas. Con todo esto
+comentado, comencemos por el primer conjunto de datos.
+
+El primer conjunto que vamos a analizar es el \textbf{Colposcopy}. Podemos ver claramente que el Enfriamiento Simulado ha conseguido
+una tasa de clasificación muy baja, inferior al resto de técnicas. No obstante, ha conseguido una reducción decente, superior
+a algunas técnicas como por ejemplo los AG. La agrupación ha salido bastante alta, situándolo más o menos en un punto intermedio
+entre los mejores resultados de agrupación y los peores. Esto se debe a que la tasa de clasificación ha tirado por lo bajo, haciendo
+que la agrupación sea un tanto peor. A pesar de todo esto, ha resultado ser la metaheurística más rápida de todas (sin
+contar al 1-NN y al \textit{RELIEF}), siendo incluso más rápida que la Búsqueda Local. Por tanto, para el poco tiempo que ha
+tardado, ha demostrado ofrecer unos resultados bastante buenos, lo cuál nos indica que no es una técnica que deba ser despreciada.
+
+Si analizamos por ejemplo como desciende la temperatura en este algorimo y cómo van difiriendo los \textit{fitness} de la mejor
+solución y de la actual, podemos ver lo siguiente:
+
+\begin{figure}[H]
+\centering
+\begin{minipage}{.5\textwidth}
+	\centering
+	\includegraphics[scale=0.4]{img/colposcopy-sa-temp.png}
+	\caption{Evolución de la temperatura.}
+\end{minipage}%
+\begin{minipage}{.5\textwidth}
+	\centering
+	\includegraphics[scale=0.4]{img/colposcopy-sa.png}
+	\caption{Diferencia entre la mejor solución y la actual.}
+\end{minipage}
+\end{figure}
+
+Vemos como claramente esta técnica realiza poco más de 2000 evaluaciones de la función objetivo, cosa que se queda muy lejos de las
+15000 evaluaciones máximas. Esto se debe a que la temperatura desciende bastante rápido debido a que $M$ tiene un valor pequeño
+(entre 23 y 24 enfriamientos) aún siguiendo el esquema modificado de Cauchy. Por otra parte, vemos que al principio el algoritmo
+tiene bastante capacidad explorativa, ya que puede irse a soluciones peores. Sin embargo, a mediad que la temperatura va decreciendo,
+el número de movimiento de empeoramiento que se realizan son mucho menos, y por tanto tiene un comportamiento más de intensificación,
+ya que solo irá a soluciones mejores.
+
+Observando la ILS, vemos que mejora en todos los aspectos al Enfriamiento Simulado menos en tiempo. Tiene unas tasas de
+clasificación, reducción y agrupación muy altas, mucho más que otras técnicas vistas anteriormente. El teimpo que tarda también es
+bastante bueno, aunque es peor que el del Enfriamiento Simulado. Veamos como es su comportamiento:
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.4]{img/colposcopy-ils.png}
+\caption{Diferencia entre el mejor \textit{fitness} y el actual.}
+\end{figure}
+
+Podemos ver que, a diferencia del ES, esta técnica realiza las 15000 evaluaciones, lo cuál explica la diferencia de tiempos. Además,
+como permite reiniciar la búsqueda con otra solución, tiene un componente explorativo bastante fuerte, ya que permite visitar más
+zonas del espacio de búsqueda. Además, vemos que hay casos en los que el \textit{fitness} actual empeora al mejor, y por tanto,
+no es escogido para seguir sobre él, si no que simplemente se aplica una mutación sobre el mejor de nuevo y se comienza otra
+Búsqueda Local. Podemos ver también que llega un punto en el que la mejor solución converge y no mejora, lo cuál nos podría
+indicar que podríamos haber detenido la búsqueda en ese momento, ya que no ha habido mejora (esto sucede aproximadamente
+en las 6000 evaluaciones).
+
+Por tanto, de entre ES e ILS, para esta partición escogeríamos la ILS, ya que ha ofrecido los mejores resultados.
+
+Pasando ahora a analizar los distintos modelos de Evolución Diferencial, vemos como el esquema de mutación \textit{rand/1} ha
+permitido conseguir unos mejores resultados. Excepto en tasa de clasificación, donde gana el \textit{current-to-best/1}, en
+el resto de aspectos el otro esquema se muestra superior, ya que permite reducir mucho más, y por tanto, nos permite conseguir
+una agrupación muy alta, la \textbf{más alta} de todas las metaheurísticas y técnicas en general. Los tiempos medios de las
+dos técnicas son muy parecidos, con lo cuál no existe mucha diferencia entre ellas en ese aspecto. Por tanto, de entre estos
+dos esquemas, nos quedaríamos con el \textit{rand/1}, ya que nos ha ofrecido los mejores resultados. Veamos el motivo por el
+cuál se puede deber esto:
+
+\begin{figure}[H]
+\centering
+\begin{minipage}{.5\textwidth}
+	\centering
+	\includegraphics[scale=0.4]{img/colposcopy-de-rand.png}
+	\caption{DE con esquema de mutación \textit{rand/1}.}
+\end{minipage}%
+\begin{minipage}{.5\textwidth}
+	\centering
+	\includegraphics[scale=0.4]{img/colposcopy-de-best.png}
+	\caption{DE con esquema de mutación \textit{current-to-best/1}.}
+\end{minipage}
+\end{figure}
+
+Podemos ver claramente cómo en este problema el esquema \textit{current-to-best/1} converge a la mejor solución muy rápidamente
+y llega al máximo posible aproximadamente a las 4000 evaluaciones, es decir, después de unas 80 épocas (en cada época se evalúan
+50 nuevos cromosomas). Además, el pico del mejor \textit{fitness} es mucho más bajo que en el esquema \textit{rand/1}. En este
+segundo observamos como no existe una convergencia tan drástica, ya que se ve que existe cierta diferencia siempre entre el mejor
+y el peor cromosoma. Además, el máximo al que llega el mejor \textit{fitness} es a un valor cercano al $0.9$, mucho mejor
+que en el otro esquema. Por tanto, podemos concluir de aquí que, al utilizar siempre el mejor, se va a tener una tendencia de
+que la población converja hacia él, y por tanto se va a perder diversidad. En cambio, en el esquema \textit{rand/1} se va a
+conservar cierta diversidad, ya que los padres que se usarán en la mutación serán siempre aletorios, y al ser 3 los participantes
+en el proceso de mutación y recombinación (sin contar al elemento base), existen muchas más posibles combinaciones de valores.
+
+Si tenemos que escoger una metaheurística de las que hemos implementado en esta práctica, deberíamos de escoger sin ningún tipo
+de duda la DE con el esquema de mutación \textit{rand/1}, ya que es la que mejores resultados ofrece, además de que el tiempo
+que tarda ésta y el ILS son muy parecidos.
+
+Si ahora comparamos el DE con esquema de mutación \textit{rand/1} con todo el resto de técnicas, vemos que por ejemplo los AM
+que aplicaban la BL sobre toda la población consiguen una mayor tasa de clasificación que nuestra nueva metaheurística. Sin embargo,
+en el resto de aspectos la DE se muestra muy superior, ya que tarda un poco menos, reduce más y la agrupación es más alta. Si la
+comparamos además con la BL, el \textit{RELIEF} y el 1-NN, podemos ver que gana a la BL en todo menos en tiempo, lo cuál es normal,
+y que para las otras dos técnicas, se ve que es un poco inferior a estas en cuanto a clasificación, pero que a pesar de eso, teniendo
+la capacidad de reducir, ha conseguido una tasa de aciertos media bastante respetable, reduciendo además una muy gran parte de las
+características. Por tanto, para este conjunto de datos, nuestro claro ganador sería el \textbf{DE con esquema de mutación
+\textit{rand/1}}, ya que nos ha ofrecido unos resultados de clasificación medios bastante buenos y de media ha reducido muchísimo
+más que cualquiera de las otras técnicas.
+
+Pasemos ahora al conjunto de datos \textbf{Ionosphere}. Si analizamos el ES, podemos ver que sucede algo parecido a la última
+vez, ya que obtiene una tasa de clasificación no muy buena, sin embargo reduce bastante más que muchas de las otras metaheurísticas
+y la tasa de agrupación es muy buena debido a que reduce mucho, situándolo por tanto entre las técnicas con mayor agrupación. Además,
+sus tiempos son muy buenos, situándolo también entre los más rápidos. Tal y como hicimos la última vez, vamos a ver cómo es
+su comportamiento con algunas gráficas:
+
+\begin{figure}[H]
+\centering
+\begin{minipage}{.5\textwidth}
+	\centering
+	\includegraphics[scale=0.4]{img/ionosphere-sa-temp.png}
+	\caption{Evolución de la temperatura.}
+\end{minipage}%
+\begin{minipage}{.5\textwidth}
+	\centering
+	\includegraphics[scale=0.4]{img/ionosphere-sa.png}
+	\caption{Diferencia entre la mejor solución y la actual.}
+\end{minipage}
+\end{figure}
+
+Podemos ver que, en este caso, se producen muchos más enfriamientos que en el problema anterior, aunque el número de evaluaciones
+totales que se hacen parece ser muy similar, por no decir casi el mismo. En cuanto a las diferencias entre el \textit{fitness}
+de la mejor solución y de la actual, podemos ver que, tal y como sucedía en el caso anterior, a medida que va disminuyendo la
+temperatura, se hace menos probable el aceptar soluciones peores. A partir de las 1000 evaluacoines parece que ya se
+van aceptando cada vez menos soluciones peores, y solo se pueden esperar soluciones que vayan mejorando a la actual.
+
+Si ahora observamos la ILS, podemos ver que de nuevo sucede algo parecido a antes, ya que es una de las técnicas que consigue
+una mayor tasa de clasificación (viéndose superada solo por 3 técnicas), una tasa de reducción muy alta que la sitúa entre
+las mejores y una agrupación muy buena. Además, sus tiempos son también bastante buenos, situándola entre las más rápidas (en
+este aspecto ha sido superada, como es obvio, por el ES). Vamos a ver su comportamiento con una gráfica:
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.4]{img/ionosphere-ils.png}
+\caption{Diferencia entre el mejor \textit{fitness} y el actual.}
+\end{figure}
+
+En este caso, a diferencia del problema anterior, podemos ver que, para esta partición, la BL mejora hasta cierto punto la
+mejor solución hasta que se estanca aproximadamente a las 3000 evaluaciones. Esto puede significar que, en este caso, la
+solución ha caído en un óptimo local del cuál por mucho que se mute, no puede salir en el número máximo de evaluaciones establecido.
+Por tanto, puede ser que aquí sí que hubiese sido buena idea darle algunas evaluaciones más a la ILS para ver si se conseguía salir
+de esa zona de óptimos locales.
+
+De nuevo, tal y como sucedió la vez anterior, podemos afirmar que la ILS se comporta mejor que el ES por los buenos resultados que
+nos ha ofrecido la primera.
+
+Pasando ahora a comparar los distintos esquemas de mutación de la DE, podemos ver que de nuevo sucede algo parecido a la última
+vez. Es decir, el modelo \textit{current-to-best/1} ofrece una mejor tasa de clasificación, aunque se queda corto en cuanto
+a tasa de reducción y agrupación si lo comparamos con el \textit{rand/1}. De nuevo, sus tiempos son similares, son lo cuál no esto
+no es un factor decisivo. Por tanto, de nuevo, el mejor esquema entre los dos es el \textit{rand/1}. Tal y como hicimos la última
+vez, vamos a estudiar como se comportan estas dos técnicas según pasan el número de evaluaciones:
+
+\begin{figure}[H]
+\centering
+\begin{minipage}{.5\textwidth}
+	\centering
+	\includegraphics[scale=0.4]{img/ionosphere-de-rand.png}
+	\caption{DE con esquema de mutación \textit{rand/1}.}
+\end{minipage}%
+\begin{minipage}{.5\textwidth}
+	\centering
+	\includegraphics[scale=0.4]{img/ionosphere-de-best.png}
+	\caption{DE con esquema de mutación \textit{current-to-best/1}.}
+\end{minipage}
+\end{figure}
+
+Como podemos ver, en este caso existe una mayor convergencia en los dos casos. Antes, el \textit{rand/1} no convergía tanto,
+pero ahora a medida que van pasando las evaluaciones, el mejor y el peor \textit{fitness} se van acercando más y más. En el caso
+del \textit{current-to-best/1} la convergencia es aún más exagerada que antes, ya que se puede ver que a partir de las 40 épocas
+(unas 2000 evaluaciones) el mejor cromosoma se estanca, y el peor de la población ya ha convergido a él, lo cuál hace que no se
+produzcan mejoras significativas en el mejor cromosoma de la población. Por tanto, notamos que este segundo enfoque tiene
+problemas de diversidad muy serios, ya que se pierde muy rápido. El \textit{rand/1}, dependiendo del problema, conserva más o menos
+diversidad al final, pero aún así sí que existe cierta diversidad.
+
+Comparando ahora la ILS y el DE con \textit{rand/1}, vemos que la ILS ofrece unos mejores resultados en casi todo menos en
+tasa de reducción, donde la DE gana por poco. Sin embargo, este no es motivo suficiente para escoger la DE sobre el ILS, así
+que por tanto, vamos a escoger la ILS, debido a que sus resultados medios son mejores y tarda menos, lo cuál en estos casos
+es deseable.
+
+Si comparamos ahoa la ILS con el resto de metaheurísticas y técnicas, vemos que solo al \textit{RELIEF} y el AM con BL sobre los
+0.1 mejores elementos de la población le superan en cuanto a tasa de clasificación. Sin embargo, en cuanto a reducción solo lo supera
+el DE con \textit{rand/1} y el AM con BL sobre toda la población se le acerca, pero es el que más agrupa de todos. Además, es uno
+de los algoritmos más rápidos de media. Por tanto, si de entre todos los modelos tuviésemos que escoger uno, nos quedaríamos
+con la \textbf{ILS}, ya que ha ofrecido unos resultados muy buenos en cuanto a clasificación reduciendo muchas características,
+muchas más que la mayoría de técnicas, y ha ofrecido una agrupación muy elevada, la más alta de todas, además de unos tiempos muy
+buenos.
+
+Por último, analicemos los resultados para el conjunto de datos \textbf{Texture}. Tal y como lleva sucediendo hasta ahora, el ES
+ha conseguido una baja tasa de clasificación, consiguiendo sin embargo una mayor reducción que otras metahuerísticas y una tasa
+de agrupación bastante buena. Además, es una de las metahuerísticas más rápidas, lo cuál es un punto importante a su favor. Si
+pasamos a analizar sus gráficas, tal y como hicimos anteriormente, podemos ver lo siguiente:
+
+\begin{figure}[H]
+\centering
+\begin{minipage}{.5\textwidth}
+	\centering
+	\includegraphics[scale=0.4]{img/texture-sa-temp.png}
+	\caption{Evolución de la temperatura.}
+\end{minipage}%
+\begin{minipage}{.5\textwidth}
+	\centering
+	\includegraphics[scale=0.4]{img/texture-sa.png}
+	\caption{Diferencia entre la mejor solución y la actual.}
+\end{minipage}
+\end{figure}
+
+Como pasó en el caso anterior, hay bastantes más enfriamientos que en el caso del Colposcopy, aunque el número de evaluaciones sigue
+siendo similar. Tal y como lleva pasando hasta ahora, al principio la metaheurística tiene una mayor capacidad de exploración, y
+a medida que va disminuyendo la temperatura, se dejan de aceptar con tanta facilidad soluciones peores. Por tanto, al final es
+casi un proceso más de intensificación que de exploración.
+
+Si observamos ahora a la ILS, podemos ver que, a diferencia de lo que pasba antes, la tasa de clasificación que ofrece es igual
+a la del ES, aunque sí que sigue siendo mejor en reducción, donde tiene una mayor reducción media, y en agrupación, donde también,
+tiene una mayor agrupación media que el ES. Los tiempos, al igual que antes, son mejores en el ES, pero esto no es algo que nos
+sorprenda a estas alturas, ya que sabemos que la ILS realiza más evaluaciones de la función objetivo. Vamos a ver cómo
+se ha comportado esta vez la metaheurística:
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.4]{img/texture-ils.png}
+\caption{Diferencia entre el mejor \textit{fitness} y el actual.}
+\end{figure}
+
+A diferencia del caso del Ionosphere, aquí podemos ver que no se produce una convergencia prematura de la mejor solución, si no que
+se va mejorando poco a poco hasta casi el final. Por tanto, podemos afirmar que la solución no había caído en una zona de óptimos
+locales, ya que en muchas ocasiones se iban aceptando las soluciones que han sido resultado de aplicar la BL sobre la solución
+mutada.
+
+Tal y como ha sucedido hasta ahora, la ILS se comporta mejor que el ES, lo cuál nos haría decantarnos más por la primera que por
+la segunda, a menos que quisiéramos tener una solución en muy poco tiempo.
+
+Observando ahora los resultados para la DE, el esquema \textit{rand/1} es superior a \textit{current-to-best/1} en todos los
+aspectos, es decir, tanto en tasa de clasificación, reducción y agrupación. Donde sí que ganaría el \textit{current-to-best/1}
+sería en tiempo, aunque tampoco es que sea una diferencia demasiado signifiativa. Por tanto, para sorpresa de nadie a estas alturas,
+escogeremos la DE con \textit{rand/1} al ser la que mejor ha funcionado. Tal y como hemos hecho hasta ahora, vamos a estudiar
+las diferencias entre el mejor y el pero cromosoma, para ver si existe una convergencia muy fuerte en cualquiera de las dos técnicas:
+
+\begin{figure}[H]
+\centering
+\begin{minipage}{.5\textwidth}
+	\centering
+	\includegraphics[scale=0.4]{img/texture-de-rand.png}
+	\caption{DE con esquema de mutación \textit{rand/1}.}
+\end{minipage}%
+\begin{minipage}{.5\textwidth}
+	\centering
+	\includegraphics[scale=0.4]{img/texture-de-best.png}
+	\caption{DE con esquema de mutación \textit{current-to-best/1}.}
+\end{minipage}
+\end{figure}
+
+Tal y como lleva pasando hasta ahora, existe una convergencia muy fuerte en el \textit{current-to-best/1}, y esta vez es
+incluso más destacable, ya que sucede muy pronto. Además, el mejor cromosoma se estanca y no mejora casi nada desde el principio
+debido a una falta de diversidad. En cambio, \textit{rand/1} sigue manteniendo cierta diversidad hasta casi el final, donde se
+va reduciendo. Además, en este caso, el mejor cromosoma si que va mejorando más, aunque sea poco a poco.
+
+Comparando la ILS y el DE con \textit{rand/1}, nos quedaríamos con el segundo, ya que, menos en cuanto a tiempo, en los demás
+aspectos ofrece unos mejores resultados que la ILS.
+
+Si ahora comparamos esta versión del DE con el resto de técnicas, vemos que en agrupación y reducción no le supera nadie, pero
+en cuanto a tasa de clasificación media se ve superado por los AG, las técnicas básicas y el AM con BL sobre toda la población.
+A pesar de que en clasificación no haya conseguido unos resultados espectaculares, hay que reconocerle que no son nada malos
+teniendo en cuenta que ha reducido muchísimo más que cualquier otra técnica, y que por tanto, su agrupación sea muy superior a la
+del resto. No obstante, si solo nos fijamos en la clasificación, parece que para este conjunto no existe ninguna técnica que pueda
+ganarle al \textit{RELIEF}, ya que es el que clasifica mejor de media. No obstante, podría darse el caso de que con más ejemplos
+de validación los resultados de \textit{RELIEF} sean peores.
+
+Aunque por los resultados en la tasa de clasificación parezca una técnica mala, no nos debemos dejar engañar, ya que los resultados
+siguen siendo buenos teniendo en cuenta que es la metaheurística que más ha conseguido reducir de todas, además de que es la que
+ha conseguido una mayor agrupación. Por tanto, podemos afirmar que la mejor metahuerística es el \textbf{DE con esquema de mutación
+\textit{rand/1}} por todo lo que hemos dicho anteriormente.
+
 \subsection{Experimentación realizada}
+
+Después de todo lo que hemos comentado anteriormente, hemos visto que la DE con \textit{rand/1} ha ofrecido, en general, los mejores
+resultados. También hemos visto que la DE con \textit{current-to-best/1} no ha estado a la altura y ha ofrecido unos peores
+resultados. Por tanto, en esta sección pretendemos mejorar esta mutación para intentar conseguir unos mejores resultados.
+
+Para ello, hemos modificado un poco la mutación \textit{current-to-best/1}, permitiendo que, en vez de utilizar siempre el mejor,
+se escoja uno de los 5 mejores de forma aleatoria. La recombinación sigue siendo la misma; lo único que ha cambiado es que ahora
+en vez de utilizar siempre el mejor de la población y de forzar por tando la convergencia a éste, se utilizan los 5 mejores. Hemos
+llamado a esta mutación \textbf{\textit{current-to-best5-rand/1}}.
+
+A continuación se ofrece una tabla con los resultados obtenidos para cada partición, además de la tabla de resultados medios:
 
 \begin{table}[H]
 \resizebox{\columnwidth}{!}{%
@@ -1288,9 +1600,9 @@ en el problema del APC.}
 \cline{2-13}
                                                                                                      & \multicolumn{4}{c|}{\textbf{Colposcopy}}                                                          & \multicolumn{4}{c|}{\textbf{Ionosphere}}                                                          & \multicolumn{4}{c|}{\textbf{Texture}}                                                            \\ \cline{2-13} 
                                                                                                      & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T}        & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T}        & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T}       \\ \hline
-\multicolumn{1}{|c|}{\textbf{1-NN}}                                                                  & 74,88                      & 0                       & 37,44                  & 0,000388717651367 & 86,33                      & 0                       & 43,16                  & 0,000394868850708 & 92,36                      & 0                       & 46,18                  & 0,00048770904541 \\ \hline
-\multicolumn{1}{|c|}{\textbf{RELIEF}}                                                                & 74,23                      & 39,35                   & 56,79                  & 0,03658905        & 88,89                      & 2,94                    & 45,92                  & 0,03987055        & 94,91                      & 7,50                    & 51,20                  & 0,08738794       \\ \hline
-\multicolumn{1}{|c|}{\textbf{BL}}                                                                    & 72,06                      & 81,29                   & 76,68                  & 2,73475590        & 86,32                      & 88,24                   & 87,28                  & 0,67943101        & 91,09                      & 82,50                   & 86,80                  & 1,09860759       \\ \hline
+\multicolumn{1}{|c|}{\textbf{1-NN}}                                                            & 74.88                      & 0                       & 37.44                  & 0.00039    & 86.33                      & 0                       & 43.16                  & 0.00039    & 92.36                      & 0                       & 46.18                  & 0.00049    \\ \hline
+\multicolumn{1}{|c|}{\textbf{RELIEF}}                                                          & 74.23                      & 39.35                   & 56.79                  & 0.03659    & 88.89                      & 2.94                    & 45.92                  & 0.03987    & 94.91                      & 7.50                    & 51.20                  & 0.08739    \\ \hline
+\multicolumn{1}{|c|}{\textbf{BL}}                                                              & 72.06                      & 81.29                   & 76.68                  & 2.73476    & 86.32                      & 88.24                   & 87.28                  & 0.67943    & 91.09                      & 82.50                   & 86.80                  & 1.09861    \\ \hline
 \multicolumn{1}{|c|}{\textbf{AGG-BLX}}                                                               & 74.54                      & 70.32                   & 72.43                  & 11.1              & 85.48                      & 85.29                   & 85.39                  & 4.78              & 89.82                      & 82.5                    & 86.16                  & 6.47             \\ \hline
 \multicolumn{1}{|c|}{\textbf{AGG-CA}}                                                                & 74.52                      & 53.55                   & 64.03                  & 17.35             & 87.18                      & 64.71                   & 75.94                  & 9.48              & 91.82                      & 67.5                    & 79.66                  & 9.88             \\ \hline
 \multicolumn{1}{|c|}{\textbf{AGE-BLX}}                                                               & 71.79                      & 71.94                   & 71.86                  & 11.81             & 84.03                      & 85.29                   & 84.66                  & 6.59              & 90.91                      & 77.0                    & 83.95                  & 8.2              \\ \hline
@@ -1308,8 +1620,79 @@ en el problema del APC.}
 \caption{Resultados medios obtenidos en el problema del APC.}
 \end{table}
 
+Vamos ahora a hacer un pequeño análisis de esta mejora respecto a su versión original y ver cómo de buenos son sus resultados
+respecto a las otras metaheurísticas.
+
+En \textbf{Colposcopy} consigue una tasa de clasificación peor que la nos ofrece \textit{current-to-best/1}. No obstante, permite
+reducir más que la versión original, además de que consigue una tasa de agrupación muy alta, viéndose solo superado por la ILS
+y la DE con \textit{rand/1}. En comparación con la mejor técnica, DE con \textit{rand/1}, se queda bastante cerca de ésta, pero
+se ve superada en todas las tasas. Donde gana es en tiempo, donde es la más rápida de las variantes de la DE.
+
+En \textbf{Ionosphere} sucede algu parecido que en el caso contrario. Clasifica peor que \textit{current-to-best/1} aunque
+lo hace mejor que \textit{rand/1}. Sin embargo, tiene la mayor reducción (al igual que el \textit{rand/1} y una agrupación solo
+superada por la ILS y el AM con BL sobre los 0.1 mejores individuos. Por tanto, aunque sea la mejor versión de la Evolución
+Diferencial, sigue siendo superado por poco por la ILS, aunque ha ofrecido unos resultados muy buenos.
+
+En el conjunto \textbf{Texture} se puede ver que tiene una tasa de clasificación más alta que todas las nuevas metahuerísticas
+y más que la mayoría de las anteriores, siendo superado solo por la BL, el 1-NN, el \textit{RELIEF} y el AGG con cruce aritmético.
+Sin embargo, es la metaheurística con mayor tasa de reducción media y la agrupación más alta, haciendo por tanto que sea una opción
+a considerar en este problema, ya que es el que consigue una mayor agrupación. Además, los tiempos no son los peores, ya que hay
+otras muchas metaheurísticas basadas en poblaciones que son más lentas que esta.
+
+Vamos a ver ahora mediante unas gráficas si existe o no convergencia muy fuerte:
+
+\begin{figure}[H]
+\centering
+\begin{minipage}{.5\textwidth}
+	\centering
+	\includegraphics[scale=0.4]{img/colposcopy-de-randbest.png}
+	\caption{DE con esquema de mutación \textit{current-to-best5-rand/1} en Colposcopy.}
+\end{minipage}%
+\begin{minipage}{.5\textwidth}
+	\centering
+	\includegraphics[scale=0.4]{img/ionosphere-de-randbest.png}
+	\caption{DE con esquema de mutación \textit{current-to-best5-rand/1} en Ionosphere.}
+\end{minipage}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.5]{img/texture-de-randbest.png}
+	\caption{DE con esquema de mutación \textit{current-to-best5-rand/1} en Texture.}
+\end{figure}
+
+Podemos ver que este enfoque ha mejorado un poco los problemas de convergencia que tenía la mutación \textit{current-to-best/1}.
+Esta vez, se puede ver como la diversidad se mantiene durante un mayor tiempo, aunque, al igual que todas las técnicas basadas
+en población básicas, tiene problemas de convergencia en las últimas épocas, ya que se pierde diversidad. La diversidad que
+proporciona este esquema de mutación, sin embargo, no es tan buena como la del \textit{rand/1}, el cuál tenía una diversidad mayor
+y la mantenía durante un poco más de tiempo. A pesar de eso, sí que se puede apreciar cierta mejora respecto a la versión original.
+
+Para concluir este breve apartado, hemos visto que la mejora propuesta se ha acerado a los mejores algoritmos de cada conjunto
+de datos, llegando incluso a ser la mejor opción en el caso del conjunto \textbf{Texture}. Además, hemos visto que este esquema,
+al utilizar no solo al mejor, hace que la diversidad se vea aumentada un poco. A lo mejor, se podría intentar un enfoque que mezcle
+más la aleatoriedad del \textit{rand/1} teniendo en cuenta cuáles son los mejores individuos de la población, con tal de conseguir
+una mayor diversidad, y por tanto, que no exista una convergencia tan fuerte. Pero, de momento, podemos decir que este expermiento
+ha ofrecido unos buenos resultados, aunque aún puede ser mejorado.
 
 \subsection{Conclusiones}
+
+Para concluir este análisis y el trabajo, vamos a ofrecer unas breves conclusiones. Hemos probado distintas técnicas que seguían
+distintas filosofías para ver cuáles de ellas eran capaces de ofrecernos los mejores resultados. Hemos visto que, ya que estamos
+en un problema con variables reales, la Evolución Diferencial con el esquema de mutación \textit{rand/1} ha resultado ser, en la 
+mayoría de casos, el mejor enfoque a seguir, ya que nos ha permitido obtener unos muy buenos resultados. La ILS no debe ser
+despreciada, ya que sus resultados también han sido muy buenos y nos ha permitido llegar a una muy buena solución en uno de los
+conjuntos de datos. El Enfriamiento Simulado, a pesar de no haber conseguido los mejores resultados, ha demostrado que es una
+metaheurística muy eficiente, ya que ha ofrecido unos resultados relativamente buenos con muy poco tiempo de cómputo. También
+hemos probado una mejora sobre el \textit{current-to-best/1} a la que hemos llamado \textit{current-to-best5-rand/1}, la cuál,
+en general, nos ha permitido obener unos resultados muy buenos, y ha supuesto una mejora sobre la versión original, ya que funcionaba
+mejor que ésta en todos los casos.
+
+Sin embargo, es muy importante recalcar, como llevamos haciendo durante todas las prácticas, que no existe una metaheurística ideal
+que nos resuelva el problema. Cuanta más información tengamos sobre el problema, mejor podremos elegir de entre las distintas
+metaheurísticas que existen y mejor podremos adaptarla al problema. Además, es muy importante no solo probar una técnica si no un
+grupo de ellas, y de entre éstas, escoger aquella que creamos que sea más adecuada para el problema a resolver. Como cada problema
+es un mundo, para cada uno habrá una metaheurística que funcione mejor que las otras. Así que, no hay que tener miedo a probar, ya
+que solo así podremos saber cuál es la más adecuada para el problema.
 
 \newpage
 

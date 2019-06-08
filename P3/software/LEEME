@@ -26,17 +26,19 @@ los algoritmos generales de la practica.
 
 Contiene los archivos:
 
-+ practica2.py: Contiene el codigo ejecutable practica 
++ practica3.py: Contiene el codigo ejecutable practica 
 + requirements.txt: Contiene los modulos a ser instalados
 + install.sh: Codigo para instalar requirements.txt
 
 El directorio algorithms contiene:
 
 + __init__.py: Archivo para inicializar el módulo
-+ classifiers.py: Archivo que contiene los distontos clasificadores de la practica (clasificador genético y memético)
-+ genetics.py: Archivo que contiene la implementación de los AG
-+ memetics.py: Contiene la implementacin de los AM
-+ utils.py: Contiene funciones utiles (normalizarW)
++ classifiers.py: Archivo que contiene el clasificador que se usará (se le indica que algoritmo usar con un parámetro que se le pasa)
++ local_search.py: Archivo que contiene el algoritmo de búsqueda local utilizado por la ILS. Además contiene funcionalidades que usa la BL.
++ ils.py: Archivo que contiene la implementación del ILS
++ differential_evolution.py: Archivo que contiene la implementación de la DE.
++ simulated_annealing.py: Archivo que contiene la implementación del ES.
++ utils.py: Contiene funciones utiles para normalizar por ejemplo un vector W o generar un W aleatorio
 + kfold.py: Contiene funciones para crear las particiones y normalizar los datos
 + metris.py: Contiene funciones para medir metricas (funcion objetivo, tasa de clasificacion y reduccion, etc)
 
