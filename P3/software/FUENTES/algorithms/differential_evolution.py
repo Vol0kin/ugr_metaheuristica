@@ -49,6 +49,21 @@ def generate_initial_population(chromosomes, genes):
 
 def differential_evolution(X, y, use_best, pop_size=50, cr=0.5, f=0.5,
                            max_evaluations=15000):
+    """
+    Funcion que simula la Evolucion Diferencial para el calculo de un
+    vector de pesos
+
+    :param X: Conjunto de datos
+    :param y: Etiquetas
+    :param pop_size: Numero de habitantes de la poblacion (por defecto 50)
+    :param cr: Tasa de cruce (por defecto 0.5)
+    :param f: Ponderacion que se le da a una combinacion en un cruce (por
+              defecto 0.5)
+    :param max_evaluations: Numero maximo de evaluaciones de la funcion
+                            objetivo (por defecto 15000)
+
+    :return Devuelve el mejor cromosoma de la poblacion
+    """
 
     # Obtener numero de caracteristicas
     N = X.shape[1]
@@ -122,6 +137,5 @@ def differential_evolution(X, y, use_best, pop_size=50, cr=0.5, f=0.5,
 
         # Ordenar nueva poblacion
         pop_fitness, population = sort_population(pop_fitness, population)
-        #print(pop_fitness)
 
     return population[0]

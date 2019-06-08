@@ -24,7 +24,6 @@ def mutate(w, N, mut_rate=0.1, mean=0.0, sigma=0.4):
 
     # Elegir caracteristicas a mutar
     traits = np.random.choice(np.arange(N), n_mutations, replace=False)
-    print(traits)
 
     # Clonar w
     mut_w = np.copy(w)
@@ -81,6 +80,5 @@ def ils(X, y, max_evaluations=15000):
         if new_fit > best_fit:
             best_w = new_w
             best_fit = new_fit
-            print('Aceptamos: ', n_evaluations)
 
     return best_w

@@ -116,15 +116,6 @@ def simulated_annealing(X, y, max_evaluations=15000):
     # Generar beta
     beta = generate_beta(temperature, t_end, M)
 
-    #print('Initial Temperature: ', temperature)
-    #print('Final Temperature: ', t_end)
-    #print('M: ', M)
-    #print('N: ', N)
-    #print('Max neighbors: ', max_neigh)
-    #print('Max success: ', max_success)
-    #print('Beta: ', beta)
-    #print('w: ', best_w)
-
     # Mientras no se hayan dado M iteraciones y haya habido al menos un exito
     # realizar la busqueda mediante enfriamiento simulado
     while num_iterations < M and num_success > 0:
