@@ -433,6 +433,7 @@ Una vez dicho esto, veamos cómo sería la implementación:
 \newpage
 
 \subsubsection{Búsqueda Local}
+\label{subsubsect:ls}
 
 En la primera práctica se implementó una búsqueda local (búsqueda basada en trayectorias), así que vamos a rescatarla para
 tener un algoritmo más de comparación, ademñas de que los AM la necesitarán luego, aunque ligeramente modificada. Esta búsqueda,
@@ -498,13 +499,669 @@ El pseudocódigo de la búsqueda local se puede ver aquí:
 
 \newpage
 
+\subsection{Algoritmos implementados}
+
+\subsubsection{Enfriamiento Simulado}
+
+La primera técnica que se ha implementado en esta práctica es el \textbf{Enfriamiento Simulado}. Esta es una búsqueda basada
+en trayectorias que se inspira en la termodinámica. Esta técnica, al igual que la Búsqueda Local, explora el entorno de la
+solución actual con el objetivo de intentar encontrar una solución mejor. Sin embargo, a diferencia de esta última, el
+\textbf{Enfriamiento Simulado} puede seleccionar soluciones peores que la actual con una cierta probabilidad, la cuál tendrá en
+cuenta a la temperatura. A mayor temperatura, mayor será la posibilidad de aceptar una solución peor, y a menor temperatura,
+menor probabilidad de hacerlo. Por tanto, es una técnica que permite explorar más al principio, ya que al aceptar soluciones
+peores se pueden salir por ejemplo de zonas de óptimos locales, mientras que al final permite explotar más, ya que habrá menos
+probabilidad de aceptar una solución que empeore a la actual.
+
+El esquema de enfriamiento que sigue este algoritmo es el \textbf{esquema modificado de Cauchy}, el cuál permitirá realizar
+enfriamientos de forma proporcional a un parámetro $\beta$. Este esquema se puede ver en el siguiente pseudocódigo:
+
+\begin{algorithm}[H]
+\caption{Esquema de enfriamiento de Cauchy modificaco}
+\begin{algorithmic}[1]
+\Function{EsquemaCauchyModificado}{$T_K, \beta$}
+\State $T_{K+1} \gets T_K$ / $(1 + \beta \cdot T_K)$
+\State \Return{$T_{K+1}$}
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+El valor de $\beta$ depende de la temperatura inicial, de la temperatura final que se quiere alcanzar y de un valor $M$, que es
+el número de enfriamientos que se quieren hacer. Esto se puede ver en el siguiente pseudocódigo:
+
+\begin{algorithm}[H]
+\caption{Cálculo del valor de $\beta$}
+\begin{algorithmic}[1]
+\Function{CalcularBeta}{$T_0$, $T_f$, $M$}
+\State $\beta \gets (T_0 - T_f)$ / $(M \cdot T_0 \cdot T_f)$
+\State \Return{$\beta$}
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+La temperatura inicial se ha especificado que se calcule de la siguiente forma, donde $C$ es el coste de la solución inicial y
+$\phi \in [0, 1]$ es la probabilidad de aceptar un $\mu$ por 1 peor que la inicial. Se ha especificado en este problema que
+$\phi = 0.3$ y que $\mu = 0.3$.
+
+\begin{algorithm}[H]
+\caption{Cálculo de la temperatura inicial}
+\begin{algorithmic}[1]
+\Function{CalcularTempInicial}{$C$, $\mu$, $\phi$}
+\State $T_0 \gets (\mu \cdot C)$ / $-\ln (\phi)$
+\State \Return{$T_0$}
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+También es importante saber como se generan los vecinos de una solución. Para ello, hace falta modificar una característica
+aleatoria del vector de pesos añadiéndole un valor aletorio generado mediante una distribución normal de $\mu = 0$ y $\sigma = 0.3$.
+Es importante destacar que este vecino tiene que normalizarse después de añadirle el valor aleatorio, ya que se tiene que dar que
+$\forall w_i \in W$, $w_i \in [0, 1]$. Esto se puede ver en el siguiente pseudocódigo:
+
+\begin{algorithm}[H]
+\caption{Operador de generación de vecino}
+\begin{algorithmic}[1]
+\Function{OperadorVecindario}{$W$, $N$}
+\State $carac \gets$ ValorEnteroAleatorio($N$)
+\State $vecino[carac] \gets vecino[carac] + $ GenerarValorDistribucionNormal($\mu$, $\sigma$)
+\State NormalizarW($vecino$)
+\State \Return{$vecino$}
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+Antes de ver finalmente el pesudocódigo del Enfriamiento Simulado, hace falta comentar unos aspectos muy breves sobre él. Se ha
+especificado que el \textbf{número máximo de evaluaciones} sea 15000. Además, se ha modificado el bucle externo para que se hagan
+$M$ iteraciones, siempre y cuando ha habido algún éxito, que es entrar dentro del bloque condicional, debido a que se ha encontrado
+una solución mejor o se ha aceptado una peor con una cierat probabilidad dada por un valor aleatorio uniforme en el rango $[0, 1]$.
+Y otra cosa importante es que, ya que estamos en un problema de maximización, el valor de $\Delta f$ tiene que ser positivo, y
+al ser este valor positivo, dentro de la exponencial se tiene que eliminar el signo negativo que viene en la versión original.
+
+Con esto ya dicho, pasemos a ver finalmente el pseudocódigo de esta técnica:
+
+\begin{algorithm}[H]
+\caption{Función de cálculo de pesos mediante Enfriamiento Simulado (I)}
+\begin{algorithmic}[1]
+\Function{EnfriamientoSimulado}{$X$, $y$, $maxEvaluaciones$}
+\State $T_f \gets 0.001$
+\State $N \gets $ ObtenerNumCaracteristicas($X$)
+\State $W \gets $ GenerarWAleatorio($N$)
+\State $mejorW \gets W$
+\State $maxVecinos \gets 10 \cdot N$
+\State $maxExitos \gets $ Redondear($0.1 \cdot maxVecinos$)
+\State $M \gets $ Redondear($maxEvaluaciones$ / $maxVecinos$)
+\algstore{sa}
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}[H]
+\caption{Función de cálculo de pesos mediante Enfriamiento Simulado (II)}
+\begin{algorithmic}
+\algrestore{sa}
+\State $numEvaluaciones \gets 0$
+\State $numIteraciones \gets 0$
+\State $numExitos \gets 1$
+\State $C \gets $ Evaluar($X$, $y$, $W$)
+\State $mejorFitness \gets C$
+\State $fitness \gets C$
+\State $numEvaluacions \gets numEvaluaciones + 1$
+\State $T \gets $ CalcularTempInicial($C$, $\mu$, $\phi$)
+\State $\beta \gets $ CalcularBeta($T$, $T_f$, $M$)
+\While{$numIteraciones < M$ \textbf{and} $numExitos > 0$}
+	\State $numExitos \gets 0$
+	\State $numVecinos \gets 0$
+	\While{$numVecinos < maxVecinos$ \textbf{and} $numExitos < maxExitos$}
+		\State $W' \gets $ OperadorVecindario($W$, $N$)
+		\State $fitness' \gets $ Evaluar($X$, $y$, $W'$)
+		\State $numEvaluaciones \gets numEvaluaciones + 1$
+		\State $\Delta f \gets fitness' - fitness$
+		\If{$\Delta f > 0$ \textbf{or} ValorAleatorioUniformeRango0-1() $\leq e^{\Delta f \; / \; T}$}
+			\State $numExitos \gets numExitos + 1$
+			\State $W \gets W'$
+			\State $fitness \gets fitness'$
+			\If{$fitness > mejorFitness$}
+				\State $mejorW \gets W$
+				\State $mejorFitness \gets fitness$
+			\EndIf
+		\EndIf	
+		\State $numVecinos \gets numVecinos + 1$
+	\EndWhile
+	\State $T \gets$ EsquemaCauchyModificado($T$, $\beta$)
+	\State $numIteraciones \gets numIteraciones + 1$	
+\EndWhile
+\State \Return $mejorW$
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+\newpage
+
+\subsubsection{ILS: Búsqueda Local Iterativa}
+
+La segunda técnica que se ha implementado es la \textbf{ILS}, o como se conoce en español, \textbf{Búsqueda Local Iterativa}.
+Esta es una búsqueda basada en trayectorias que, a diferencia de la búsqueda local, permite evitar óptimos locales, reiniciando
+la búsqueda con una nueva solución inicial. Se parte de una solución inicial y se aplica una búsqueda local sobre ella, y el
+restultado se guarda como la mejor solución hasta el momento. A continuación se aplica una mutación sobre la mejor solución
+actual, modificando una parte de los valores de la solución y se vuelve a aplicar una búsqueda local sobre esta modificación.
+aceptando no esta nueva solución como la mejor actual según algún criterio, y se repite este proceso hasta que se dé un cierto 
+de parada.
+
+En este problema, el operador de mutación que se aplica sobre la soluión modifica un 10\% de las características de forma aleatoria
+añadiéndoles un valor aleatorio generado por una distribución normal de $\mu = 0$ y $\sigma = 0.4$. Esto se puede ver en el
+siguiente pseudocódigo:
+
+\begin{algorithm}[H]
+\caption{Operador de mutación en ILS}
+\begin{algorithmic}[1]
+\Function{Mutacion}{$W$, $N$}
+\State $caracteristicas \gets $ GenerarSecuenciaAleatoriaEnteros($N$, $0.1$)
+\For{$carac \in caracteristicas$}
+	\State $W[carac] \gets W[carac] + $ GenerarValorDistribucionNormal($\mu$, $\sigma$)
+\EndFor
+\State $W \gets$ NormalizarW($W$)
+\State \Return{$W$}
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+En este problema, se piden hacer de nuevo 15000 evaluaciones de la función objetivo. Además, se utiliza la búsqueda local
+de la sección \ref{subsubsect:ls}, modificándola para que acepte un número máximo de iteraciones de 1000 (que es el número
+de evaluaciones que se pide que haga la búsqueda local) y un vector de pesos de entrada, de forma que no tiene que generarlo
+ella, aunque sí que debe evaluarlo. Además, se elimina toda la parte que implica parar antes de tiempo por no mejorar. También
+se hace que devuelva el \textit{fitness} de la solución a la que ha llegado, para así evitar tener que volver a calcularlo
+posteriormente. A continuación se puede ver un pseudocódigo del ILS:
+
+\begin{algorithm}[H]
+\caption{Cálculo de los pesos mediante la ILS (I)}
+\begin{algorithmic}[1]
+\Function{ILS}{$X$, $y$, $maxEvaluaciones$}
+\State $N \gets$ ObtenerNumCaracteristicas($X$)
+\State $numEvaluaciones \gets 0$
+\State $evalsBL \gets 1000$
+\State $W_0 \gets$ GenerarWAleatorio($N$)
+\algstore{ils}
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}[H]
+\caption{Cálculo de los pesos mediante la ILS (II)}
+\begin{algorithmic}
+\algrestore{ils}
+\State $mejorW, mejorFitness \gets$ BusquedaLocal($X$, $y$, $W_0$, $evalsBL$)
+\State $numEvaluaciones \gets numEvaluaciones + evalsBL$
+\While{$numEvaluaciones < maxEvaluaciones$}
+	\State $W' \gets mejorW$
+	\State $W' \gets $ Mutacion($W'$, $N$)
+	\State $W', fitness \gets$ BusquedaLocal($X$, $y$, $W'$, $evalsBL$)
+	\If{$fitness > mejorFitness$}
+		\State $mejorW \gets W'$
+		\State $mejorFitness \gets fitness$
+	\EndIf
+\EndWhile
+\State \Return{$mejorW$}
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+\newpage
+
+\subsubsection{Evolución Diferencial}
+
+La tercera y última técnica que se ha pedido implementar es la \textbf{Evolución Diferencial}. Esta es una metaheurística basada
+en poblaciones, al igual que los Algoritmos Genéticos. Sin embargo, esta técnica está especialmente diseñada para problemas
+con variables reales, ya que las mutaciones y recombinaciones están especialmente pensados para éstos. Estos operadores permiten
+combinar tanto la capacidad explorativa de los AG como su capacidad explotativa con tal de conseguir unos mejores resultados.
+
+En este problema se utilizan dos mutaciones. Una de ellas es el \textit{Rand}, donde se escogen 3 padres aleatorios y se
+combinan entre ellos. El otro es el \textit{current-to-best/1}, donde se escogen dos padres aleatorios, el mejor elemento
+de la población y el elemento $i$-ésimo sobre el que se está haciendo la mutación, y se combinan entre ellos. Esto se puede ver
+en los siguientes pseudocódigos:
+
+\begin{algorithm}[H]
+\caption{Esquema de mutación \textit{Rand}}
+\begin{algorithmic}[1]
+\Function{MutacionRand}{$p1$, $p2$, $p3$, $f$ $gen$}
+\State $mutacion \gets p1[gen] + f (p2 - p3)$
+\State \Return{$mutacion$}
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}[H]
+\caption{Esquema de mutación \textit{current-to-best/1}}
+\begin{algorithmic}[1]
+\Function{MutacionCurrentToBest}{$mejor$, $actual$, $p1$, $p2$, $f$ $gen$}
+\State $mutacion \gets mejor[gen] + f (mejor[gen] - actual[gen]) + f (p1[gen] - p2[gen])$
+\State \Return{$mutacion$}
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+Esta mutación, sin embargo, no se hace siempre, si no que viene por una tasa de cruce ($CR$). Se genera un número aleatorio y,
+en caso de obtener un valor más pequeño que $CR$, de realiza la mutación en el gen. En caso contrario, se copia la información
+genética del cromosoma sobre el que se están realizando las operaciones.
+
+Una vez que se han generado todos los descendientes, éstos tienen que competir contra sus padres directos. Los descendientes
+solo pueden entrar en la población si su valor \textit{fitness} es mejor que el de sus padres. En caso contrario, serán ignorados.
+
+Para facilitar un poco el trabajo, la población estará ordeanda según su valor \textit{fitness}, ya que uno de los modelos de
+mutación utiliza el mejor cromosoma. Por tanto, para tener un acceso más rápido a él, lo más adecuado sería tener toda la población
+ordenada.
+
+Para este problema se tienen que realizar de nuevo 15000 evaluaciones a la función objetivo. Los valores de $CR$ y $f$ son
+ambos 0.5, con lo cuál hay bastante probabilidad de cruce.
+
+Con todo esto dicho, vamos a ver un pseudocódigo de la Evolución Diferencial:
+
+\begin{algorithm}[H]
+\caption{Evolución Diferencial}
+\begin{algorithmic}[1]
+\Function{AGG}{$X$, $Y$, $opMutacion$}
+\State $numGenes \gets$ ObtenerNumCaracteristicas($datos$)
+\State Determinar $numPadres$ en función de $opMutacion$
+\State $numEvaluaciones \gets 0$
+\State $poblacion \gets$ GenerarPoblacionInicial($numCrom$, $numGenes$)
+\State $fitness \gets$ EvaluarPoblacion($datos$, $etiquetas$, $poblacion$)
+\State $fitness$, $poblacion \gets$ OrdenarPoblacion($fitness$, $poblacion$)
+\State $numEvaluaciones \gets numEvaluaciones + tamPob$
+\While{$numEvaluaciones < 15000$}
+	\State $descendientes \gets$ NuevoVectorVacio()
+	\For{$i \gets 1$ \textbf{to} $tamPob$}
+		\State $indicesPadres \gets$ GenerarIndicesExcluyendoValorI($N$, $i$)
+		\State Escoger $numPadres$ de $indicesPadres$ de forma aleatoria
+		\State $descendiente \gets$ NuevoVectorVacio()
+		\For{$gen \gets 1$ \textbf{to} $numGenes$}
+			\If{GenerarValorAleatorioUniforme01() $< CR$}
+				\State $descendiente[gen] \gets$ Aplicar mutación según $opMutacion$
+			\Else{}
+				\State $descendiente[gen] \gets poblacion[i][gen]$
+			\EndIf
+		\EndFor
+		\State $descendiente \gets$ NormalizarW($descendiente$)
+		\State $descendientes$.Insertar($descendiente$)
+	\EndFor
+	\State $fitnessDesc \gets$ EvaluarPoblacion($X$, $y$, $descendientes$)
+	\State $numEvaluaciones \gets numEvaluaciones + numCrom$
+	\For{$i \gets 1$ \textbf{to} $tamPob$}
+		\If{$fitnessDesc[i] > fitness[i]$}
+			\State $poblacion[i] \gets descendientes[i]$
+			\State $fitness[i] \gets fitnessDesc[i]$
+		\EndIf
+	\EndFor
+	\State $fitness$, $poblacion \gets$ OrdenarPoblacion($fitness$, $poblacion$)
+\EndWhile
+\State $W \gets poblacion[0]$
+\State \Return{$W$}
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+\newpage
+
+\section{Desarrollo de la práctica}
+
+La práctica se ha implementado en \textbf{Python3} y ha sido probada en la versión 3.7.1. Por tanto, se recomienda
+encarecidamente utilizar un intérprete de Python3 al ejecutar el código y no uno de la versión 2.X, debio a problemas
+de compatibilidad con ciertas funciones del lenguaje. Se ha probado el código sobre Linux Mint 19 y al estar basado en
+Ubuntu 18 no debería haber problemas de compatibilidad con otros sistemas, además de que Python es un lenguaje muy portable.
+No se ha probado en el entorno \textbf{conda}, pero si se consiguen instalar los módulos necesarios, no debería haber
+problemas.
+
+A la hora de implementar el software, se han utilizado tanto módulos ya incluidos en Python, como el módulo \textbf{time}
+para la medición de tiempos, como módulos científicos y para \textit{machine learning}, como por ejemplo \textbf{numpy} y
+\textbf{sklearn}. Este último se ha utlizado para poder dividir los datos para el \textbf{5 Fold Cross Validation}
+y para obtener un clasificador KNN que poder utilizar para poder probar los resultados obtenidos por cada uno de los
+algoritmos. Para la visualización de datos se ha utilizado \textbf{pandas}, ya que permite conseguir una visualización rápida
+de estos gracias a los DataFrames.
+
+Adicionalmente, la estructura de \textbf{KDTree} utilizada ha sido sacada de un módulo externo llamado
+\textbf{pykdtree}\cite{pykdtree}. Este módulo está implementado en \textbf{Cython} y \textbf{C} y también utiliza
+\textbf{OMP}, con lo cuál su rendimiento va a ser muy superior a otras implementaciones como por ejemplo el \textbf{cKDTree}
+de \textbf{scipy}\footnote{De hecho, pykdtree está basado en cKDTree y libANN, cogiendo lo
+mejor de cada implementación y paralelizando el código con OMP para conseguir unos rendimientos muy superiores a ambos,
+tanto a la hora de crear el árbol como para hacer consultas.}. En cuanto a su uso, las funciones y la forma de construirlo
+son las mismas que las de cKDTree, con lo cuál se puede consultar su documentación\cite{ckdtree} para obtener más información
+sobre su uso.
+
+Siendo ahora más concretos en cuanto a la implementación, se ha creado un módulo que contiene tanto código reutilizado de la
+práctica anterior (creación de particiones, búsqueda local, función de normalización de los datos, función para generar una
+solución inicial aleatoria y funciones objetivo y de evaluación de los datos) como código referente a esta práctica (es decir,
+la implementación del Enfriamiento Simulado, la de la ILS y la de la Evolución Diferencial). Se ha implementado un algoritmo
+para las dos versiones de la Evolución Diferencial. Además, se ha implementado una función a la que se ha llamado clasificador,
+la cuál se se encargan de recorrer las particiones creadas, de ejecutar los respectivos algoritmos pasándoles los datos, entrenar
+luego un clasificador 1-NN con los pesos calculados y predecir las clases, además de recopilar información estadística para
+mostrarla luego por pantalla. 
+
+Se han utilizado dos semillas aleatorias las cuáles están fijas en el código: una para dividir los datos, y otra para los
+algoritmos implementados, que se fija al justo antes de llamar a la función que le pasa los datos al algoritmo que se vaya a
+ejecutar. Los ficheros ARFF proporcionados se han convertido al formato CSV con un script propio, con el objetivo de facilitar
+la lectura de los datos. Estos archivos también se proporcionan junto con el código fuente implementado.
+
+\newpage
+
+\section{Manual de usuario}
+
+Para poder ejecutar el programa, se necesita un intérprete de \textbf{Python3}, como se ha mencionado anteriormente. Además,
+para poder satisfacer las dependencias se necesita el gestor de paquetes \textbf{pip} (preferiblemente \textbf{pip3}).
+
+Se recomienda instalar las dependencias, las cuáles vienen en el archivo \textbf{requirements.txt}, ya que sin ellas, el
+programa no podrá funcionar. Se recomienda utilizar el script de bash incluido para realizar la instalación, ya que se
+encarga de instalarlo en un entorno virtual para no causar problemas de versiones con paquetes que ya se tengan instaladas en
+el equipo o para no instalar paquetes no deseados. Una vez instalados\footnote{Si se produce algún error durante la
+instalación de los paquetes, puede ser debido a pykdtree, ya que al necesitar un compilador que soporte OMP puede fallar en
+los sistemas OSX. Para evitar estos problemas, el programa puede utilizar un cKDTree de scipy en caso de que a la hora de
+importar pykdtree se produzca un error, suponiendo a cambio una penalización en el tiempo de ejecución.}, para poder utilizar
+el entorno creado se debe ejecutar el siguiente comando:
+
+\begin{lstlisting}
+	$ source ./env/bin/activate
+\end{lstlisting}
+
+Para desactivar el entorno virtual, simplemente basta con ejecutar:
+
+\begin{lstlisting}
+	(env) $ deactivate
+\end{lstlisting}
+
+Para ejecutar el programa basta con ejecutar el siguiente comando:
+
+\begin{lstlisting}
+	$ python3 practica3.py [archivo] [algoritmo]
+\end{lstlisting}
+
+Los argumentos \textbf{archivo} y \textbf{algoritmo} son obligatorios, y sin ellos el programa lanzará una excepción. En
+cuanto a sus posibles valores:
+
+\begin{itemize}[label=\textbullet]
+	\item \textbf{archivo} puede ser: \textbf{colposcopy}, \textbf{ionosphere} o \textbf{texture}.
+	\item \textbf{algoritmo} puede ser:
+	\begin{itemize}[label=$\ast$]
+		\item Para Enfriamiento Simulado: \textbf{sa}.
+		\item Para ILS: \textbf{ils}.
+		\item Para Evolución Diferencial: \textbf{der} para la mutación \textit{Rand} y \textbf{de} para la mutación
+		\textit{current-to-best/1}.
+	\end{itemize}
+\end{itemize}
+
+A continuación, para ilustrar mejor lo explicado hasta el momento, se ofrece una captura de un ejemplo de ejecución del
+programa. En la imagen se puede ver la siguiente información:
+
+\begin{itemize}[label=\textbullet]
+	\item Se muestra primero el conjunto de datos sobre el que se va a ejecutar y el clasificador que se va a ejecutar.
+	\item Se puede ver una tabla en la que aparecen los datos referentes a cada partición (tasa de clasificación, tasa de
+	reducción, agrupación y tiempo).
+	\item Se muestran valores estadísticos para cada variable (valores máximo, mínimo, medio, mediana y desviación típica).
+\end{itemize}
+
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.4]{img/out_example.png}
+\caption{Ejemplo de salida de la ejecución con los datos \textbf{ionosphere} y la Evolución Diferencial con
+\textit{current-to-best/1}.}
+\end{figure}
+
+\newpage
+
+\section{Análisis de resultados y experimentación}
+
+\subsection{Descripción de los casos del problema}
+
+Para analizar el rendimiento de los algoritmos, se han realizado pruebas sobre 3 conjuntos de datos:
+
+\begin{itemize}[label=\textbullet]
+	\item \textbf{Colposcopy}: Conjunto de datos de colposcopias adquirido y anotado por médicos profesionales del Hospital
+	Universitario de Caracas. Las imágenes fueron tomadas al azar de las secuencias colposcópicas. 287 ejemplos con 62
+	características que deben ser clasificados en 2 clases.
+	\item \textbf{Ionosphere}: Conjunto de datos de radar que fueron recogidos por un sistema en \textit{Goose Bay},
+	Labrador. 352 ejemplos con 34 características que deben ser clasificados en 2 clases.
+	\item \textbf{Texture}: Conjunto de datos de extracciones de imágenes para distinguir entre 11 texturas diferentes
+	(césped, piel de becerro prensada, papel hecho a mano, rafia en bucle a una pila alta, lienzo de algodón,...). 550
+	ejemplos con 40 características que deben ser clasificados en 11 clases.
+\end{itemize}
+
+\subsection{Análisis de los resultados}
+
+Se han realizado distintas ejecuciones con los datos para cada uno de los algoritmos. Cada conjunto de datos se ha dividido
+con una función de \textbf{sklearn}, y se han mezclado con la \textbf{semialla aleatoria} 40. Antes de ejecutar cada uno de los
+algoritmos con la primera partición de datos se ha fijado como \textbf{semilla} el valor 8912374 (la misma que la práctica 
+anterior para realizar un análisis más justo, ya que si no podría pasar que alguno de los nuevos algoritmos es mejor). Ambas 
+están fijadas en el código y se pueden comprobar. Es muy importante destacar que todas las gráficas que se vean proceden de
+la primera partición de cada conjunto de datos, con el objetivo de el análisis sea sobre los mismos datos, en vez de sobre
+diferentes particiones.
+
+A continuación se muestran los resultados obtenidos para cada algoritmo y para cada uno de los conjuntos de datos, rescatando
+las tablas de la práctica anterior. Se han medido los valores de tasa de clasificación, tasa de reducción, agrupación (función
+objetivo) y tiempo que ha tardado (en segundos). Además se ofrece información extra sobre los valores máximo, mínimo, medio,
+mediana y desviación típica de cada uno de los datos, para poder comparar los datos más fácilmente. Y, como extra, se ha añadido
+una tabla en la que aparecen los valores medios de cada algoritmo, para facilitar la comparación. Estas tablas se pueden ver
+a continuación:
+
+\begin{table}[H]
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\cline{2-13}
+\multicolumn{1}{l|}{}                       & \multicolumn{4}{c|}{\textbf{Colposcopy}}                                                   & \multicolumn{4}{c|}{\textbf{Ionosphere}}                                                   & \multicolumn{4}{c|}{\textbf{Texture}}                                                      \\ \cline{2-13} 
+\multicolumn{1}{l|}{}                       & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 1}}  & 79,66                      & 0                       & 39,83                  & 0,00049    & 85,92                      & 0                       & 42,96                  & 0,00045    & 91,82                      & 0                       & 45,91                  & 0,00056    \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 2}}  & 66,67                      & 0                       & 33,33                  & 0,00037    & 85,71                      & 0                       & 42,86                  & 0,00037    & 91,82                      & 0                       & 45,91                  & 0,00048    \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 3}}  & 71,93                      & 0                       & 35,96                  & 0,00035    & 88,57                      & 0                       & 44,29                  & 0,00036    & 93,64                      & 0                       & 46,82                  & 0,00044    \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 4}}  & 82,46                      & 0                       & 41,23                  & 0,00035    & 87,14                      & 0                       & 43,57                  & 0,00039    & 93,64                      & 0                       & 46,82                  & 0,00046    \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 5}}  & 73,68                      & 0                       & 36,84                  & 0,00035    & 84,29                      & 0                       & 42,14                  & 0,00039    & 90,91                      & 0                       & 45,45                  & 0,00049    \\ \hline
+\multicolumn{1}{|c|}{\textbf{Media}}        & 74,88                      & 0                       & 37,44                  & 0,00038    & 86,33                      & 0                       & 43,16                  & 0,00039    & 92,36                      & 0                       & 46,18                  & 0,00049    \\ \hline
+\multicolumn{1}{|c|}{\textbf{Máximo}}       & 82,46                      & 0                       & 41,23                  & 0,00049    & 88,57                      & 0                       & 44,29                  & 0,00048    & 93,64                      & 0                       & 46,82                  & 0,00056    \\ \hline
+\multicolumn{1}{|c|}{\textbf{Mínimo}}       & 66,67                      & 0                       & 33,33                  & 0,00035    & 84,29                      & 0                       & 42,14                  & 0,00036    & 90,91                      & 0                       & 45,45                  & 0,00044    \\ \hline
+\multicolumn{1}{|c|}{\textbf{Mediana}}      & 73,68                      & 0                       & 36,84                  & 0,00035    & 85,92                      & 0                       & 42,96                  & 0,00039    & 91,82                      & 0                       & 45,91                  & 0,00048    \\ \hline
+\multicolumn{1}{|c|}{\textbf{Desv. Típica}} & 5,62                       & 0                       & 2,81                   & 0,000056   & 1,44                       & 0                       & 0,72                   & 0,000033   & 1,09                       & 0                       & 0,55                   & 0,00004    \\ \hline
+\end{tabular}
+}%
+\caption{Resultados obtenidos por el algoritmo 1-NN en el problema del APC.}
+\end{table}
+
+\begin{table}[H]
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\cline{2-13}
+\multicolumn{1}{l|}{}                       & \multicolumn{4}{c|}{\textbf{Colposcopy}}                                                   & \multicolumn{4}{c|}{\textbf{Ionosphere}}                                                   & \multicolumn{4}{c|}{\textbf{Texture}}                                                      \\ \cline{2-13} 
+\multicolumn{1}{l|}{}                       & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 1}}  & 72,88                      & 29,03                   & 50,96                  & 0,04223180 & 87,32                      & 2,94                    & 45,13                  & 0,04617286 & 93,64                      & 7,50                    & 50,57                  & 0,09011912 \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 2}}  & 70,18                      & 25,81                   & 47,99                  & 0,03592849 & 91,43                      & 2,94                    & 47,18                  & 0,04701781 & 94,55                      & 15,00                   & 54,77                  & 0,08130646 \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 3}}  & 68,42                      & 48,39                   & 58,40                  & 0,03983450 & 91,43                      & 2,94                    & 47,18                  & 0,03659153 & 95,45                      & 7,50                    & 51,48                  & 0,08078218 \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 4}}  & 77,19                      & 64,52                   & 70,85                  & 0,03201556 & 90,00                      & 2,94                    & 46,47                  & 0,03484225 & 97,27                      & 5,00                    & 51,14                  & 0,08749294 \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 5}}  & 82,46                      & 29,03                   & 55,74                  & 0,03293490 & 84,29                      & 2,94                    & 43,61                  & 0,03472829 & 93,64                      & 2,50                    & 48,07                  & 0,09723902 \\ \hline
+\multicolumn{1}{|c|}{\textbf{Media}}        & 74,23                      & 39,35                   & 56,79                  & 0,03658905 & 88,89                      & 2,94                    & 45,92                  & 0,03987055 & 94,91                      & 7,50                    & 51,20                  & 0,08738794 \\ \hline
+\multicolumn{1}{|c|}{\textbf{Máximo}}       & 82,46                      & 64,52                   & 70,85                  & 0,04223180 & 91,43                      & 2,94                    & 47,18                  & 0,04701781 & 97,27                      & 15,00                   & 54,77                  & 0,09723902 \\ \hline
+\multicolumn{1}{|c|}{\textbf{Mínimo}}       & 68,42                      & 25,81                   & 47,99                  & 0,03201556 & 84,29                      & 2,94                    & 43,61                  & 0,03472829 & 93,64                      & 2,50                    & 48,07                  & 0,08078218 \\ \hline
+\multicolumn{1}{|c|}{\textbf{Mediana}}      & 72,88                      & 29,03                   & 55,74                  & 0,03592849 & 90,00                      & 2,94                    & 46,47                  & 0,03659153 & 94,55                      & 7,50                    & 51,14                  & 0,08749294 \\ \hline
+\multicolumn{1}{|c|}{\textbf{Desv. Típica}} & 5,07                       & 14,91                   & 7,91                   & 0,00392631 & 2,75                       & 0,00                    & 1,37                   & 0,00553680 & 1,36                       & 4,18                    & 2,15                   & 0,00608498 \\ \hline
+\end{tabular}
+}%
+\caption{Resultados obtenidos por el algoritmo \textit{RELIEF} en el problema del APC.}
+\end{table}
+
+\begin{table}[H]
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\cline{2-13}
+                                            & \multicolumn{4}{c|}{\textbf{Colposcopy}}                                                   & \multicolumn{4}{c|}{\textbf{Ionosphere}}                                                   & \multicolumn{4}{c|}{\textbf{Texture}}                                                      \\ \cline{2-13} 
+                                            & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 1}}  & 81,36                      & 83,87                   & 82,61                  & 2,47677159 & 88,73                      & 85,29                   & 87,01                  & 0,74606109 & 92,73                      & 77,50                   & 85,11                  & 0,81571221 \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 2}}  & 71,93                      & 82,26                   & 77,09                  & 2,88534594 & 88,57                      & 79,41                   & 83,99                  & 0,83731246 & 89,09                      & 85,00                   & 87,05                  & 0,86508775 \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 3}}  & 70,18                      & 82,26                   & 76,22                  & 2,59485793 & 80,00                      & 94,12                   & 87,06                  & 0,42965746 & 95,45                      & 82,50                   & 88,98                  & 1,02096820 \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 4}}  & 71,93                      & 82,26                   & 77,09                  & 2,90626860 & 88,57                      & 91,18                   & 89,87                  & 0,75856829 & 90,91                      & 85,00                   & 87,95                  & 1,56289935 \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 5}}  & 64,91                      & 75,81                   & 70,36                  & 2,81053543 & 85,71                      & 91,18                   & 88,45                  & 0,62555575 & 87,27                      & 82,50                   & 84,89                  & 1,22837043 \\ \hline
+\multicolumn{1}{|c|}{\textbf{Media}}        & 72,06                      & 81,29                   & 76,68                  & 2,73475590 & 86,32                      & 88,24                   & 87,28                  & 0,67943101 & 91,09                      & 82,50                   & 86,80                  & 1,09860759 \\ \hline
+\multicolumn{1}{|c|}{\textbf{Máximo}}       & 81,36                      & 83,87                   & 82,61                  & 2,90626860 & 88,73                      & 94,12                   & 89,87                  & 0,83731246 & 95,45                      & 85,00                   & 88,98                  & 1,56289935 \\ \hline
+\multicolumn{1}{|c|}{\textbf{Mínimo}}       & 64,91                      & 75,81                   & 70,36                  & 2,47677159 & 80,00                      & 79,41                   & 83,99                  & 0,42965746 & 87,27                      & 77,50                   & 84,89                  & 0,81571221 \\ \hline
+\multicolumn{1}{|c|}{\textbf{Mediana}}      & 71,93                      & 82,26                   & 77,09                  & 2,81053543 & 88,57                      & 91,18                   & 87,06                  & 0,74606109 & 90,91                      & 82,50                   & 87,05                  & 1,02096820 \\ \hline
+\multicolumn{1}{|c|}{\textbf{Desv. Típica}} & 5,31                       & 2,81                    & 3,89                   & 0,16968432 & 3,35                       & 5,26                    & 1,95                   & 0,14206914 & 2,84                       & 2,74                    & 1,59                   & 0,27312796 \\ \hline
+\end{tabular}
+}%
+\caption{Resultados obtenidos por el algoritmo BL en el problema del APC.}
+\end{table}
+
+\begin{table}[H]
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\cline{2-13}
+                                            & \multicolumn{4}{c|}{\textbf{Colposcopy}}                                 & \multicolumn{4}{c|}{\textbf{Ionosphere}}                        & \multicolumn{4}{c|}{\textbf{Texture}}                           \\ \cline{2-13} 
+                                            & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 1}}  & 77.97             & 72.58                   & 75.27         & 10.26      & 83.1              & 85.29          & 84.2          & 5.0        & 90.91             & 85.0           & 87.95         & 6.29       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 2}}  & 66.67             & 72.58                   & 69.62         & 10.79      & 82.86             & 88.24          & 85.55         & 4.36       & 86.36             & 82.5           & 84.43         & 6.63       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 3}}  & 78.95             & 59.68                   & 69.31         & 13.95      & 88.57             & 85.29          & 86.93         & 4.69       & 93.64             & 77.5           & 85.57         & 6.88       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 4}}  & 77.19             & 74.19                   & 75.69         & 9.55       & 91.43             & 91.18          & 91.3          & 3.88       & 89.09             & 85.0           & 87.05         & 6.26       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 5}}  & 71.93             & 72.58                   & 72.26         & 10.97      & 81.43             & 76.47          & 78.95         & 5.98       & 89.09             & 82.5           & 85.8          & 6.28       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Media}}        & 74.54             & 70.32                   & 72.43         & 11.1       & 85.48             & 85.29          & 85.39         & 4.78       & 89.82             & 82.5           & 86.16         & 6.47       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Máximo}}       & 78.95             & 74.19                   & 75.69         & 13.95      & 91.43             & 91.18          & 91.3          & 5.98       & 93.64             & 85.0           & 87.95         & 6.88       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Mínimo}}       & 66.67             & 59.68                   & 69.31         & 9.55       & 81.43             & 76.47          & 78.95         & 3.88       & 86.36             & 77.5           & 84.43         & 6.26       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Mediana}}      & 77.19             & 72.58                   & 72.26         & 10.79      & 83.1              & 85.29          & 85.55         & 4.69       & 89.09             & 82.5           & 85.8          & 6.29       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Desv. Típica}} & 4.63              & 5.36                    & 2.7           & 1.51       & 3.84              & 4.92           & 4.01          & 0.7        & 2.4               & 2.74           & 1.22          & 0.25       \\ \hline
+\end{tabular}
+}%
+\caption{Resultados obtenidos por el AGG con cruce BLX-$\alpha$ en el problema del APC.}
+\end{table}
+
+\begin{table}[H]
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\cline{2-13}
+                                            & \multicolumn{4}{c|}{\textbf{Colposcopy}}                                 & \multicolumn{4}{c|}{\textbf{Ionosphere}}                        & \multicolumn{4}{c|}{\textbf{Texture}}                           \\ \cline{2-13} 
+                                            & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 1}}  & 81.36             & 58.06                   & 69.71         & 18.7       & 87.32             & 61.76          & 74.54         & 9.83       & 93.64             & 75.0           & 84.32         & 8.72       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 2}}  & 73.68             & 51.61                   & 62.65         & 17.91      & 85.71             & 70.59          & 78.15         & 9.98       & 90.91             & 77.5           & 84.2          & 8.04       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 3}}  & 66.67             & 54.84                   & 60.75         & 14.76      & 90.0              & 64.71          & 77.35         & 9.03       & 92.73             & 62.5           & 77.61         & 10.16      \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 4}}  & 78.95             & 54.84                   & 66.89         & 16.96      & 91.43             & 64.71          & 78.07         & 8.22       & 90.91             & 67.5           & 79.2          & 9.85       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 5}}  & 71.93             & 48.39                   & 60.16         & 18.4       & 81.43             & 61.76          & 71.6          & 10.36      & 90.91             & 55.0           & 72.95         & 12.62      \\ \hline
+\multicolumn{1}{|c|}{\textbf{Media}}        & 74.52             & 53.55                   & 64.03         & 17.35      & 87.18             & 64.71          & 75.94         & 9.48       & 91.82             & 67.5           & 79.66         & 9.88       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Máximo}}       & 81.36             & 58.06                   & 69.71         & 18.7       & 91.43             & 70.59          & 78.15         & 10.36      & 93.64             & 77.5           & 84.32         & 12.62      \\ \hline
+\multicolumn{1}{|c|}{\textbf{Mínimo}}       & 66.67             & 48.39                   & 60.16         & 14.76      & 81.43             & 61.76          & 71.6          & 8.22       & 90.91             & 55.0           & 72.95         & 8.04       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Mediana}}      & 73.68             & 54.84                   & 62.65         & 17.91      & 87.32             & 64.71          & 77.35         & 9.83       & 90.91             & 67.5           & 79.2          & 9.85       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Desv. Típica}} & 5.2               & 3.29                    & 3.69          & 1.42       & 3.5               & 3.22           & 2.54          & 0.76       & 1.15              & 8.22           & 4.28          & 1.57       \\ \hline
+\end{tabular}
+}%
+\caption{Resultados obtenidos por el AGG con cruce aritmético en el problema del APC.}
+\end{table}
+
+
+\begin{table}[H]
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\cline{2-13}
+                                            & \multicolumn{4}{c|}{\textbf{Colposcopy}}                                 & \multicolumn{4}{c|}{\textbf{Ionosphere}}                        & \multicolumn{4}{c|}{\textbf{Texture}}                           \\ \cline{2-13} 
+                                            & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 1}}  & 69.49             & 72.58                   & 71.04         & 11.01      & 88.73             & 91.18          & 89.95         & 5.58       & 88.18             & 80.0           & 84.09         & 8.03       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 2}}  & 71.93             & 70.97                   & 71.45         & 11.7       & 85.71             & 88.24          & 86.97         & 6.71       & 85.45             & 75.0           & 80.23         & 7.94       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 3}}  & 68.42             & 64.52                   & 66.47         & 13.99      & 81.43             & 82.35          & 81.89         & 8.23       & 94.55             & 85.0           & 89.77         & 6.83       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 4}}  & 77.19             & 80.65                   & 78.92         & 10.92      & 80.0              & 85.29          & 82.65         & 5.73       & 94.55             & 67.5           & 81.02         & 10.15      \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 5}}  & 71.93             & 70.97                   & 71.45         & 11.41      & 84.29             & 79.41          & 81.85         & 6.69       & 91.82             & 77.5           & 84.66         & 8.06       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Media}}        & 71.79             & 71.94                   & 71.86         & 11.81      & 84.03             & 85.29          & 84.66         & 6.59       & 90.91             & 77.0           & 83.95         & 8.2        \\ \hline
+\multicolumn{1}{|c|}{\textbf{Máximo}}       & 77.19             & 80.65                   & 78.92         & 13.99      & 88.73             & 91.18          & 89.95         & 8.23       & 94.55             & 85.0           & 89.77         & 10.15      \\ \hline
+\multicolumn{1}{|c|}{\textbf{Mínimo}}       & 68.42             & 64.52                   & 66.47         & 10.92      & 80.0              & 79.41          & 81.85         & 5.58       & 85.45             & 67.5           & 80.23         & 6.83       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Mediana}}      & 71.93             & 70.97                   & 71.45         & 11.41      & 84.29             & 85.29          & 82.65         & 6.69       & 91.82             & 77.5           & 84.09         & 8.03       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Desv. Típica}} & 3.03              & 5.16                    & 4.0           & 1.13       & 3.1               & 4.16           & 3.26          & 0.94       & 3.59              & 5.79           & 3.37          & 1.07       \\ \hline
+\end{tabular}
+}%
+\caption{Resultados obtenidos por el AGE con cruce BLX-$\alpha$ en el problema del APC.}
+\end{table}
+
+\begin{table}[H]
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\cline{2-13}
+                                            & \multicolumn{4}{c|}{\textbf{Colposcopy}}                                 & \multicolumn{4}{c|}{\textbf{Ionosphere}}                        & \multicolumn{4}{c|}{\textbf{Texture}}                           \\ \cline{2-13} 
+                                            & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 1}}  & 74.58             & 59.68                   & 67.13         & 15.52      & 85.92             & 61.76          & 73.84         & 10.09      & 95.45             & 72.5           & 83.98         & 9.33       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 2}}  & 68.42             & 66.13                   & 67.28         & 13.6       & 87.14             & 64.71          & 75.92         & 11.17      & 90.0              & 75.0           & 82.5          & 9.81       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 3}}  & 68.42             & 67.74                   & 68.08         & 14.62      & 90.0              & 73.53          & 81.76         & 8.93       & 89.09             & 70.0           & 79.55         & 9.6        \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 4}}  & 77.19             & 69.35                   & 73.27         & 12.62      & 85.71             & 64.71          & 75.21         & 11.07      & 82.73             & 70.0           & 76.36         & 10.9       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 5}}  & 70.18             & 69.35                   & 69.77         & 11.34      & 84.29             & 70.59          & 77.44         & 11.03      & 91.82             & 72.5           & 82.16         & 10.52      \\ \hline
+\multicolumn{1}{|c|}{\textbf{Media}}        & 71.76             & 66.45                   & 69.1          & 13.54      & 86.61             & 67.06          & 76.84         & 10.46      & 89.82             & 72.0           & 80.91         & 10.03      \\ \hline
+\multicolumn{1}{|c|}{\textbf{Máximo}}       & 77.19             & 69.35                   & 73.27         & 15.52      & 90.0              & 73.53          & 81.76         & 11.17      & 95.45             & 75.0           & 83.98         & 10.9       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Mínimo}}       & 68.42             & 59.68                   & 67.13         & 11.34      & 84.29             & 61.76          & 73.84         & 8.93       & 82.73             & 70.0           & 76.36         & 9.33       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Mediana}}      & 70.18             & 67.74                   & 68.08         & 13.6       & 85.92             & 64.71          & 75.92         & 11.03      & 90.0              & 72.5           & 82.16         & 9.81       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Desv. Típica}} & 3.53              & 3.59                    & 2.29          & 1.47       & 1.92              & 4.32           & 2.72          & 0.86       & 4.16              & 1.87           & 2.68          & 0.59       \\ \hline
+\end{tabular}
+}%
+\caption{Resultados obtenidos por el AGE con cruce aritmético en el problema del APC.}
+\end{table}
+
+\begin{table}[H]
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\cline{2-13}
+                                            & \multicolumn{4}{c|}{\textbf{Colposcopy}}                                 & \multicolumn{4}{c|}{\textbf{Ionosphere}}                        & \multicolumn{4}{c|}{\textbf{Texture}}                           \\ \cline{2-13} 
+                                            & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 1}}  & 69.49             & 85.48                   & 77.49         & 7.15       & 80.28             & 88.24          & 84.26         & 3.91       & 88.18             & 85.0           & 86.59         & 4.74       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 2}}  & 68.42             & 80.65                   & 74.53         & 8.19       & 87.14             & 88.24          & 87.69         & 3.57       & 87.27             & 85.0           & 86.14         & 5.23       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 3}}  & 80.7              & 83.87                   & 82.29         & 7.56       & 75.71             & 88.24          & 81.97         & 3.82       & 93.64             & 82.5           & 88.07         & 5.51       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 4}}  & 84.21             & 83.87                   & 84.04         & 7.8        & 85.71             & 94.12          & 89.92         & 3.43       & 91.82             & 85.0           & 88.41         & 5.39       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 5}}  & 78.95             & 83.87                   & 81.41         & 7.79       & 84.29             & 91.18          & 87.73         & 3.68       & 92.73             & 82.5           & 87.61         & 5.75       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Media}}        & 76.35             & 83.55                   & 79.95         & 7.7        & 82.63             & 90.0           & 86.31         & 3.68       & 90.73             & 84.0           & 87.36         & 5.32       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Máximo}}       & 84.21             & 85.48                   & 84.04         & 8.19       & 87.14             & 94.12          & 89.92         & 3.91       & 93.64             & 85.0           & 88.41         & 5.75       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Mínimo}}       & 68.42             & 80.65                   & 74.53         & 7.15       & 75.71             & 88.24          & 81.97         & 3.43       & 87.27             & 82.5           & 86.14         & 4.74       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Mediana}}      & 78.95             & 83.87                   & 81.41         & 7.79       & 84.29             & 88.24          & 87.69         & 3.68       & 91.82             & 85.0           & 87.61         & 5.39       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Desv. Típica}} & 6.28              & 1.58                    & 3.46          & 0.34       & 4.15              & 2.35           & 2.83          & 0.17       & 2.53              & 1.22           & 0.87          & 0.34       \\ \hline
+\end{tabular}
+}%
+\caption{Resultados obtenidos por el AM con cruce BLX-$\alpha$ y Búsqueda Local sobre toda la población en el problema del
+APC.}
+\end{table}
+
+\begin{table}[H]
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\cline{2-13}
+                                            & \multicolumn{4}{c|}{\textbf{Colposcopy}}                                 & \multicolumn{4}{c|}{\textbf{Ionosphere}}                        & \multicolumn{4}{c|}{\textbf{Texture}}                           \\ \cline{2-13} 
+                                            & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 1}}  & 72.88             & 83.87                   & 78.38         & 5.88       & 90.14             & 91.18          & 90.66         & 2.94       & 87.27             & 85.0           & 86.14         & 4.31       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 2}}  & 71.93             & 83.87                   & 77.9          & 6.73       & 90.0              & 91.18          & 90.59         & 2.97       & 90.91             & 87.5           & 89.2          & 4.22       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 3}}  & 70.18             & 83.87                   & 77.02         & 6.62       & 94.29             & 82.35          & 88.32         & 3.85       & 95.45             & 87.5           & 91.48         & 4.35       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 4}}  & 75.44             & 80.65                   & 78.04         & 8.95       & 90.0              & 82.35          & 86.18         & 4.7        & 85.45             & 87.5           & 86.48         & 4.48       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 5}}  & 59.65             & 82.26                   & 70.95         & 7.66       & 87.14             & 91.18          & 89.16         & 2.75       & 81.82             & 85.0           & 83.41         & 4.58       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Media}}        & 70.01             & 82.9                    & 76.46         & 7.17       & 90.31             & 87.65          & 88.98         & 3.44       & 88.18             & 86.5           & 87.34         & 4.39       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Máximo}}       & 75.44             & 83.87                   & 78.38         & 8.95       & 94.29             & 91.18          & 90.66         & 4.7        & 95.45             & 87.5           & 91.48         & 4.58       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Mínimo}}       & 59.65             & 80.65                   & 70.95         & 5.88       & 87.14             & 82.35          & 86.18         & 2.75       & 81.82             & 85.0           & 83.41         & 4.22       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Mediana}}      & 71.93             & 83.87                   & 77.9          & 6.73       & 90.0              & 91.18          & 89.16         & 2.97       & 87.27             & 87.5           & 86.48         & 4.35       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Desv. Típica}} & 5.45              & 1.29                    & 2.79          & 1.06       & 2.28              & 4.32           & 1.66          & 0.73       & 4.67              & 1.22           & 2.77          & 0.13       \\ \hline
+\end{tabular}
+}%
+\caption{Resultados obtenidos por el AM con cruce BLX-$\alpha$ y Búsqueda Local sobre el mejor de la población en el problema
+del APC.}
+\end{table}
+
+\begin{table}[H]
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\cline{2-13}
+                                            & \multicolumn{4}{c|}{\textbf{Colposcopy}}                                 & \multicolumn{4}{c|}{\textbf{Ionosphere}}                        & \multicolumn{4}{c|}{\textbf{Texture}}                           \\ \cline{2-13} 
+                                            & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} & \textit{\textbf{\%\_clas}} & \textit{\textbf{\%red}} & \textit{\textbf{Agr.}} & \textbf{T} \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 1}}  & 72.88             & 83.87                   & 78.38         & 5.88       & 90.14             & 91.18          & 90.66         & 2.94       & 87.27             & 85.0           & 86.14         & 4.31       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 2}}  & 71.93             & 83.87                   & 77.9          & 6.73       & 90.0              & 91.18          & 90.59         & 2.97       & 90.91             & 87.5           & 89.2          & 4.22       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 3}}  & 70.18             & 83.87                   & 77.02         & 6.62       & 94.29             & 82.35          & 88.32         & 3.85       & 95.45             & 87.5           & 91.48         & 4.35       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 4}}  & 75.44             & 80.65                   & 78.04         & 8.95       & 90.0              & 82.35          & 86.18         & 4.7        & 85.45             & 87.5           & 86.48         & 4.48       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Partición 5}}  & 59.65             & 82.26                   & 70.95         & 7.66       & 87.14             & 91.18          & 89.16         & 2.75       & 81.82             & 85.0           & 83.41         & 4.58       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Media}}        & 70.01             & 82.9                    & 76.46         & 7.17       & 90.31             & 87.65          & 88.98         & 3.44       & 88.18             & 86.5           & 87.34         & 4.39       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Máximo}}       & 75.44             & 83.87                   & 78.38         & 8.95       & 94.29             & 91.18          & 90.66         & 4.7        & 95.45             & 87.5           & 91.48         & 4.58       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Mínimo}}       & 59.65             & 80.65                   & 70.95         & 5.88       & 87.14             & 82.35          & 86.18         & 2.75       & 81.82             & 85.0           & 83.41         & 4.22       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Mediana}}      & 71.93             & 83.87                   & 77.9          & 6.73       & 90.0              & 91.18          & 89.16         & 2.97       & 87.27             & 87.5           & 86.48         & 4.35       \\ \hline
+\multicolumn{1}{|c|}{\textbf{Desv. Típica}} & 5.45              & 1.29                    & 2.79          & 1.06       & 2.28              & 4.32           & 1.66          & 0.73       & 4.67              & 1.22           & 2.77          & 0.13       \\ \hline
+\end{tabular}
+}%
+\caption{Resultados obtenidos por el AM con cruce BLX-$\alpha$ y Búsqueda Local sobre un cromosoma aleatorio  de la población
+en el problema del APC.}
+\end{table}
+
+
 \newpage
 
 \begin{thebibliography}{5}
 
-\bibitem{nombre-referencia}
-Texto referencia
-\\\url{https://url.referencia.com}
+\bibitem{pykdtree}
+Repositroio de GitHub de pykdtree.
+\\\url{https://github.com/storpipfugl/pykdtree}
+
+\bibitem{ckdtree}
+Documentación de cKDTree.
+\\\url{https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.cKDTree.html}
 
 \end{thebibliography}
 
